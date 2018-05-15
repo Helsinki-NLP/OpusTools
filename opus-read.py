@@ -6,7 +6,7 @@ import re
 
 class SentenceParser:
 	
-	def __init__(self, document, direction, preprocessing, sentencen):
+	def __init__(self, document, direction, preprocessing, sentencen, wmode, language):
 		self.document = document
 		self.direction = direction
 		self.pre = preprocessing
@@ -26,6 +26,9 @@ class SentenceParser:
 
 		self.sentencen = sentencen.split("-")
 		self.sentencen.sort()
+
+		self.wmode = wmode
+		self.language = language
 
 		self.processSentence = {"xml":self.processTokenizedSentence, "raw":self.processRawSentence, 
 								"rawos":self.processRawSentenceOS}
@@ -77,11 +80,37 @@ class SentenceParser:
 		else:
 			return sentence, 0
 
+	def addTuBeginning(self):
+		sentences = " "
+		if self.direction == "src":
+			sentences = sentences + "\t\t<tu>\n"
+		sentences = sentences + '\t\t\t<tuv xml:lang="'+self.language+'"><seg>'
+		return sentences
+		
+	def addSentence(self, sentences, sentence):
+		if self.wmode == "normal":
+			sentences = sentences + "\n(" + self.direction + ')="' + str(self.sid) + '">' + sentence
+		elif self.wmode == "moses" or self.wmode == "tmx":
+			sentences = sentences + " " + sentence
+		return sentences
+
+	def addTuEnding(self, sentences):
+		sentences = sentences + "</seg></tuv>"
+		if self.direction == "trg":
+			sentences = sentences + "\n\t\t</tu>"
+		return sentences
+
 	def readSentence(self, ids):
+		#if no limit is set or the number of sentences are within the limit, process the sentence,
+		#otherwise return -1, which skips the sentence in AlignmentParser.readPair()
 		if (self.sentencen[0] == "all") or (len(ids) >= int(self.sentencen[0]) and len(ids) <= int(self.sentencen[-1])):
 			if len(ids) == 0 or ids[0] == "":
 				return ""
 			sentences = ""
+			
+			if self.wmode == "tmx":
+				sentences = self.addTuBeginning()
+
 			for i in ids:
 				sentence = ""
 				while True:
@@ -91,15 +120,19 @@ class SentenceParser:
 					sentence = newSentence
 					if stop == -1:
 						break
-				sentences = sentences + "\n(" + self.direction + ')="' + str(self.sid) + '">' + sentence
+
+				sentences = self.addSentence(sentences, sentence)
 			
+			if self.wmode == "tmx":
+				sentences = self.addTuEnding(sentences)
+
 			return sentences[1:]
 		else:
 			return -1
 
 class AlignmentParser:
 
-	def __init__(self, alignment, source, target, args):
+	def __init__(self, alignment, source, target, args, result):
 		self.start = ""
 
 		self.toids = []
@@ -118,12 +151,19 @@ class AlignmentParser:
 		self.args = args
 
 		self.overTreshold = False
+		self.nonAlignments = self.args.ln
+
+		self.result = result
 
 	def start_element(self, name, attrs):
 		self.start = name
 		if name == "linkGrp":
-			print("\n# " + attrs["fromDoc"] + "\n# " + attrs["toDoc"] + "\n")
-			print("================================")
+			if self.args.wm == "normal":
+				docnames = "\n# " + attrs["fromDoc"] + "\n# " + attrs["toDoc"] + "\n\n================================"
+				if self.args.w != -1:
+					self.result.write(docnames + "\n")
+				else:
+					print(docnames)
 
 			szipfile = self.sourcezip.open(self.args.d+"/"+self.args.p+"/"+attrs["fromDoc"][:-3], "r")
 			tzipfile = self.targetzip.open(self.args.d+"/"+self.args.p+"/"+attrs["toDoc"][:-3], "r")
@@ -135,14 +175,13 @@ class AlignmentParser:
 			pre = self.args.p
 			if pre == "raw" and self.args.d == "OpenSubtitles":
 				pre = "rawos"
-			self.sPar = SentenceParser(szipfile, "src", pre, self.args.S)
-			self.tPar = SentenceParser(tzipfile, "trg", pre, self.args.T)
+
+			self.sPar = SentenceParser(szipfile, "src", pre, self.args.S, self.args.wm, self.args.s)
+			self.tPar = SentenceParser(tzipfile, "trg", pre, self.args.T, self.args.wm, self.args.t)
 			
 		elif name == "link":
 			if self.args.a in attrs.keys():
 				if float(attrs[self.args.a]) >= float(self.args.tr):
-					self.overTreshold = True
-			elif self.args.a == "any":
 					self.overTreshold = True
 			m = re.search("(.*);(.*)", attrs["xtargets"])
 			self.toids = m.group(2).split(" ")
@@ -154,11 +193,18 @@ class AlignmentParser:
 	def readPair(self):
 		sourceSen = self.sPar.readSentence(self.fromids)
 		targetSen = self.tPar.readSentence(self.toids)
-		if sourceSen == -1 or targetSen == -1 or self.overTreshold == False:
+
+		#if either side of the alignment is outside of the sentence limit, or the attribute value is under the given attribute
+		#treshold, return -1, which skips printing of the alignment in PairPrinter.outputPair()
+		if sourceSen == -1 or targetSen == -1 or (self.args.a != "any" and self.overTreshold == False):
+			return -1
+		#if filtering non-alignments is set to True and either side of the alignment has no sentences:
+		#return -1
+		elif self.nonAlignments and (self.fromids[0] == "" or self.toids[0] == ""):
 			return -1
 		else:
 			self.overTreshold = False
-			return sourceSen + "\n" + targetSen
+			return sourceSen, targetSen
 
 	def closeFiles(self):
 		self.sourcezip.close()
@@ -195,11 +241,15 @@ class PairPrinter:
 		parser.add_argument("-r", help="Release (default=latest)", default="latest")
 		parser.add_argument("-p", help="Pre-process-type (default=xml)", default="xml")
 		parser.add_argument("-m", help="Maximum number of alignments", default="all")
-		parser.add_argument("-S", help="Maximum number of source sentences in alignments (range is allowed, eg. 1-2)", default="all")
-		parser.add_argument("-T", help="Maximum number of target sentences in alignments (range is allowed, eg. 1-2)", default="all")
-		parser.add_argument("-a", help="Set attribute to filter by", default="any")
+		parser.add_argument("-S", help="Maximum number of source sentences in alignments (range is allowed, eg. -S 1-2)", default="all")
+		parser.add_argument("-T", help="Maximum number of target sentences in alignments (range is allowed, eg. -T 1-2)", default="all")
+		parser.add_argument("-a", help="Set attribute for filttering", default="any")
 		parser.add_argument("-tr", help="Set threshold for an attribute", default=0)
-
+		parser.add_argument("-ln", help="Leave non-alignments out", action="store_true")
+		parser.add_argument("-w", help="Write to file. Enter two file names separated by a comma when writing in moses format \
+										(eg. -w moses.src,moses.trg). Otherwise enter one file name.", default=-1)
+		parser.add_argument("-wm", help="Set writing mode (moses, tmx)", default="normal")
+		
 		self.args = parser.parse_args()
 
 		self.fromto = [self.args.s, self.args.t]
@@ -210,40 +260,103 @@ class PairPrinter:
 		self.target = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/"+self.args.p+"/"+self.fromto[1]+".zip"
 		self.moses = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/moses/"+self.fromto[0]+"-"+self.fromto[1]+".txt.zip"
 
-	def printPair(self, par, line):
+		self.resultfile = None
+
+		if self.args.w != -1:
+			self.filenames = self.args.w.split(",")
+			if self.args.wm == "moses":	
+				self.mosessrc = open(self.filenames[0], "w")
+				self.mosestrg = open(self.filenames[1], "w")
+			else:
+				self.resultfile = open(self.filenames[0], "w")
+
+	def printPair(self, sPair):
+		if self.args.wm == "moses":
+			print(sPair[0] + "\t" + sPair[1])
+		else:
+			print(sPair[0] + "\n" + sPair[1])
+		if self.args.wm == "normal":
+			print("================================")
+	
+	def writePair(self, sPair):
+		if self.args.wm == "moses":
+			self.mosessrc.write(sPair[0]+"\n")
+			self.mosestrg.write(sPair[1]+"\n")
+		else:
+			self.resultfile.write(sPair[0] + "\n" + sPair[1] + "\n")
+		if self.args.wm == "normal":
+			self.resultfile.write("================================\n")
+
+	def outputPair(self, par, line):
 		par.parseLine(line)
 		if par.start == "link":
 			sPair = par.readPair()
 
 			par.fromids = []
 			par.toids = []
-
+			
+			#if the sentence pair doesn't meet the requirements in AlignmentParser.readLine(),
+			#don't output the sentence pair and return 0, which won't increment the pairs-counter in printPairs()
 			if sPair == -1:
 				return 0
+	
+			if self.args.w != -1:
+				self.writePair(sPair)
+			else:
+				self.printPair(sPair)
 
-			print(sPair)
-			print("================================")
-
+			#if the sentence pair is printed:
+			#return 1, which will increment the pairs-counter in printPairs()
 			return 1
 		return 0
 
+	def addTmxHeader(self):
+		tmxheader = '<tmx version="1.4.">\n<header srclang="' + self.fromto[0] + \
+					'"\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype="PlainText" />\n\t<body>'
+		if self.args.w != -1:
+			self.resultfile.write(tmxheader + "\n")
+		else:
+			print(tmxheader)
+
+	def addTmxEnding(self):
+		if self.args.w != -1:
+			self.resultfile.write("\t</body>\n</tmx>")
+		else:
+			print("\t</body>\n</tmx>")
+
+	def closeResultFiles(self):
+		if self.args.wm == "moses":	
+			self.mosessrc.close()
+			self.mosestrg.close()
+		elif self.args.wm == "tmx":
+			self.resultfile.close()
+
 	def printPairs(self):
-		par = AlignmentParser(self.alignment, self.source, self.target, self.args)
+		par = AlignmentParser(self.alignment, self.source, self.target, self.args, self.resultfile)
+
+		if self.args.wm == "tmx":
+			self.addTmxHeader()
 
 		with gzip.open(self.alignment) as gzipAlign:
 			if self.args.m == "all":
 				for line in gzipAlign:
-					self.printPair(par, line)
+					self.outputPair(par, line)
 			else:
 				pairs = int(self.args.m)
 				while True:
 					line = gzipAlign.readline()
-					link = self.printPair(par, line)
+					link = self.outputPair(par, line)
 					pairs -= link
 					if pairs == 0:
 						break
 
+		if self.args.wm == "tmx":
+			self.addTmxEnding()
+			
 		par.closeFiles()
+
+		if self.args.w != -1:
+			self.closeResultFiles()
 
 	def printPairsMoses(self):
 		mread = MosesRead(self.moses, self.args.d, self.fromto[0], self.fromto[1])
