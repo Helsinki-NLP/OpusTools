@@ -2,12 +2,23 @@
 
 Tools for accessing and processing OPUS data.
 
+* opus-tools: general python library of OPUS-related tools as class library
+* opus-read: read parallel data sets and convert to different output formats
+* opus-cat: extract given OPUS document from release data
+* opus-api: web-service that provides information about OPUS data and download URLs
+
 ## opus-read related task- and wish-list:
 
 * a python library of data access functions
   * status: to do
   * reader and writer classes for data in different formats
   * installable package (pip package?)
+  
+* OPUS reader
+  * status: started
+  * read OPUS corpora in their native XML formats (sentence-aligned)
+  * obligatory parameters: corpus name, source and target language
+  * otional parameters: release version, type (raw, xml, parsed), opus root-dir
   
 * filter on alignment type and link likelihood
   * status: started
