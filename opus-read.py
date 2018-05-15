@@ -6,7 +6,7 @@ import re
 
 class SentenceParser:
 	
-	def __init__(self, document, direction, preprocessing):
+	def __init__(self, document, direction, preprocessing, sentencen):
 		self.document = document
 		self.direction = direction
 		self.pre = preprocessing
@@ -23,6 +23,9 @@ class SentenceParser:
 		
 		self.sfound = False
 		self.efound = False
+
+		self.sentencen = sentencen.split("-")
+		self.sentencen.sort()
 
 		self.processSentence = {"xml":self.processTokenizedSentence, "raw":self.processRawSentence, 
 								"rawos":self.processRawSentenceOS}
@@ -75,25 +78,28 @@ class SentenceParser:
 			return sentence, 0
 
 	def readSentence(self, ids):
-		if len(ids) == 0 or ids[0] == "":
-			return ""
-		sentences = ""
-		for i in ids:
-			sentence = ""
-			while True:
-				line = self.document.readline()
-				self.parseLine(line)
-				newSentence, stop = self.processSentence[self.pre](sentence, ids)
-				sentence = newSentence
-				if stop == -1:
-					break
-			sentences = sentences + "\n(" + self.direction + ')="' + str(self.sid) + '">' + sentence
+		if (self.sentencen[0] == "all") or (len(ids) >= int(self.sentencen[0]) and len(ids) <= int(self.sentencen[-1])):
+			if len(ids) == 0 or ids[0] == "":
+				return ""
+			sentences = ""
+			for i in ids:
+				sentence = ""
+				while True:
+					line = self.document.readline()
+					self.parseLine(line)
+					newSentence, stop = self.processSentence[self.pre](sentence, ids)
+					sentence = newSentence
+					if stop == -1:
+						break
+				sentences = sentences + "\n(" + self.direction + ')="' + str(self.sid) + '">' + sentence
 			
-		return sentences[1:]
+			return sentences[1:]
+		else:
+			return -1
 
 class AlignmentParser:
 
-	def __init__(self, alignment, source, target, document, preproc):
+	def __init__(self, alignment, source, target, args):
 		self.start = ""
 
 		self.toids = []
@@ -109,8 +115,9 @@ class AlignmentParser:
 		self.sPar = None
 		self.tPar = None
 
-		self.document = document
-		self.preproc = preproc
+		self.args = args
+
+		self.overTreshold = False
 
 	def start_element(self, name, attrs):
 		self.start = name
@@ -118,20 +125,25 @@ class AlignmentParser:
 			print("\n# " + attrs["fromDoc"] + "\n# " + attrs["toDoc"] + "\n")
 			print("================================")
 
-			szipfile = self.sourcezip.open(self.document+"/"+self.preproc+"/"+attrs["fromDoc"][:-3], "r")
-			tzipfile = self.targetzip.open(self.document+"/"+self.preproc+"/"+attrs["toDoc"][:-3], "r")
+			szipfile = self.sourcezip.open(self.args.d+"/"+self.args.p+"/"+attrs["fromDoc"][:-3], "r")
+			tzipfile = self.targetzip.open(self.args.d+"/"+self.args.p+"/"+attrs["toDoc"][:-3], "r")
 
 			if self.sPar and self.tPar:
 				self.sPar.document.close()
 				self.tPar.document.close()
 			
-			pre = self.preproc
-			if pre == "raw" and self.document == "OpenSubtitles":
+			pre = self.args.p
+			if pre == "raw" and self.args.d == "OpenSubtitles":
 				pre = "rawos"
-			self.sPar = SentenceParser(szipfile, "src", pre)
-			self.tPar = SentenceParser(tzipfile, "trg", pre)
+			self.sPar = SentenceParser(szipfile, "src", pre, self.args.S)
+			self.tPar = SentenceParser(tzipfile, "trg", pre, self.args.T)
 			
 		elif name == "link":
+			if self.args.a in attrs.keys():
+				if float(attrs[self.args.a]) >= float(self.args.tr):
+					self.overTreshold = True
+			elif self.args.a == "any":
+					self.overTreshold = True
 			m = re.search("(.*);(.*)", attrs["xtargets"])
 			self.toids = m.group(2).split(" ")
 			self.fromids = m.group(1).split(" ")
@@ -140,7 +152,13 @@ class AlignmentParser:
 		self.alignParser.Parse(line)
 
 	def readPair(self):
-		return self.sPar.readSentence(self.fromids) + "\n" + self.tPar.readSentence(self.toids)
+		sourceSen = self.sPar.readSentence(self.fromids)
+		targetSen = self.tPar.readSentence(self.toids)
+		if sourceSen == -1 or targetSen == -1 or self.overTreshold == False:
+			return -1
+		else:
+			self.overTreshold = False
+			return sourceSen + "\n" + targetSen
 
 	def closeFiles(self):
 		self.sourcezip.close()
@@ -177,6 +195,10 @@ class PairPrinter:
 		parser.add_argument("-r", help="Release (default=latest)", default="latest")
 		parser.add_argument("-p", help="Pre-process-type (default=xml)", default="xml")
 		parser.add_argument("-m", help="Maximum number of alignments", default="all")
+		parser.add_argument("-S", help="Maximum number of source sentences in alignments (range is allowed, eg. 1-2)", default="all")
+		parser.add_argument("-T", help="Maximum number of target sentences in alignments (range is allowed, eg. 1-2)", default="all")
+		parser.add_argument("-a", help="Set attribute to filter by", default="any")
+		parser.add_argument("-tr", help="Set threshold for an attribute", default=0)
 
 		self.args = parser.parse_args()
 
@@ -187,24 +209,26 @@ class PairPrinter:
 		self.source = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/"+self.args.p+"/"+self.fromto[0]+".zip"
 		self.target = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/"+self.args.p+"/"+self.fromto[1]+".zip"
 		self.moses = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/moses/"+self.fromto[0]+"-"+self.fromto[1]+".txt.zip"
-		#print("sentence alignment document: " + alignment)
-		#print("source language document: " + source)
-		#print("target language document: " + target)
 
 	def printPair(self, par, line):
 		par.parseLine(line)
 		if par.start == "link":
-			print(par.readPair())
-			print("================================")
+			sPair = par.readPair()
 
 			par.fromids = []
 			par.toids = []
+
+			if sPair == -1:
+				return 0
+
+			print(sPair)
+			print("================================")
 
 			return 1
 		return 0
 
 	def printPairs(self):
-		par = AlignmentParser(self.alignment, self.source, self.target, self.args.d, self.args.p)
+		par = AlignmentParser(self.alignment, self.source, self.target, self.args)
 
 		with gzip.open(self.alignment) as gzipAlign:
 			if self.args.m == "all":
