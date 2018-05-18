@@ -16,25 +16,33 @@ class PairPrinter:
 		parser.add_argument("-r", help="Release (default=latest)", default="latest")
 		parser.add_argument("-p", help="Pre-process-type (default=xml)", default="xml")
 		parser.add_argument("-m", help="Maximum number of alignments", default="all")
-		parser.add_argument("-S", help="Maximum number of source sentences in alignments (range is allowed, eg. -S 1-2)", default="all")
-		parser.add_argument("-T", help="Maximum number of target sentences in alignments (range is allowed, eg. -T 1-2)", default="all")
+		parser.add_argument("-S", help="Maximum number of source sentences in alignments (range is allowed, eg. -S 1-2)", \
+							default="all")
+		parser.add_argument("-T", help="Maximum number of target sentences in alignments (range is allowed, eg. -T 1-2)", \
+							default="all")
 		parser.add_argument("-a", help="Set attribute for filttering", default="any")
 		parser.add_argument("-tr", help="Set threshold for an attribute", default=0)
-		parser.add_argument("-l", help="Leave non-alignments out", action="store_true")
+		parser.add_argument("-ln", help="Leave non-alignments out", action="store_true")
 		parser.add_argument("-w", help="Write to file. Enter two file names separated by a comma when writing in moses format \
-										(eg. -w moses.src,moses.trg). Otherwise enter one file name.", default=-1)
+							(e.g. -w moses.src,moses.trg). Otherwise enter one file name.", default=-1)
 		parser.add_argument("-wm", help="Set writing mode (normal, moses, tmx, links)", default="normal")
-		parser.add_argument("-e", help="Exhaustive mode", action="store_true")
+		parser.add_argument("-f", help="Fast parsing. Slightly faster than normal parsing, but requires the sentence ids in \
+							alignment files to be in sequence.", action="store_true")
+		parser.add_argument("-rd", help="Change root directory (default=/proj/nlpl/data/OPUS/)", default="/proj/nlpl/data/OPUS/")
+		parser.add_argument("-af", help="Use given alignment file", default=-1)
 		
 		self.args = parser.parse_args()
 
 		self.fromto = [self.args.s, self.args.t]
 		self.fromto.sort()
-
-		self.alignment = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/xml/"+self.fromto[0]+"-"+self.fromto[1]+".xml.gz"
-		self.source = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/"+self.args.p+"/"+self.fromto[0]+".zip"
-		self.target = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/"+self.args.p+"/"+self.fromto[1]+".zip"
-		self.moses = "/proj/nlpl/data/OPUS/"+self.args.d+"/"+self.args.r+"/moses/"+self.fromto[0]+"-"+self.fromto[1]+".txt.zip"
+		
+		if self.args.af == -1:
+			self.alignment = self.args.rd+self.args.d+"/"+self.args.r+"/xml/"+self.fromto[0]+"-"+self.fromto[1]+".xml.gz"
+		else:
+			self.alignment = self.args.af
+		self.source = self.args.rd+self.args.d+"/"+self.args.r+"/"+self.args.p+"/"+self.fromto[0]+".zip"
+		self.target = self.args.rd+self.args.d+"/"+self.args.r+"/"+self.args.p+"/"+self.fromto[1]+".zip"
+		self.moses = self.args.rd+self.args.d+"/"+self.args.r+"/moses/"+self.fromto[0]+"-"+self.fromto[1]+".txt.zip"
 
 		self.resultfile = None
 
@@ -92,11 +100,12 @@ class PairPrinter:
 		#if the sentence pair is printed:
 		#return 1, which will increment the pairs-counter in printPairs()		
 		if par.start == "link":
+			par.start = ""
 			return 1, sPair
 		return 0, sPair
 
 	def addTmxHeader(self):
-		tmxheader = '<tmx version="1.4.">\n<header srclang="' + self.fromto[0] + \
+		tmxheader = '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n<header srclang="' + self.fromto[0] + \
 					'"\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype="PlainText" />\n\t<body>'
 		if self.args.w != -1:
 			self.resultfile.write(tmxheader + "\n")
@@ -122,32 +131,40 @@ class PairPrinter:
 		elif self.args.wm == "tmx":
 			self.resultfile.close()
 
+	def readAlignment(self, align):
+		if self.args.m == "all":
+			for line in align:
+				lastline = self.outputPair(self.par, line)[1]
+		else:
+			pairs = int(self.args.m)
+			while True:
+				line = align.readline()
+				link, lastline = self.outputPair(self.par, line)
+				pairs -= link
+				if pairs == 0:
+					break
+		return lastline
+
 	def printPairs(self):
-		par = AlignmentParser(self.alignment, self.source, self.target, self.args, self.resultfile)
+		self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile)
 
 		if self.args.wm == "tmx":
 			self.addTmxHeader()
 
-		with gzip.open(self.alignment) as gzipAlign:
-			if self.args.m == "all":
-				for line in gzipAlign:
-					lastline = self.outputPair(par, line)[1]
-			else:
-				pairs = int(self.args.m)
-				while True:
-					line = gzipAlign.readline()
-					link, lastline = self.outputPair(par, line)
-					pairs -= link
-					if pairs == 0:
-						break
-
+		if self.alignment[-3:] == ".gz":
+			with gzip.open(self.alignment) as gzipAlign:
+				lastline = self.readAlignment(gzipAlign)
+		else:
+			with open(self.alignment) as xmlAlign:
+				lastline = self.readAlignment(xmlAlign)
+		
 		if self.args.wm == "links" and lastline != "</cesAlign>":
 			self.addLinkFileEnding()
 
 		if self.args.wm == "tmx":
 			self.addTmxEnding()
 			
-		par.closeFiles()
+		self.par.closeFiles()
 
 		if self.args.w != -1:
 			self.closeResultFiles()

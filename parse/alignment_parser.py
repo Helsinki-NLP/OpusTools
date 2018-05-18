@@ -8,14 +8,16 @@ from parse.exhaustive_sentence_parser import ExhaustiveSentenceParser
 
 class AlignmentParser:
 
-	def __init__(self, alignment, source, target, args, result):
+	def __init__(self, source, target, args, result):
+		self.source = source
+		self.target = target
+
 		self.start = ""
 
 		self.toids = []
 		self.fromids = []
 
-		self.sourcezip = zipfile.ZipFile(source, "r")
-		self.targetzip = zipfile.ZipFile(target, "r")
+		self.zipFilesOpened = False		
 
 		self.alignParser = xml.parsers.expat.ParserCreate()
 
@@ -27,7 +29,7 @@ class AlignmentParser:
 		self.args = args
 
 		self.overTreshold = False
-		self.nonAlignments = self.args.l
+		self.nonAlignments = self.args.ln
 
 		self.result = result
 
@@ -35,6 +37,10 @@ class AlignmentParser:
 		self.slim.sort()
 		self.tlim = self.args.T.split("-")
 		self.tlim.sort()
+	
+	def openZipFiles(self):
+		self.sourcezip = zipfile.ZipFile(self.source, "r")
+		self.targetzip = zipfile.ZipFile(self.target, "r")
 
 	def initializeSentenceParsers(self, attrs):
 		#if link printing mode is activated, no need to open zipfiles and create sentence parsers
@@ -46,8 +52,15 @@ class AlignmentParser:
 				else:
 					print(docnames)
 
-			szipfile = self.sourcezip.open(self.args.d+"/"+self.args.p+"/"+attrs["fromDoc"][:-3], "r")
-			tzipfile = self.targetzip.open(self.args.d+"/"+self.args.p+"/"+attrs["toDoc"][:-3], "r")
+			try:
+				sourcefile = open(attrs["fromDoc"][:-3], "r")
+				targetfile = open(attrs["toDoc"][:-3], "r")
+			except:
+				if self.zipFilesOpened == False:
+					self.openZipFiles()
+					self.zipFilesOpened = True
+				sourcefile = self.sourcezip.open(self.args.d+"/"+self.args.p+"/"+attrs["fromDoc"][:-3], "r")
+				targetfile = self.targetzip.open(self.args.d+"/"+self.args.p+"/"+attrs["toDoc"][:-3], "r")
 
 			if self.sPar and self.tPar:
 				self.sPar.document.close()
@@ -57,14 +70,14 @@ class AlignmentParser:
 			if pre == "raw" and self.args.d == "OpenSubtitles":
 				pre = "rawos"
 
-			if self.args.e:
-				self.sPar = ExhaustiveSentenceParser(szipfile, pre, "src", self.args.wm, self.args.s)
-				self.sPar.storeSentences()
-				self.tPar = ExhaustiveSentenceParser(tzipfile, pre, "trg", self.args.wm, self.args.t)
-				self.tPar.storeSentences()
+			if self.args.f:
+				self.sPar = SentenceParser(sourcefile, "src", pre, self.args.wm, self.args.s)
+				self.tPar = SentenceParser(targetfile, "trg", pre, self.args.wm, self.args.t)
 			else:
-				self.sPar = SentenceParser(szipfile, "src", pre, self.args.wm, self.args.s)
-				self.tPar = SentenceParser(tzipfile, "trg", pre, self.args.wm, self.args.t)
+				self.sPar = ExhaustiveSentenceParser(sourcefile, pre, "src", self.args.wm, self.args.s)
+				self.sPar.storeSentences()
+				self.tPar = ExhaustiveSentenceParser(targetfile, pre, "trg", self.args.wm, self.args.t)
+				self.tPar.storeSentences()				
 
 	def processLink(self, attrs):
 		if self.args.a in attrs.keys():
@@ -120,5 +133,6 @@ class AlignmentParser:
 				return 1
 		
 	def closeFiles(self):
-		self.sourcezip.close()
-		self.targetzip.close()
+		if self.zipFilesOpened:
+			self.sourcezip.close()
+			self.targetzip.close()
