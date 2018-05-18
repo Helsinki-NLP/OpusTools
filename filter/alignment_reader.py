@@ -22,7 +22,7 @@ data_root = '/proj/nlpl/data/OPUS'
 
 
 class OPUSReadArgs:
-    def __init__(self, d, s, t, r='latest', p='xml', m='all', S='all', T='all', a='any', tr=0, l=True, ln=True, w=-1, wm='normal', e=False):
+    def __init__(self, d, s, t, r='latest', p='xml', m='all', S='all', T='all', a='any', tr=0, l=True, ln=True, w=-1, wm='normal', e=True):
         self.__dict__.update(d=d, s=s, t=t, r=r, p=p, m=m, S=S, T=T, a=a, tr=tr, l=l, ln=ln, w=w, wm=wm, e=e)
 
 
