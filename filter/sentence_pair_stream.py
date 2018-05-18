@@ -14,6 +14,7 @@
 
 
 import gzip
+from operator import itemgetter
 
 from parse.alignment_parser import AlignmentParser
 
@@ -30,12 +31,26 @@ class Alignment:
     def __init__(self, raw_line, parses):
         src_parses, trg_parses = parses
 
-        self.source = [{'id': p.split('(src)="')[1].split('"')[0], 'text': p.split('> ')[1]} for p in src_parses.split('\n')]
-        self.target = [{'id': p.split('(trg)="')[1].split('"')[0], 'text': p.split('> ')[1]} for p in trg_parses.split('\n')]
+        self.source = [{'id': int(p.split('(src)="')[1].split('"')[0]), 'text': p.split('> ')[1]} for p in src_parses.split('\n')]
+        self.target = [{'id': int(p.split('(trg)="')[1].split('"')[0]), 'text': p.split('> ')[1]} for p in trg_parses.split('\n')]
 
-        overlap = str(raw_line).split('overlap=\"')[1].split('\"')[0]
+        overlap = str(raw_line).split('overlap="')[1].split('"')[0]
 
         self.overlap = float(overlap)
+
+    def __parses_to_str(self, parses):
+        texts = []
+
+        for parse in sorted(parses, key=itemgetter('id')):
+            texts.append(parse['text'])
+
+        return ' '.join(texts)
+
+    def source_str(self):
+        return self.__parses_to_str(self.source)
+
+    def target_str(self):
+        return self.__parses_to_str(self.target)
 
 
 class AlignmentStream:
