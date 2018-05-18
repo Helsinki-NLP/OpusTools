@@ -1,15 +1,13 @@
-##############################################################
-# Usage:                                                     #
-##############################################################
-# reader = AlignmentReader('OpenSubtitles', 'de', 'en')      #
-# writer = AlignmentWriter('out.de-en.de', 'out.de-en.en')   #
-#                                                            #
-# while reader.has_next():                                   #
-#     alignment = reader.next()                              #
-#     writer.write(alignment)                                #
-#                                                            #
-# writer.close() # The reader auto-closes after a full scan. #
-##############################################################
+###################################################################
+# Usage:                                                          #
+###################################################################
+# reader = AlignmentReader('OpenSubtitles', 'de', 'en')           #
+#                                                                 #
+# with AlignmentWriter('out.de-en.de', 'out.de-en.en') as writer: #
+#     while reader.has_next():                                    #
+#         alignment = reader.next()                               #
+#         writer.write(alignment)                                 #
+###################################################################
 
 
 import gzip
