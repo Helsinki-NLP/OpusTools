@@ -7,7 +7,7 @@ from parse.moses_read import MosesRead
 
 class PairPrinter:
 
-	def __init__(self):
+	def __init__(self, arguments):
 		parser = argparse.ArgumentParser(prog="opus-read", description="Read sentence alignments")
 
 		parser.add_argument("-d", help="Corpus name", required=True)
@@ -31,7 +31,10 @@ class PairPrinter:
 		parser.add_argument("-rd", help="Change root directory (default=/proj/nlpl/data/OPUS/)", default="/proj/nlpl/data/OPUS/")
 		parser.add_argument("-af", help="Use given alignment file", default=-1)
 		
-		self.args = parser.parse_args()
+		if len(arguments) == 0:
+			self.args = parser.parse_args()
+		else:
+			self.args = parser.parse_args(arguments)
 
 		self.fromto = [self.args.s, self.args.t]
 		self.fromto.sort()
@@ -139,6 +142,8 @@ class PairPrinter:
 			pairs = int(self.args.m)
 			while True:
 				line = align.readline()
+				## Maybe 
+				#if len(line) == 0: break
 				link, lastline = self.outputPair(self.par, line)
 				pairs -= link
 				if pairs == 0:
@@ -181,8 +186,9 @@ class PairPrinter:
 
 			mread.closeFiles()
 
-pp = PairPrinter()
-if pp.args.p == "moses":
-	pp.printPairsMoses()
-else:
-	pp.printPairs()
+if __name__ == "__main__":
+	pp = PairPrinter([])
+	if pp.args.p == "moses":
+		pp.printPairsMoses()
+	else:
+		pp.printPairs()
