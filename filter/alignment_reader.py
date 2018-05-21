@@ -20,8 +20,8 @@ data_root = '/proj/nlpl/data/OPUS'
 
 
 class OPUSReadArgs:
-    def __init__(self, d, s, t, r='latest', p='xml', m='all', S='all', T='all', a='any', tr=0, l=True, ln=True, w=-1, wm='normal', e=True):
-        self.__dict__.update(d=d, s=s, t=t, r=r, p=p, m=m, S=S, T=T, a=a, tr=tr, l=l, ln=ln, w=w, wm=wm, e=e)
+    def __init__(self, d, s, t, r='latest', p='xml', m='all', S='all', T='all', a='any', tr=0, ln=True, w=-1, wm='normal', f=False, rd=data_root+'/', af=-1):
+        self.__dict__.update(d=d, s=s, t=t, r=r, p=p, m=m, S=S, T=T, a=a, tr=tr, ln=ln, w=w, wm=wm, f=f, rd=rd, af=af)
 
 
 class AlignmentReader:
@@ -34,7 +34,7 @@ class AlignmentReader:
         source_path = data_root + '/' + args.d + '/' + args.r + '/' + args.p + '/' + args.s + '.zip'
         target_path = data_root + '/' + args.d + '/' + args.r + '/' + args.p + '/' + args.t + '.zip'
 
-        self.__parser = AlignmentParser(alignment_path, source_path, target_path, args, None)
+        self.__parser = AlignmentParser(source_path, target_path, args, None)
 
         # Open the alignment file
         self.__alignment_file = gzip.open(alignment_path)
@@ -54,17 +54,17 @@ class AlignmentReader:
         while seeking:
             line = self.__alignment_file.readline()
 
-            if line == '':
+            if line == b'':
                 self.close()
                 seeking = False
 
             else:
                 self.__parser.parseLine(line)
 
-                if self.__parser.start == 'link':
+                if '<link ' in str(line):
                     parsed_pair = self.__parser.readPair()
 
-                    if parsed_pair != -1:
+                    if isinstance(parsed_pair, tuple):
                         self.__last_alignment = Alignment(line, parsed_pair)
                         seeking = False
 

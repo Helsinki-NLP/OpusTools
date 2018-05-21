@@ -19,8 +19,8 @@ class Alignment:
     def __init__(self, raw_line, parses):
         src_parses, trg_parses = parses
 
-        self.source = [{'id': int(p.split('(src)="')[1].split('"')[0]), 'text': p.split('> ')[1]} for p in src_parses.split('\n')]
-        self.target = [{'id': int(p.split('(trg)="')[1].split('"')[0]), 'text': p.split('> ')[1]} for p in trg_parses.split('\n')]
+        self.source = [{'id': int(p.split('(src)="')[1].split('"')[0]), 'text': p.split('>')[1]} for p in src_parses.split('\n')]
+        self.target = [{'id': int(p.split('(trg)="')[1].split('"')[0]), 'text': p.split('>')[1]} for p in trg_parses.split('\n')]
 
         overlap = str(raw_line).split('overlap="')[1].split('"')[0]
 
