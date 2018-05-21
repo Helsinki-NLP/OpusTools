@@ -1,4 +1,6 @@
-##GNOME
+# Problems in OPUS
+
+## GNOME
 
 * Error message: `xml.parsers.expat.ExpatError: not well-formed (invalid token): line 1, column 3234`
 * Probably caused by not having closing tags for `<no description>`.
@@ -9,7 +11,7 @@
 * `<Ð½ÐµÐ¼Ð° Ð¾Ð¿Ð¸Ñ<U+0081>>` in `GNOME/xml/mk/accerciser.gnome-2-30/accerciser.gnome-2-30.xml`
 * Same problem possibly in all languages
 
-##MPC1
+## MPC1
  
 * Error message: `xml.parsers.expat.ExpatError: not well-formed (invalid token): line 1, column 122657`
 * A paragraph beginning with "He considered the version" has no `<p>` but does have `</p>` in `MPC1/xml/en/Jersild_Barnenso.xml`
@@ -17,7 +19,7 @@
 * A paragraph beginning with "BREVET SER KONSTIGT UT" in `MPC1/xml/sv/MajgullAxelsson_Aprilhaxan1997.xml`
 * A paragraph at the beginning of `MPC1/cml/fi/MajgullAxelsson_Aprilhaxan1997.xml` 
 
-##OpenSubtitles
+## OpenSubtitles
 
 * Sentence ids are not always in sequential order.
 * In en-fi.xml.gz the second document pair:
