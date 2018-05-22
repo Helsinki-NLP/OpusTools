@@ -26,7 +26,7 @@ class PairPrinter:
 		parser.add_argument("-w", help="Write to file. Enter two file names separated by a comma when writing in moses format \
 							(e.g. -w moses.src,moses.trg). Otherwise enter one file name.", default=-1)
 		parser.add_argument("-wm", help="Set writing mode (normal, moses, tmx, links)", default="normal")
-		parser.add_argument("-f", help="Fast parsing. Slightly faster than normal parsing, but requires the sentence ids in \
+		parser.add_argument("-f", help="Fast parsing. Faster than normal parsing, but requires the sentence ids in \
 							alignment files to be in sequence.", action="store_true")
 		parser.add_argument("-rd", help="Change root directory (default=/proj/nlpl/data/OPUS/)", default="/proj/nlpl/data/OPUS/")
 		parser.add_argument("-af", help="Use given alignment file", default=-1)
@@ -51,34 +51,41 @@ class PairPrinter:
 
 		if self.args.w != -1:
 			self.filenames = self.args.w.split(",")
-			if self.args.wm == "moses":	
+			if self.args.wm == "moses":
 				self.mosessrc = open(self.filenames[0], "w")
 				self.mosestrg = open(self.filenames[1], "w")
 			else:
 				self.resultfile = open(self.filenames[0], "w")
 
+		self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile)
+
 	def printPair(self, sPair):
+		ret = ""
+		print(sPair)
 		if self.args.wm == "links":
-			print(sPair)
+			ret = sPair
 		else:
 			if self.args.wm == "moses":
-				print(sPair[0] + "\t" + sPair[1])
+				ret = sPair[0] + "\t" + sPair[1]
 			else:
-				print(sPair[0] + "\n" + sPair[1])
+				ret = sPair[0] + "\n" + sPair[1]
 			if self.args.wm == "normal":
-				print("================================")
+				ret = ret + "\n================================"
+		return ret
 	
 	def writePair(self, sPair):
+		ret1, ret2 = "", ""
 		if self.args.wm == "links":
-			self.resultfile.write(sPair+"\n")
+			ret1 = sPair+"\n"
 		else:
 			if self.args.wm == "moses":
-				self.mosessrc.write(sPair[0]+"\n")
-				self.mosestrg.write(sPair[1]+"\n")
+				ret1 = sPair[0]+"\n"
+				ret2 = sPair[1]+"\n"
 			else:
-				self.resultfile.write(sPair[0] + "\n" + sPair[1] + "\n")
+				ret1 = sPair[0] + "\n" + sPair[1] + "\n"
 			if self.args.wm == "normal":
-				self.resultfile.write("================================\n")
+				ret1 = ret1 + "================================\n"
+		return (ret1, ret2)
 
 	def outputPair(self, par, line):
 		par.parseLine(line)
@@ -96,9 +103,14 @@ class PairPrinter:
 			sPair = line.decode("utf-8")[:-1]
 
 		if self.args.w != -1:
-			self.writePair(sPair)
+			wpair = self.writePair(sPair)
+			if self.args.wm == "moses":
+				self.mosessrc.write(wpair[0])
+				self.mosestrg.write(wpair[1])
+			else:
+				self.resultfile.write(wpair[0])
 		else:
-			self.printPair(sPair)
+			print(self.printPair(sPair))
 
 		#if the sentence pair is printed:
 		#return 1, which will increment the pairs-counter in printPairs()		
@@ -142,8 +154,8 @@ class PairPrinter:
 			pairs = int(self.args.m)
 			while True:
 				line = align.readline()
-				## Maybe 
-				#if len(line) == 0: break
+				if len(line) == 0:
+					break
 				link, lastline = self.outputPair(self.par, line)
 				pairs -= link
 				if pairs == 0:
@@ -151,8 +163,6 @@ class PairPrinter:
 		return lastline
 
 	def printPairs(self):
-		self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile)
-
 		if self.args.wm == "tmx":
 			self.addTmxHeader()
 

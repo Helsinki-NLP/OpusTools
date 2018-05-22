@@ -28,7 +28,7 @@ class AlignmentParser:
 
 		self.args = args
 
-		self.overTreshold = False
+		self.overThreshold = False
 		self.nonAlignments = self.args.ln
 
 		self.result = result
@@ -82,7 +82,7 @@ class AlignmentParser:
 	def processLink(self, attrs):
 		if self.args.a in attrs.keys():
 			if float(attrs[self.args.a]) >= float(self.args.tr):
-				self.overTreshold = True
+				self.overThreshold = True
 		m = re.search("(.*);(.*)", attrs["xtargets"])
 		self.toids = m.group(2).split(" ")
 		self.fromids = m.group(1).split(" ")
@@ -97,9 +97,13 @@ class AlignmentParser:
 	def parseLine(self, line):
 		self.alignParser.Parse(line)
 
-	def sentencesOverLimit(self):
+	def sentencesOutsideLimit(self):
 		snum = len(self.fromids)
 		tnum = len(self.toids)
+		if snum == 0 or self.fromids[0] == "":
+			snum = 0
+		if tnum == 0 or self.toids[0] == "":
+			tnum = 0
 		
 		return (self.slim[0] != "all" and (snum < int(self.slim[0]) or snum > int(self.slim[-1]))) or \
 				(self.tlim[0] != "all" and (tnum < int(self.tlim[0]) or tnum > int(self.tlim[-1])))
@@ -118,15 +122,15 @@ class AlignmentParser:
 			targetSen = self.tPar.readSentence(self.toids)
 
 		#if either side of the alignment is outside of the sentence limit, or the attribute value is under the given attribute
-		#treshold, return -1, which skips printing of the alignment in PairPrinter.outputPair()
-		if self.sentencesOverLimit() or (self.args.a != "any" and self.overTreshold == False):
+		#threshold, return -1, which skips printing of the alignment in PairPrinter.outputPair()
+		if self.sentencesOutsideLimit() or (self.args.a != "any" and self.overThreshold == False):
 			return -1
 		#if filtering non-alignments is set to True and either side of the alignment has no sentences:
 		#return -1
 		elif self.nonAlignments and (self.fromids[0] == "" or self.toids[0] == ""):
 			return -1
 		else:
-			self.overTreshold = False
+			self.overThreshold = False
 			if self.args.wm != "links":
 				return sourceSen, targetSen
 			else:

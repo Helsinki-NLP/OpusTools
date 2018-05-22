@@ -112,6 +112,9 @@ class SentenceParser:
 				if stop == -1:
 					break
 
+			if self.pre == "xml":
+				sentence = sentence[1:]
+
 			sentences = self.addSentence(sentences, sentence)
 		
 		if self.wmode == "tmx":

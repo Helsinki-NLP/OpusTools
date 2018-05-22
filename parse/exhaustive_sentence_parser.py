@@ -90,6 +90,8 @@ class ExhaustiveSentenceParser:
 		return sentences
 
 	def readSentence(self, ids):
+		if len(ids) == 0 or ids[0] == "":
+			return ""
 		sentence = ""
 		if self.wmode == "tmx":
 			sentence = self.addTuBeginning()
