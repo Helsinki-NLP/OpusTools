@@ -30,6 +30,7 @@ class PairPrinter:
 							alignment files to be in sequence.", action="store_true")
 		parser.add_argument("-rd", help="Change root directory (default=/proj/nlpl/data/OPUS/)", default="/proj/nlpl/data/OPUS/")
 		parser.add_argument("-af", help="Use given alignment file", default=-1)
+		parser.add_argument("-cm", help='Change moses delimiter, default is tab', default="\t")
 		
 		if len(arguments) == 0:
 			self.args = parser.parse_args()
@@ -65,7 +66,7 @@ class PairPrinter:
 			ret = sPair
 		else:
 			if self.args.wm == "moses":
-				ret = sPair[0] + "\t" + sPair[1]
+				ret = sPair[0] + self.args.cm + sPair[1]
 			else:
 				ret = sPair[0] + "\n" + sPair[1]
 			if self.args.wm == "normal":
