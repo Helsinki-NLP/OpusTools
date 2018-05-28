@@ -61,7 +61,6 @@ class PairPrinter:
 
 	def printPair(self, sPair):
 		ret = ""
-		print(sPair)
 		if self.args.wm == "links":
 			ret = sPair
 		else:

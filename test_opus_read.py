@@ -11,12 +11,18 @@ class TestOpusRead(unittest.TestCase):
 		self.opr = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi"])
 		self.opr.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
 											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
+		self.fastopr = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-f"])
+		self.fastopr.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
+											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
 
 	@classmethod
 	def tearDownClass(self):
 		self.opr.par.sPar.document.close()
 		self.opr.par.tPar.document.close()
 		self.opr.par.closeFiles()
+		self.fastopr.par.sPar.document.close()
+		self.fastopr.par.tPar.document.close()
+		self.fastopr.par.closeFiles()
 
 	def tearDown(self):
 		self.opr.par.args.wm="normal"
@@ -31,6 +37,18 @@ class TestOpusRead(unittest.TestCase):
 		self.opr.par.sPar.pre = "xml"
 		self.opr.par.tPar.wmode = "normal"
 		self.opr.par.tPar.pre = "xml"
+		self.fastopr.par.args.wm="normal"
+		self.fastopr.par.slim=["all"]
+		self.fastopr.par.tlim=["all"]
+		self.fastopr.par.args.a = "any"
+		self.fastopr.par.nonAlignments = self.fastopr.par.args.ln
+		self.fastopr.par.args.m = "all"
+		self.fastopr.par.alignParser = xml.parsers.expat.ParserCreate()
+		self.fastopr.par.alignParser.StartElementHandler = self.fastopr.par.start_element
+		self.fastopr.par.sPar.wmode = "normal"
+		self.fastopr.par.sPar.pre = "xml"
+		self.fastopr.par.tPar.wmode = "normal"
+		self.fastopr.par.tPar.pre = "xml"
 
 	def pairPrinterToVariable(self, arguments):
 		printout = io.StringIO()
@@ -74,57 +92,50 @@ class TestOpusRead(unittest.TestCase):
 		self.assertEqual(self.opr.par.tPar.readSentence(["s5.2", "s5.3"]), """\t\t\t<tuv xml:lang="fi"><seg>Se oli""" + \
  		""" jokseenkin soma ja tukeva , se oli varustettu sipulinmuotoisella kädensijalla ja näytti oikealta " tuomarin""" + \
 		""" sauvalta . " ' M.R.C.S.</seg></tuv>\n\t\t</tu>""")
-
+	
 	def test_ExhaustiveSentenceParser_readSentence_raw(self):
 		rawprint = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw"])
 		rawprint.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
 											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
 		self.assertEqual(rawprint.par.sPar.readSentence(["s5.2"]), '(src)="s5.2">It was a fine, thick piece of wood,' + \
 													' bulbous-headed, of the sort which is known as a "Penang lawyer."')
-
+		rawprint.par.closeFiles()
+	
 	def test_ExhaustiveSentenceParser_readSentence_empty(self):
 		self.assertEqual(self.opr.par.sPar.readSentence([""]), "")
 
 	def test_SentenceParser_readSentence_format(self):
-		fastprinter = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-f"])
-		fastprinter.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
-											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
-		self.assertEqual(fastprinter.par.sPar.readSentence(["s1"]), '(src)="s1">Source : manybooks.netAudiobook available here')
-		self.assertEqual(fastprinter.par.tPar.readSentence(["s1"]), '(trg)="s1">Source : Project Gutenberg')
-		self.assertEqual(fastprinter.par.sPar.readSentence(["s11.0", "s11.1"]), '(src)="s11.0">" Good ! " said Holmes .\n' + \
+		self.assertEqual(self.fastopr.par.sPar.readSentence(["s1"]), '(src)="s1">Source : manybooks.netAudiobook available here')
+		self.assertEqual(self.fastopr.par.tPar.readSentence(["s1"]), '(trg)="s1">Source : Project Gutenberg')
+		self.assertEqual(self.fastopr.par.sPar.readSentence(["s11.0", "s11.1"]), '(src)="s11.0">" Good ! " said Holmes .\n' + \
 															'(src)="s11.1">" Excellent ! "')
-
+	
 	def test_SentenceParser_readSentence_moses(self):
-		fastprinter = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-wm", "moses", "-f"])
-		fastprinter.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
-											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
-		fastprinter.par.sPar.wmode = "moses"
-		self.assertEqual(fastprinter.par.sPar.readSentence(["s5.2"]), 'It was a fine , thick piece of wood , bulbous-headed' + \
-															' , of the sort which is known as a " Penang lawyer . "')
-
+		self.fastopr.par.sPar.wmode = "moses"
+		self.assertEqual(self.fastopr.par.sPar.readSentence(["s12"]), '" I think also that the probability is in favour of' + \
+										' his being a country practitioner who does a great deal of his visiting on foot . "')
+	
 	def test_SentenceParser_readSentence_tmx(self):
-		fastprinter = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-wm", "tmx", "-f"])
-		fastprinter.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
-											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
-		self.assertEqual(fastprinter.par.sPar.readSentence(["s5.2"]), '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>It was a fine' +\
-					' , thick piece of wood , bulbous-headed , of the sort which is known as a " Penang lawyer . "</seg></tuv>')
-		self.assertEqual(fastprinter.par.tPar.readSentence(["s5.2", "s5.3"]), """\t\t\t<tuv xml:lang="fi"><seg>Se oli""" + \
-		""" jokseenkin soma ja tukeva , se oli varustettu sipulinmuotoisella kädensijalla ja näytti oikealta " tuomarin""" + \
-		""" sauvalta . " ' M.R.C.S.</seg></tuv>\n\t\t</tu>""")
-
+		self.fastopr.par.sPar.wmode = "tmx"
+		self.fastopr.par.tPar.wmode = "tmx"
+		self.assertEqual(self.fastopr.par.sPar.readSentence(["s16.0"]), """\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>" And""" + \
+													""" then again , there is the ' friends of the C.C.H. '</seg></tuv>""")
+		self.assertEqual(self.fastopr.par.tPar.readSentence(["s16.1", "s16.2"]), """\t\t\t<tuv xml:lang="fi"><seg>Minä""" + \
+		""" otaksun , että H tarkoittaa jotain hevosurheiluseuraa . Ehkäpä hän kirurgina oli tehnyt palveluksia""" + \
+		""" paikallisen urheiluseuran jäsenille , ja nämä ovat kiitollisuutensa osoitteeksi antaneet tämän pienen lahjan""" + \
+		""" . "</seg></tuv>\n\t\t</tu>""")
+	
 	def test_SentenceParser_readSentence_raw(self):
 		fastprinter = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw", "-f"])
 		fastprinter.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
 											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
 		self.assertEqual(fastprinter.par.sPar.readSentence(["s5.2"]), '(src)="s5.2">It was a fine, thick piece of wood,' + \
 														' bulbous-headed, of the sort which is known as a "Penang lawyer."')
-
+		fastprinter.par.closeFiles()
+	
 	def test_SentenceParser_readSentence_empty(self):
-		fastprinter = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw", "-f"])
-		fastprinter.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
-											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
-		self.assertEqual(fastprinter.par.sPar.readSentence([""]), "")
-
+		self.assertEqual(self.fastopr.par.sPar.readSentence([""]), "")
+	
 	def test_AlignmentParser_readPair_returns_1_if_tag_is_not_link_and_write_mode_is_links(self):
 		self.opr.par.args.wm="links"
 		self.opr.par.parseLine("<s>")
@@ -239,7 +250,8 @@ class TestOpusRead(unittest.TestCase):
 
 	def test_PairPrinter_writePair_tmx(self):
 		self.opr.par.args.wm = "tmx"
-		sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock Holmes</seg></tuv>', '\t\t\t<tuv xml:lang="fi"><seg>Herra Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
+		sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock Holmes</seg></tuv>', '\t\t\t<tuv' + \
+				' xml:lang="fi"><seg>Herra Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
 		self.assertEqual(self.opr.writePair(sPair), ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock' + \
 		' Holmes</seg></tuv>\n\t\t\t<tuv xml:lang="fi"><seg>Herra Sherlock Holmes .</seg></tuv>\n\t\t</tu>\n', ''))
 
