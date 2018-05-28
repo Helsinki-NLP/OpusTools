@@ -73,31 +73,39 @@ class SentenceParser:
 		else:
 			return '("' + self.sid + '")>' + sentence
 
-parser = argparse.ArgumentParser(prog="opus_cat", description="Read a document from OPUS and print to STDOUT")
+class OpusCat:
 
-parser.add_argument("-d", help="Corpus name", required=True)
-parser.add_argument("-l", help="Language", required=True)
-parser.add_argument("-i", help="Print without ids", action="store_true")
-parser.add_argument("-m", help="Maximum number of sentences", default="all")
+	def __init__(self):
+		self.parser = argparse.ArgumentParser(prog="opus_cat", description="Read a document from OPUS and print to STDOUT")
 
-args = parser.parse_args()
+		self.parser.add_argument("-d", help="Corpus name", required=True)
+		self.parser.add_argument("-l", help="Language", required=True)
+		self.parser.add_argument("-i", help="Print without ids", action="store_true")
+		self.parser.add_argument("-m", help="Maximum number of sentences", default="all")
 
-lzip = zipfile.ZipFile("/proj/nlpl/data/OPUS/" + args.d + "/latest/xml/" + args.l + ".zip" , "r")
+		self.args = self.parser.parse_args()
 
-maximum = int(args.m)
+		self.lzip = zipfile.ZipFile("/proj/nlpl/data/OPUS/" + self.args.d + "/latest/xml/" + self.args.l + ".zip" , "r")
 
-for n in lzip.namelist():
-	if n[-4:] == ".xml":
-		with lzip.open(n, "r") as f:
-			spar = SentenceParser(f, args)
-			print("\n#"+n+"\n")
-			while True:
-				sent = spar.readSentence()
-				if sent != "":
-					print(sent)
-					maximum -= 1
-				if spar.stopit or maximum == 0:
-					break
-			spar.document.close()
-	if maximum == 0:
-		break
+		self.maximum = int(self.args.m)
+
+	def printSentences(self):
+		for n in self.lzip.namelist():
+			if n[-4:] == ".xml":
+				with self.lzip.open(n, "r") as f:
+					spar = SentenceParser(f, self.args)
+					print("\n#"+n+"\n")
+					while True:
+						sent = spar.readSentence()
+						if sent != "":
+							print(sent)
+							self.maximum -= 1
+						if spar.stopit or self.maximum == 0:
+							break
+					spar.document.close()
+			if self.maximum == 0:
+				break
+
+if __name__ == "__main__":
+	oc = OpusCat()
+	oc.printSentences()
