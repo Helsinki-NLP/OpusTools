@@ -55,7 +55,7 @@ class AlignmentParser:
 			try:
 				sourcefile = open(attrs["fromDoc"][:-3], "r")
 				targetfile = open(attrs["toDoc"][:-3], "r")
-			except:
+			except FileNotFoundError:
 				if self.zipFilesOpened == False:
 					self.openZipFiles()
 					self.zipFilesOpened = True
@@ -71,12 +71,12 @@ class AlignmentParser:
 				pre = "rawos"
 
 			if self.args.f:
-				self.sPar = SentenceParser(sourcefile, "src", pre, self.args.wm, self.args.s)
-				self.tPar = SentenceParser(targetfile, "trg", pre, self.args.wm, self.args.t)
+				self.sPar = SentenceParser(sourcefile, "src", pre, self.args.wm, self.args.s, self.args.pa, self.args.ca)
+				self.tPar = SentenceParser(targetfile, "trg", pre, self.args.wm, self.args.t, self.args.pa, self.args.ca)
 			else:
-				self.sPar = ExhaustiveSentenceParser(sourcefile, pre, "src", self.args.wm, self.args.s)
+				self.sPar = ExhaustiveSentenceParser(sourcefile, pre, "src", self.args.wm, self.args.s, self.args.pa, self.args.ca)
 				self.sPar.storeSentences()
-				self.tPar = ExhaustiveSentenceParser(targetfile, pre, "trg", self.args.wm, self.args.t)
+				self.tPar = ExhaustiveSentenceParser(targetfile, pre, "trg", self.args.wm, self.args.t, self.args.pa, self.args.ca)
 				self.tPar.storeSentences()				
 
 	def processLink(self, attrs):

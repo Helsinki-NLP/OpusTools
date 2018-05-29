@@ -2,17 +2,22 @@ import xml.parsers.expat
 
 class ExhaustiveSentenceParser:
 
-	def __init__(self, document, preprocessing, direction, wmode, language):
+	def __init__(self, document, preprocessing, direction, wmode, language, annotations, delimiter):
 		self.document = document
 		self.pre = preprocessing
 		self.direction = direction
 		self.wmode = wmode
 		self.language = language
+		self.annotations = annotations
+		self.delimiter = delimiter
 
 		self.start = ""
 		self.sid = ""
 		self.chara = ""
 		self.end = ""
+
+		self.lemma = ""
+		self.pos = ""
 
 		self.sfound = False
 		self.efound = False
@@ -30,6 +35,19 @@ class ExhaustiveSentenceParser:
 		if name == "s" and "id" in attrs.keys():
 			self.sid = attrs["id"]
 			self.sfound = True
+		if name == "w":
+			if self.pre == "parsed":
+				if "lemma" in attrs.keys():
+					self.lemma = attrs["lemma"]
+				if "upos" in attrs.keys():
+					self.pos = attrs["upos"]
+				if "feats" in attrs.keys():
+					self.pos = self.pos + self.delimiter + attrs["feats"].replace("|", self.delimiter)
+			else:
+				if "lem" in attrs.keys():
+					self.lemma = attrs["lem"]
+				if "pos" in attrs.keys():
+					self.pos = attrs["pos"]
 
 	def char_data(self, data):
 		self.chara = repr(data)
@@ -52,9 +70,14 @@ class ExhaustiveSentenceParser:
 					self.done = True
 					break
 				self.parseLine(line)
-				if self.pre == "xml":
+				if self.pre == "xml" or self.pre == "parsed":
 					if self.sfound and self.start == "w" and self.end == "w":
 						sentence = sentence + " " + self.chara[1:-1]
+						if self.annotations:
+							sentence = sentence + self.delimiter + self.pos + self.delimiter + self.lemma
+							self.pos = ""
+							self.lemma = ""
+							self.feats = ""
 				elif self.pre == "raw":
 					if self.sfound and self.start == "s":
 						sentence = self.chara[:-1]

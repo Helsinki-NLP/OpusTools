@@ -14,7 +14,7 @@ class PairPrinter:
 		parser.add_argument("-s", help="Source language", required=True)
 		parser.add_argument("-t", help="Target language", required=True)
 		parser.add_argument("-r", help="Release (default=latest)", default="latest")
-		parser.add_argument("-p", help="Pre-process-type (default=xml)", default="xml")
+		parser.add_argument("-p", help="Pre-process-type (raw, xml or parsed, default=xml)", default="xml")
 		parser.add_argument("-m", help="Maximum number of alignments", default="all")
 		parser.add_argument("-S", help="Maximum number of source sentences in alignments (range is allowed, eg. -S 1-2)", \
 							default="all")
@@ -30,12 +30,20 @@ class PairPrinter:
 							alignment files to be in sequence.", action="store_true")
 		parser.add_argument("-rd", help="Change root directory (default=/proj/nlpl/data/OPUS/)", default="/proj/nlpl/data/OPUS/")
 		parser.add_argument("-af", help="Use given alignment file", default=-1)
-		parser.add_argument("-cm", help='Change moses delimiter, default is tab', default="\t")
+		parser.add_argument("-cm", help="Change moses delimiter (default=tab)", default="\t")
+		parser.add_argument("-pa", help="Print annotations, if they exist", action="store_true")
+		parser.add_argument("-ca", help="Change annotation delimiter (default=|)", default="|")
 		
 		if len(arguments) == 0:
 			self.args = parser.parse_args()
 		else:
 			self.args = parser.parse_args(arguments)
+
+		if self.args.p not in ["raw", "xml", "parsed"]:
+			raise ValueError('p has to be "raw", "xml" or "parsed"')
+
+		if self.args.wm not in ["normal", "moses", "tmx", "links"]:
+			raise ValueError('wm has to be "normal", "moses", "tmx" or "links"')
 
 		self.fromto = [self.args.s, self.args.t]
 		self.fromto.sort()
@@ -143,7 +151,7 @@ class PairPrinter:
 		if self.args.wm == "moses":	
 			self.mosessrc.close()
 			self.mosestrg.close()
-		elif self.args.wm == "tmx":
+		else:
 			self.resultfile.close()
 
 	def readAlignment(self, align):

@@ -2,15 +2,20 @@ import xml.parsers.expat
 
 class SentenceParser:
 	
-	def __init__(self, document, direction, preprocessing, wmode, language):
+	def __init__(self, document, direction, preprocessing, wmode, language, annotations, delimiter):
 		self.document = document
 		self.direction = direction
 		self.pre = preprocessing
+		self.annotations = annotations
+		self.delimiter = delimiter
 
 		self.start = ""
 		self.sid = ""
 		self.chara = ""
 		self.end = ""
+
+		self.lemma = ""
+		self.pos = ""
 		
 		self.parser = xml.parsers.expat.ParserCreate()
 		self.parser.StartElementHandler = self.start_element
@@ -23,7 +28,7 @@ class SentenceParser:
 		self.wmode = wmode
 		self.language = language
 
-		self.processSentence = {"xml":self.processTokenizedSentence, "raw":self.processRawSentence, 
+		self.processSentence = {"parsed":self.processTokenizedSentence, "xml":self.processTokenizedSentence, "raw":self.processRawSentence, 
 								"rawos":self.processRawSentenceOS}
 
 	def start_element(self, name, attrs):
@@ -31,6 +36,19 @@ class SentenceParser:
 		if "id" in attrs.keys() and name == "s":
 			self.sfound = True
 			self.sid = attrs["id"]
+		if name == "w":
+			if self.pre == "parsed":
+				if "lemma" in attrs.keys():
+					self.lemma = attrs["lemma"]
+				if "upos" in attrs.keys():
+					self.pos = attrs["upos"]
+				if "feats" in attrs.keys():
+					self.pos = self.pos + self.delimiter + attrs["feats"].replace("|", self.delimiter)
+			else:
+				if "lem" in attrs.keys():
+					self.lemma = attrs["lem"]
+				if "pos" in attrs.keys():
+					self.pos = attrs["pos"]
 
 	def char_data(self, data):
 		self.chara = repr(data)
@@ -53,6 +71,11 @@ class SentenceParser:
 		if self.sfound and self.sid in ids:
 			if self.start == "w" and self.end == "w":
 				newSentence = sentence + " " + self.chara[1:-1]
+				if self.annotations:
+					newSentence = newSentence + self.delimiter + self.pos + self.delimiter + self.lemma
+					self.pos = ""
+					self.lemma = ""
+					self.feats = ""
 		return newSentence, stop
 
 	def processRawSentenceOS(self, sentence, ids):
