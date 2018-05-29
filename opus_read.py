@@ -103,7 +103,7 @@ class PairPrinter:
 		par.toids = []
 		
 		#if the sentence pair doesn't meet the requirements in AlignmentParser.readLine(),
-		#don't output the sentence pair and return 0, which won't increment the pairs-counter in printPairs()
+		#return -1 as the sentence pair and return 0, which won't increment the pairs-counter in printPairs()
 		if sPair == -1:
 			return 0, sPair
 		
@@ -143,9 +143,9 @@ class PairPrinter:
 
 	def addLinkFileEnding(self):
 		if self.args.w != -1:
-			self.resultfile.write("  </linkGrp>\n</cesAlign>")
+			self.resultfile.write(" </linkGrp>\n</cesAlign>")
 		else:
-			print("  </linkGrp>\n</cesAlign>")
+			print(" </linkGrp>\n</cesAlign>")
 
 	def closeResultFiles(self):
 		if self.args.wm == "moses":	

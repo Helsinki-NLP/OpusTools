@@ -140,3 +140,6 @@ class AlignmentParser:
 		if self.zipFilesOpened:
 			self.sourcezip.close()
 			self.targetzip.close()
+		if self.sPar and self.tPar:
+			self.sPar.document.close()
+			self.tPar.document.close()

@@ -135,7 +135,7 @@ class SentenceParser:
 				if stop == -1:
 					break
 
-			if self.pre == "xml":
+			if self.pre == "xml" or self.pre == "parsed":
 				sentence = sentence[1:]
 
 			sentences = self.addSentence(sentences, sentence)
