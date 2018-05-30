@@ -1,5 +1,11 @@
 # Problems in OPUS
 
+## Books
+
+* `/proj/nlpl/data/OPUS/Books/latest/xml/en-es.xml.gz` contains line `<link xtargets="s1241;" id="SL1241"/>` under `<linkGrp targType="s" fromDoc="en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.x
+ml.gz" toDoc="es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz" >`
+* Sentence with id `s1241` does not exist in file `Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml` in `/proj/nlpl/data/OPUS/Books/latest/xml/en.zip`
+
 ## GNOME
 
 * Error message: `xml.parsers.expat.ExpatError: not well-formed (invalid token): line 1, column 3234`
@@ -45,9 +51,4 @@ fromDoc="de/0/1467474/6453495.xml.gz" toDoc="en/0/1467474/6185069.xml.gz"
     <link id="SL249" xtargets="268 266;231" overlap="0.932" />
     <link id="SL250" xtargets="267;232" overlap="0.271" />
 ...
-```
-
-## Books
-
-* `/proj/nlpl/data/OPUS/Books/latest/xml/en-es.xml.gz` contains line `<link xtargets="s1241;" id="SL1241"/>`
-* Sentence with id `s1241` does not exist in file `Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml` in `/proj/nlpl/data/OPUS/Books/latest/xml/en.zip` 
+``` 
