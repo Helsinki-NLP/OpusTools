@@ -94,10 +94,12 @@ class TestOpusRead(unittest.TestCase):
 		self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please|NNP|please rise|NN|rise ,|,|,""" + \
 		""" then|RB|then ,|,|, for|IN|for this|DT|this minute|NN|minute '|POS|' s|NNS|S silence|NN|silence .|.|.""")
 		opr = opus_read.PairPrinter(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@"])
+		opr.par.closeFiles()
 		opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
 											 "toDoc": "fi/ep-00-01-17.xml.gz"})
 		self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please@NNP@please rise@NN@rise ,@,@,""" + \
 		""" then@RB@then ,@,@, for@IN@for this@DT@this minute@NN@minute '@POS@' s@NNS@S silence@NN@silence .@.@.""")
+		opr.par.closeFiles()
 
 	def test_ExhaustiveSentenceParser_readSentence_moses(self):
 		self.opr.par.sPar.wmode = "moses"
@@ -136,6 +138,7 @@ class TestOpusRead(unittest.TestCase):
 											 "toDoc": "fi/ep-00-01-17.xml.gz"})
 		self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please|NNP|please rise|NN|rise ,|,|,""" + \
 		""" then|RB|then ,|,|, for|IN|for this|DT|this minute|NN|minute '|POS|' s|NNS|S silence|NN|silence .|.|.""")
+		opr.par.closeFiles()
 
 	def test_SentenceParser_readSentence_annotations_change_delimiter(self):
 		opr = opus_read.PairPrinter(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@", "-f"])
@@ -143,6 +146,7 @@ class TestOpusRead(unittest.TestCase):
 											 "toDoc": "fi/ep-00-01-17.xml.gz"})
 		self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please@NNP@please rise@NN@rise ,@,@,""" + \
 		""" then@RB@then ,@,@, for@IN@for this@DT@this minute@NN@minute '@POS@' s@NNS@S silence@NN@silence .@.@.""")
+		opr.par.closeFiles()
 	
 	def test_SentenceParser_readSentence_moses(self):
 		self.fastopr.par.sPar.wmode = "moses"
