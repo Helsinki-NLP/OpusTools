@@ -8,7 +8,7 @@ from parse.moses_read import MosesRead
 class PairPrinter:
 
 	def __init__(self, arguments):
-		parser = argparse.ArgumentParser(prog="opus-read", description="Read sentence alignments")
+		parser = argparse.ArgumentParser(prog="python3 opus_read.py", description="Read sentence alignment in XCES align")
 
 		parser.add_argument("-d", help="Corpus name", required=True)
 		parser.add_argument("-s", help="Source language", required=True)
@@ -26,8 +26,8 @@ class PairPrinter:
 		parser.add_argument("-w", help="Write to file. Enter two file names separated by a comma when writing in moses format \
 							(e.g. -w moses.src,moses.trg). Otherwise enter one file name.", default=-1)
 		parser.add_argument("-wm", help="Set writing mode (normal, moses, tmx, links)", default="normal")
-		parser.add_argument("-f", help="Fast parsing. Faster than normal parsing, but requires the sentence ids in \
-							alignment files to be in sequence.", action="store_true")
+		parser.add_argument("-f", help="Fast parsing. Faster than normal parsing, if you print a small part of the whole corpus, \
+							but requires the sentence ids in alignment files to be in sequence.", action="store_true")
 		parser.add_argument("-rd", help="Change root directory (default=/proj/nlpl/data/OPUS/)", default="/proj/nlpl/data/OPUS/")
 		parser.add_argument("-af", help="Use given alignment file", default=-1)
 		parser.add_argument("-cm", help="Change moses delimiter (default=tab)", default="\t")

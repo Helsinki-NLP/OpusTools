@@ -76,7 +76,7 @@ class SentenceParser:
 class OpusCat:
 
 	def __init__(self):
-		self.parser = argparse.ArgumentParser(prog="opus_cat", description="Read a document from OPUS and print to STDOUT")
+		self.parser = argparse.ArgumentParser(prog="python3 opus_cat.py", description="Read a document from OPUS and print to STDOUT")
 
 		self.parser.add_argument("-d", help="Corpus name", required=True)
 		self.parser.add_argument("-l", help="Language", required=True)
