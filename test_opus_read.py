@@ -1,17 +1,17 @@
 import unittest
 import io
 import sys
-import opus_read
+from opustools_pkg import OpusRead
 import xml.parsers.expat
 
 class TestOpusRead(unittest.TestCase):
 
 	@classmethod
 	def setUpClass(self):
-		self.opr = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi"])
+		self.opr = OpusRead(["-d", "Books", "-s", "en", "-t", "fi"])
 		self.opr.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
 											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
-		self.fastopr = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-f"])
+		self.fastopr = OpusRead(["-d", "Books", "-s", "en", "-t", "fi", "-f"])
 		self.fastopr.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
 											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
 
@@ -59,7 +59,7 @@ class TestOpusRead(unittest.TestCase):
 		old_stdout = sys.stdout
 		printout = io.StringIO()
 		sys.stdout = printout
-		oprinter = opus_read.PairPrinter(arguments)
+		oprinter = OpusRead(arguments)
 		oprinter.printPairs()
 		oprinter.par.closeFiles()
 		sys.stdout = old_stdout
@@ -88,12 +88,12 @@ class TestOpusRead(unittest.TestCase):
 														'(src)="s11.1">" Excellent ! "')
 
 	def test_ExhaustiveSentenceParser_readSentence_annotations(self):
-		opr = opus_read.PairPrinter(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa"])
+		opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa"])
 		opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
 											 "toDoc": "fi/ep-00-01-17.xml.gz"})
 		self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please|NNP|please rise|NN|rise ,|,|,""" + \
 		""" then|RB|then ,|,|, for|IN|for this|DT|this minute|NN|minute '|POS|' s|NNS|S silence|NN|silence .|.|.""")
-		opr = opus_read.PairPrinter(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@"])
+		opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@"])
 		opr.par.closeFiles()
 		opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
 											 "toDoc": "fi/ep-00-01-17.xml.gz"})
@@ -116,7 +116,7 @@ class TestOpusRead(unittest.TestCase):
 		""" sauvalta . " ' M.R.C.S.</seg></tuv>\n\t\t</tu>""")
 	
 	def test_ExhaustiveSentenceParser_readSentence_raw(self):
-		rawprint = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw"])
+		rawprint = OpusRead(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw"])
 		rawprint.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
 											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
 		self.assertEqual(rawprint.par.sPar.readSentence(["s5.2"]), '(src)="s5.2">It was a fine, thick piece of wood,' + \
@@ -133,7 +133,7 @@ class TestOpusRead(unittest.TestCase):
 															'(src)="s11.1">" Excellent ! "')
 
 	def test_SentenceParser_readSentence_annotations(self):
-		opr = opus_read.PairPrinter(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-f"])
+		opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-f"])
 		opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
 											 "toDoc": "fi/ep-00-01-17.xml.gz"})
 		self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please|NNP|please rise|NN|rise ,|,|,""" + \
@@ -141,7 +141,7 @@ class TestOpusRead(unittest.TestCase):
 		opr.par.closeFiles()
 
 	def test_SentenceParser_readSentence_annotations_change_delimiter(self):
-		opr = opus_read.PairPrinter(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@", "-f"])
+		opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@", "-f"])
 		opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
 											 "toDoc": "fi/ep-00-01-17.xml.gz"})
 		self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please@NNP@please rise@NN@rise ,@,@,""" + \
@@ -164,7 +164,7 @@ class TestOpusRead(unittest.TestCase):
 		""" . "</seg></tuv>\n\t\t</tu>""")
 	
 	def test_SentenceParser_readSentence_raw(self):
-		fastprinter = opus_read.PairPrinter(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw", "-f"])
+		fastprinter = OpusRead(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw", "-f"])
 		fastprinter.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
 											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
 		self.assertEqual(fastprinter.par.sPar.readSentence(["s5.2"]), '(src)="s5.2">It was a fine, thick piece of wood,' + \
@@ -315,14 +315,14 @@ class TestOpusRead(unittest.TestCase):
 													'================================\n', ''))
 
 	def test_normal_xml_write(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result"]).printPairs()
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '\n# en_GB/text/schart/main0000.xml.gz\n# fr/text/schart/main0000.xml.gz\n\n' + \
 			'================================\n(src)="stit.1">Charts in $[ officename ]\n(trg)="stit.1">Diagrammes dans' + \
 			' $[officename ]\n================================\n') 
 
 	def test_normal_xml_write_fast(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-f"]).printPairs()
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-f"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '\n# en_GB/text/schart/main0000.xml.gz\n# fr/text/schart/main0000.xml.gz\n\n' + \
 			'================================\n(src)="stit.1">Charts in $[ officename ]\n(trg)="stit.1">Diagrammes dans' + \
@@ -341,7 +341,7 @@ class TestOpusRead(unittest.TestCase):
 		' dans $[officename ]\n================================\n')
 
 	def test_normal_raw_write(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-p",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-p",
 								"raw"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '\n# en_GB/text/schart/main0000.xml.gz\n# fr/text/schart/main0000.xml.gz\n\n' + \
@@ -349,7 +349,7 @@ class TestOpusRead(unittest.TestCase):
 			' dans $[officename]\n================================\n')
 
 	def test_normal_raw_write_fast(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-p",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-p",
 								"raw", "-f"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '\n# en_GB/text/schart/main0000.xml.gz\n# fr/text/schart/main0000.xml.gz\n\n' + \
@@ -369,7 +369,7 @@ class TestOpusRead(unittest.TestCase):
 		' dans $[officename]\n================================\n')
 
 	def test_normal_parsed_write(self):
-		opus_read.PairPrinter(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-w",
+		OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-w",
 								"test_result"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
@@ -377,7 +377,7 @@ class TestOpusRead(unittest.TestCase):
 			'\n================================\n')
 
 	def test_normal_parsed_write_fast(self):
-		opus_read.PairPrinter(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-w",
+		OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-w",
 								"test_result", "-f"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
@@ -397,7 +397,7 @@ class TestOpusRead(unittest.TestCase):
 			'\n================================\n')
 
 	def test_tmx_xml_write(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
 								"tmx"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n' + \
@@ -407,7 +407,7 @@ class TestOpusRead(unittest.TestCase):
 			'\n</tmx>')
 
 	def test_tmx_xml_write_fast(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
 								"tmx", "-f"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n' + \
@@ -433,7 +433,7 @@ class TestOpusRead(unittest.TestCase):
 			'\n</tmx>\n')
 
 	def test_tmx_raw_write(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
 								"tmx", "-p", "raw"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n' + \
@@ -443,7 +443,7 @@ class TestOpusRead(unittest.TestCase):
 			'\n</tmx>')
 	
 	def test_tmx_raw_write_fast(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
 								"tmx", "-p", "raw", "-f"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n' + \
@@ -470,7 +470,7 @@ class TestOpusRead(unittest.TestCase):
 			'\n</tmx>\n')
 
 	def test_tmx_parsed_write(self):
-		opus_read.PairPrinter(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test_result", "-wm",
+		OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test_result", "-wm",
 								"tmx", "-p", "parsed", "-pa"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n<header srclang="en"' + \
@@ -480,7 +480,7 @@ class TestOpusRead(unittest.TestCase):
 		'</body>\n</tmx>')
 
 	def test_tmx_parsed_write_fast(self):
-		opus_read.PairPrinter(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test_result", "-wm",
+		OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test_result", "-wm",
 								"tmx", "-p", "parsed", "-pa", "-f"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n<header srclang="en"' + \
@@ -507,7 +507,7 @@ class TestOpusRead(unittest.TestCase):
 		'</tmx>\n')
 
 	def test_moses_xml_write(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test.src,test.trg", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test.src,test.trg", "-wm",
 								"moses"]).printPairs()
 		with open("test.src", "r") as f:
 			self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
@@ -515,7 +515,7 @@ class TestOpusRead(unittest.TestCase):
 			self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
 
 	def test_moses_xml_write_fast(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test.src,test.trg", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test.src,test.trg", "-wm",
 								"moses", "-f"]).printPairs()
 		with open("test.src", "r") as f:
 			self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
@@ -531,7 +531,7 @@ class TestOpusRead(unittest.TestCase):
 		self.assertEqual(var, 'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n')
 	
 	def test_moses_raw_write(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test.src,test.trg", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test.src,test.trg", "-wm",
 								"moses", "-p", "raw"]).printPairs()
 		with open("test.src", "r") as f:
 			self.assertEqual(f.read(), 'Charts in $[officename]\n')
@@ -539,7 +539,7 @@ class TestOpusRead(unittest.TestCase):
 			self.assertEqual(f.read(), 'Diagrammes dans $[officename]\n')
 
 	def test_moses_raw_write_fast(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test.src,test.trg", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test.src,test.trg", "-wm",
 								"moses", "-p", "raw", "-f"]).printPairs()
 		with open("test.src", "r") as f:
 			self.assertEqual(f.read(), 'Charts in $[officename]\n')
@@ -556,7 +556,7 @@ class TestOpusRead(unittest.TestCase):
 		self.assertEqual(var, 'Charts in $[officename]\tDiagrammes dans $[officename]\n')
 
 	def test_moses_parsed_write(self):
-		opus_read.PairPrinter(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test.src,test.trg", "-wm",
+		OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test.src,test.trg", "-wm",
 								"moses", "-p", "parsed", "-pa"]).printPairs()
 		with open("test.src", "r") as f:
 			self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
@@ -564,7 +564,7 @@ class TestOpusRead(unittest.TestCase):
 			self.assertEqual(f.read(), 'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
 
 	def test_moses_parsed_write_fast(self):
-		opus_read.PairPrinter(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test.src,test.trg", "-wm",
+		OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test.src,test.trg", "-wm",
 								"moses", "-p", "parsed", "-pa", "-f"]).printPairs()
 		with open("test.src", "r") as f:
 			self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
@@ -581,7 +581,7 @@ class TestOpusRead(unittest.TestCase):
 		self.assertEqual(var, 'Treaty|NOUN|Number=Sing|treaty\tTratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
 
 	def test_links_write(self):
-		opus_read.PairPrinter(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
+		OpusRead(["-d", "OpenOffice", "-s", "en_GB", "-t", "fr", "-m", "1", "-w", "test_result", "-wm",
 								"links"]).printPairs()
 		with open("test_result", "r") as f:
 			self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD' + \

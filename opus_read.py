@@ -1,14 +1,14 @@
 import argparse
 import gzip
 
-from parse.alignment_parser import AlignmentParser
-from parse.moses_read import MosesRead
+from .parse.alignment_parser import AlignmentParser
+from .parse.moses_read import MosesRead
 
 
-class PairPrinter:
+class OpusRead:
 
 	def __init__(self, arguments):
-		parser = argparse.ArgumentParser(prog="python3 opus_read.py", description="Read sentence alignment in XCES align")
+		parser = argparse.ArgumentParser(prog="python3 opus_read.py", description="Read sentence alignment in XCES align format")
 
 		parser.add_argument("-d", help="Corpus name", required=True)
 		parser.add_argument("-s", help="Source language", required=True)
@@ -204,9 +204,3 @@ class PairPrinter:
 
 			mread.closeFiles()
 
-if __name__ == "__main__":
-	pp = PairPrinter([])
-	if pp.args.p == "moses":
-		pp.printPairsMoses()
-	else:
-		pp.printPairs()

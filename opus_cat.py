@@ -75,15 +75,18 @@ class SentenceParser:
 
 class OpusCat:
 
-	def __init__(self):
-		self.parser = argparse.ArgumentParser(prog="python3 opus_cat.py", description="Read a document from OPUS and print to STDOUT")
+	def __init__(self, arguments):
+		parser = argparse.ArgumentParser(prog="python3 opus_cat.py", description="Read a document from OPUS and print to STDOUT")
 
-		self.parser.add_argument("-d", help="Corpus name", required=True)
-		self.parser.add_argument("-l", help="Language", required=True)
-		self.parser.add_argument("-i", help="Print without ids", action="store_true")
-		self.parser.add_argument("-m", help="Maximum number of sentences", default="all")
+		parser.add_argument("-d", help="Corpus name", required=True)
+		parser.add_argument("-l", help="Language", required=True)
+		parser.add_argument("-i", help="Print without ids", action="store_true")
+		parser.add_argument("-m", help="Maximum number of sentences", default="all")
 
-		self.args = self.parser.parse_args()
+		if len(arguments) == 0:
+			self.args = parser.parse_args()
+		else:
+			self.args = parser.parse_args(arguments)
 
 		self.lzip = zipfile.ZipFile("/proj/nlpl/data/OPUS/" + self.args.d + "/latest/xml/" + self.args.l + ".zip" , "r")
 
@@ -106,6 +109,3 @@ class OpusCat:
 			if self.maximum == 0:
 				break
 
-if __name__ == "__main__":
-	oc = OpusCat()
-	oc.printSentences()

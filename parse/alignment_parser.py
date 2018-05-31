@@ -2,8 +2,8 @@ import zipfile
 import xml.parsers.expat
 import re
 
-from parse.sentence_parser import SentenceParser
-from parse.exhaustive_sentence_parser import ExhaustiveSentenceParser
+from .sentence_parser import SentenceParser
+from .exhaustive_sentence_parser import ExhaustiveSentenceParser
 
 
 class AlignmentParser:
