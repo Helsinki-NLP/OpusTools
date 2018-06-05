@@ -90,14 +90,17 @@ class OpusCat:
 
 		self.lzip = zipfile.ZipFile("/proj/nlpl/data/OPUS/" + self.args.d + "/latest/xml/" + self.args.l + ".zip" , "r")
 
-		self.maximum = int(self.args.m)
+		if self.args.m == "all":
+			self.maximum = -1
+		else:
+			self.maximum = int(self.args.m)
 
 	def printSentences(self):
 		for n in self.lzip.namelist():
 			if n[-4:] == ".xml":
 				with self.lzip.open(n, "r") as f:
 					spar = SentenceParser(f, self.args)
-					print("\n#"+n+"\n")
+					print("\n# "+n+"\n")
 					while True:
 						sent = spar.readSentence()
 						if sent != "":

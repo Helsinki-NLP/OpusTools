@@ -1,7 +1,7 @@
 import unittest
 import io
 import sys
-from opustools_pkg import OpusRead
+from opustools_pkg import OpusRead, OpusCat
 import xml.parsers.expat
 
 class TestOpusRead(unittest.TestCase):
@@ -14,6 +14,7 @@ class TestOpusRead(unittest.TestCase):
 		self.fastopr = OpusRead(["-d", "Books", "-s", "en", "-t", "fi", "-f"])
 		self.fastopr.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
 											 "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
+		self.maxDiff= None
 
 	@classmethod
 	def tearDownClass(self):
@@ -64,7 +65,7 @@ class TestOpusRead(unittest.TestCase):
 		oprinter.par.closeFiles()
 		sys.stdout = old_stdout
 		return printout.getvalue()
-
+	
 	def test_ExhaustiveSentenceParser_initializing(self):
 		self.assertEqual(len(self.opr.par.sPar.sentences), 3831)
 		self.assertEqual(len(self.opr.par.tPar.sentences), 3757)
@@ -596,5 +597,72 @@ class TestOpusRead(unittest.TestCase):
 			' fromDoc="en_GB/text/schart/main0000.xml.gz">\n<link certainty="3.118182" xtargets="stit.1;stit.1" id="SL1" />' + \
 			'\n </linkGrp>\n</cesAlign>\n')
 
+	def test_iteration_stops_at_the_end_of_the_document_even_if_max_is_not_filled(self):
+		var = self.pairPrinterToVariable(["-d", "Books", "-s", "en", "-t", "fi", "-S", "5", "-T", "2", "-m", "5"])
+		self.assertEqual(var,'\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n# fi/Doyle_Arthur_Conan-Hound_of_the_' + \
+						'Baskervilles.xml.gz\n\n================================\n(src)="s942.0">" So I think .\n(src)="s9' + \
+						'42.1">But if we can only trace L. L. it should clear up the whole business .\n(src)="s942.2">We h' + \
+						'ave gained that much .\n(src)="s942.3">We know that there is someone who has the facts if we can ' + \
+						'only find her .\n(src)="s942.4">What do you think we should do ? "\n(trg)="s942.0">" Niin minäkin' + \
+						' ajattelen , mutta jos voisitte saada tuon L. L : n käsiinne , niin olisi paljon voitettu , ja onh' + \
+						'an edullista jo tietääkin , että on olemassa joku nainen , joka tuntee asian oikean laidan , jos ' + \
+						'vaan voimme saada hänet ilmi .\n(trg)="s942.1">Mitä arvelette nyt olevan tekeminen ? "\n=========' + \
+						'=======================\n')
+
+	def test_use_given_sentence_alignment_file(self):
+		OpusRead(["-d", "Books", "-s", "en", "-t", "fi", "-S", "5", "-T", "2", "-wm", "links", "-w", "testlinks"]).printPairs()
+		var = self.pairPrinterToVariable(["-d", "Books", "-s", "en", "-t", "fi", "-af", "testlinks"])
+		self.assertEqual(var,'\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n# fi/Doyle_Arthur_Conan-Hound_of_the_' + \
+						'Baskervilles.xml.gz\n\n================================\n(src)="s942.0">" So I think .\n(src)="s9' + \
+						'42.1">But if we can only trace L. L. it should clear up the whole business .\n(src)="s942.2">We h' + \
+						'ave gained that much .\n(src)="s942.3">We know that there is someone who has the facts if we can ' + \
+						'only find her .\n(src)="s942.4">What do you think we should do ? "\n(trg)="s942.0">" Niin minäkin' + \
+						' ajattelen , mutta jos voisitte saada tuon L. L : n käsiinne , niin olisi paljon voitettu , ja onh' + \
+						'an edullista jo tietääkin , että on olemassa joku nainen , joka tuntee asian oikean laidan , jos ' + \
+						'vaan voimme saada hänet ilmi .\n(trg)="s942.1">Mitä arvelette nyt olevan tekeminen ? "\n=========' + \
+						'=======================\n')
+		
+	
+	def test_checks_first_whether_documents_are_in_path(self):
+		with open("testlinks", "w") as f:
+			f.write('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">'+ \
+			'\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_en.gz" toDoc="test_fi.gz" >\n<link xtargets="s1;s1"/>\n </'+ \
+			'linkGrp>+\n</cesAlign>')
+		with open("test_en", "w") as f:
+			f.write('<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2' + \
+			'</w>\n</s>\n </body>\n</text>')
+		with open("test_fi", "w") as f:
+			f.write('<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2' + \
+			'</w>\n</s>\n </body>\n</text>')
+		var = self.pairPrinterToVariable(["-d", "Books", "-s", "en", "-t", "fi", "-af", "testlinks"])
+		self.assertEqual(var, '\n# test_en.gz\n# test_fi.gz\n\n================================\n(src)="s1">test_en1 test_en2\n' + \
+						'(trg)="s1">test_fi1 test_fi2\n================================\n')
+
+class TestOpusCat(unittest.TestCase):
+
+	def printSentencesToVariable(self, arguments):
+		old_stdout = sys.stdout
+		printout = io.StringIO()
+		sys.stdout = printout
+		oprinter = OpusCat(arguments)
+		oprinter.printSentences()
+		sys.stdout = old_stdout
+		return printout.getvalue()
+
+	def test_printing_sentences(self):
+		var  = self.printSentencesToVariable(["-d", "Books", "-l", "fi",])
+		self.assertEqual(var[-145:], '("s1493.9")>Saanko sitten pyytää sinua laittautumaan valmiiksi puolessa tunnissa , niin'+ \
+		' menemme samalla tiellä Marciniin syömään päivällistä ? "\n')
+
+	def test_printing_sentences_with_limit(self):
+		var = self.printSentencesToVariable(["-d", "Books", "-l", "fi", "-m", "1"])
+		self.assertEqual(var, '\n# Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml\n\n("s1")>Source :' + \
+					' Project Gutenberg\n')
+
+	def test_printing_sentences_without_ids(self):
+		var = self.printSentencesToVariable(["-d", "Books", "-l", "fi", "-m", "1", "-i"])
+		self.assertEqual(var, '\n# Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml\n\nSource :' + \
+					' Project Gutenberg\n')
+                
 if __name__ == "__main__":
 	unittest.main()
