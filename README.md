@@ -6,6 +6,21 @@ Tools for accessing and processing OPUS data.
 * opus-read: read parallel data sets and convert to different output formats
 * opus-cat: extract given OPUS document from release data
 * opus-api: web-service that provides information about OPUS data and download URLs
+* opus-get: download parallel corpora
+* opus-find: search for resources
+
+## opus-get
+
+* download data files from OPUS (ObjectStorage)
+* allow to download several corpus files (from different corpora) - Do we need to restrict it somehow?
+* store statistics about downloads
+* command-line options
+  * -s <source-lang-ID> (required)
+  * -t <target-lang-ID> (optional?)
+  * -c <corpus> (optional)
+  * -f <data format> (optional, default = tokenized xml + sentalign-xml)
+ 
+
 
 ## opus-read related task- and wish-list:
 
