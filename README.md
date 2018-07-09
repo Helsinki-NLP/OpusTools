@@ -6,6 +6,33 @@ Tools for accessing and processing OPUS data.
 * opus-read: read parallel data sets and convert to different output formats
 * opus-cat: extract given OPUS document from release data
 * opus-api: web-service that provides information about OPUS data and download URLs
+* opus-get: download parallel corpora
+* opus-register: tool for updating info about OPUS resources (resource registry DB)
+
+## opus-get
+
+* download data files from OPUS (ObjectStorage)
+* requires some sort of database with info about available OPUS resources (resource registry DB)
+* allow to download several corpus files (from different corpora) - Do we need to restrict it somehow?
+* store statistics about downloads
+* open question: How do we handle regional language variants?
+* command-line options
+  * -s <source-lang-ID> (required)
+  * -t <target-lang-ID> (optional?)
+  * -c <corpus> (optional)
+  * -v <version> (optional, default = latest found in registry)
+  * -f <data format> (optional, default = tokenized xml + sentalign-xml)
+  * -o <lang-ID> (optional, original language - requires meta-data!)
+  * -l (optional - list resources only, no download)
+  * -d <destination-dir> (optional)
+
+## opus-register
+
+* maintain resource registery in some database
+* add, delete, modify entries
+* info about source/target language, size (translation units, nr of sentences, tokens), original language (if available, default = unknown), versions (which one is the latest)
+* import from .info files
+* should be able to query from outside (for opus-get), update only from inside with password ...
 
 ## opus-read related task- and wish-list:
 
