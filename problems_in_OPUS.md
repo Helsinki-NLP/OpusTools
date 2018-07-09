@@ -2,8 +2,7 @@
 
 ## Books
 
-* `/proj/nlpl/data/OPUS/Books/latest/xml/en-es.xml.gz` contains line `<link xtargets="s1241;" id="SL1241"/>` under `<linkGrp targType="s" fromDoc="en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.x
-ml.gz" toDoc="es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz" >`
+* `/proj/nlpl/data/OPUS/Books/latest/xml/en-es.xml.gz` contains line `<link xtargets="s1241;" id="SL1241"/>` under `<linkGrp targType="s" fromDoc="en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz" toDoc="es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz" >`
 * Sentence with id `s1241` does not exist in file `Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml` in `/proj/nlpl/data/OPUS/Books/latest/xml/en.zip`
 
 ## GNOME
