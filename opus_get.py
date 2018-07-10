@@ -46,26 +46,54 @@ class OpusGet:
 
         return data
 
+    def add_data_with_aligment(self, tempdata, retdata):
+        for i in tempdata:
+            if i["preprocessing"] == "xml" and i["source"] == self.args.s and i["target"] == self.args.t:
+                retdata += tempdata
+                break
+        return retdata
+            
+    def remove_data_with_no_alignment(self, data):
+        retdata = []
+        tempdata = []
+        prev_directory = ""
+        
+        for c in data["corpora"]:
+            directory = "/{0}/{1}".format(c["corpus"], c["version"])
+            if prev_directory != "" and prev_directory!=directory:
+                retdata = self.add_data_with_aligment(tempdata, retdata)
+                tempdata = []
+            tempdata.append(c)
+            prev_directory = directory
+
+        retdata = self.add_data_with_aligment(tempdata, retdata)
+        return retdata
+            
     def print_results(self):
         file_n = 0
         total_size = 0
         
         data = self.get_response(self.url)
-        
-        for c in data["corpora"]:
+
+        if self.args.t:
+            corpora = self.remove_data_with_no_alignment(data)
+        else:
+            corpora = data["corpora"]
+
+        for c in corpora:
             file_n += 1
             total_size += c["size"]
 
         total_size = self.format_size(total_size)
 
         if not self.args.l:
-            answer = input("Are you sure you want to download " + str(file_n) + " file(s) with total size of " + total_size + " ? (y/n) ")
+            answer = input("Downloading " + str(file_n) + " file(s) with total size of " + total_size + ". Continue? (y/n) ")
 
             if answer == "y":
-                for c in data["corpora"]:
+                for c in corpora:
                     print("{0:>7} {1:s}".format(self.format_size(c["size"]), c["url"]))
         else:
-            for c in data["corpora"]:
+            for c in corpora:
                 print("{0:>7} {1:s}".format(self.format_size(c["size"]), c["url"]))
             print("\n{0:>7} {1:s}".format(total_size, "total size"))
 
