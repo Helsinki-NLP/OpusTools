@@ -36,6 +36,9 @@ Tools for accessing and processing OPUS data.
 
 ## opus-read related task- and wish-list:
 
+* **NEW** opus-read and opus-cat download necessary files from OPUS if they don't find the source files they need for reading certain corpus data (requires access to OPUS registery DB via the online API)
+* **NEW** opus-cat can run recursively through an entire corpus for a selected language and reads all files (basically creates the monolingual files from a corpus, tokenized or untokenized)
+
 * a python library of data access functions
   * status: to do
   * reader and writer classes for data in different formats
