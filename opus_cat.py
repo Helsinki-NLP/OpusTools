@@ -30,7 +30,8 @@ class SentenceParser:
             self.sid = attrs["id"]
 
     def char_data(self, data):
-        self.chara = repr(data)
+        if self.sfound:
+            self.chara += data
 
     def end_element(self, name):
         self.end = name
@@ -48,9 +49,13 @@ class SentenceParser:
             self.sfound = False
             self.efound = False
             stop = -1
+            if newSentence == "":
+                newSentence = self.chara
+                self.chara = ""
         if self.sfound:
             if self.start == "w" and self.end == "w":
-                newSentence = sentence + " " + self.chara[1:-1]
+                newSentence = sentence + " " + self.chara
+                self.chara = ""
         return newSentence, stop
 
     def readSentence(self):
@@ -63,7 +68,7 @@ class SentenceParser:
             if stop == -1 or self.stopit:
                 break
 
-        sentence = sentence[1:]
+        sentence = sentence.strip()
 
         if sentence == "":
             return ""
@@ -97,6 +102,7 @@ class OpusCat:
             self.maximum = int(self.args.m)
 
     def printSentences(self):
+        xml_break = False
         for n in self.lzip.namelist():
             if n[-4:] == ".xml":
                 with self.lzip.open(n, "r") as f:
@@ -114,11 +120,15 @@ class OpusCat:
                     else:
                         for line in f:
                             line = line.decode("utf-8")
-                            if "<s id=" in line:
+                            if "<s id=" in line or "<s hun=" in line:
                                 self.maximum -= 1
                                 if self.maximum == -1:
+                                    xml_break = True
                                     break
-                            print(line, end="")
+                            print(line, end="")                            
+                                
+                if xml_break:
+                    break
                                 
             if self.maximum == 0:
                 break
