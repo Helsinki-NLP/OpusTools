@@ -38,6 +38,8 @@ Tools for accessing and processing OPUS data.
 
 * **NEW** opus-read and opus-cat download necessary files from OPUS if they don't find the source files they need for reading certain corpus data (requires access to OPUS registery DB via the online API)
 * **NEW** opus-cat can run recursively through an entire corpus for a selected language and reads all files (basically creates the monolingual files from a corpus, tokenized or untokenized)
+* **NEW** new filter for opus_read and opus_cat: exclude/include files that match a certain file path/name pattern (regex).
+* **NEW** filename filter as above but with a given list of file names to be read from a file (exclude or include)
 
 * a python library of data access functions
   * status: to do
