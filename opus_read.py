@@ -8,7 +8,7 @@ from .parse.moses_read import MosesRead
 class OpusRead:
 
 	def __init__(self, arguments):
-		parser = argparse.ArgumentParser(prog="python3 opus_read.py", description="Read sentence alignment in XCES align format")
+		parser = argparse.ArgumentParser(prog="opus_read", description="Read sentence alignment in XCES align format")
 
 		parser.add_argument("-d", help="Corpus name", required=True)
 		parser.add_argument("-s", help="Source language", required=True)

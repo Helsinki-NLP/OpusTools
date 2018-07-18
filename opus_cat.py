@@ -37,7 +37,7 @@ class SentenceParser:
         self.end = name
         if name == "s":
             self.efound = True
-        if name == "text":
+        if name in ["document", "text"]:
             self.stopit = True
 
     def parseLine(self, line):
@@ -81,13 +81,14 @@ class SentenceParser:
 class OpusCat:
 
     def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog="python3 opus_cat.py", description="Read a document from OPUS and print to STDOUT")
+        parser = argparse.ArgumentParser(prog="opus_cat", description="Read a document from OPUS and print to STDOUT")
 
         parser.add_argument("-d", help="Corpus name", required=True)
         parser.add_argument("-l", help="Language", required=True)
         parser.add_argument("-i", help="Print without ids when using -p", action="store_true")
         parser.add_argument("-m", help="Maximum number of sentences", default="all")
         parser.add_argument("-p", help="Print in plain txt", action="store_true")
+        parser.add_argument("-f", help="File name (if not given, prints all files)")
 
         if len(arguments) == 0:
             self.args = parser.parse_args()
@@ -101,36 +102,44 @@ class OpusCat:
         else:
             self.maximum = int(self.args.m)
 
-    def printSentences(self):
+    def printFile(self, f, n):
         xml_break = False
-        for n in self.lzip.namelist():
-            if n[-4:] == ".xml":
-                with self.lzip.open(n, "r") as f:
-                    if self.args.p:
-                        spar = SentenceParser(f, self.args)
-                        print("\n# "+n+"\n")
-                        while True:
-                            sent = spar.readSentence()
-                            if sent != "":
-                                print(sent)
-                                self.maximum -= 1
-                            if spar.stopit or self.maximum == 0:
-                                break
-                        spar.document.close()
-                    else:
-                        for line in f:
-                            line = line.decode("utf-8")
-                            if "<s id=" in line or "<s hun=" in line:
-                                self.maximum -= 1
-                                if self.maximum == -1:
-                                    xml_break = True
-                                    break
-                            print(line, end="")                            
-                                
-                if xml_break:
+        if self.args.p:
+            spar = SentenceParser(f, self.args)
+            print("\n# "+n+"\n")
+            while True:
+                sent = spar.readSentence()
+                if sent != "":
+                    print(sent)
+                    self.maximum -= 1
+                if spar.stopit or self.maximum == 0:
                     break
-                                
-            if self.maximum == 0:
-                break
+            spar.document.close()
+        else:
+            for line in f:
+                line = line.decode("utf-8")
+                if "<s id=" in line or "<s hun=" in line:
+                    self.maximum -= 1
+                    if self.maximum == -1:
+                        xml_break = True
+                        break
+                print(line, end="")
+        return xml_break
+
+            
+    def printSentences(self):
+        if self.args.f:
+            with self.lzip.open(self.args.f, "r") as f:
+                self.printFile(f, self.args.f)
+        else:
+            for n in self.lzip.namelist():
+                if n[-4:] == ".xml":
+                    with self.lzip.open(n, "r") as f:
+                        xml_break = self.printFile(f, n)
+                    if xml_break:
+                        break
+
+                if self.maximum == 0:
+                    break
 
 
