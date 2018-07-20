@@ -23,11 +23,25 @@ class SentenceParser:
         self.sfound = False
         self.efound = False
 
+        self.annotations = self.args.pa
+        if self.annotations:
+            self.anno_attrs = self.args.sa.split(",")
+
+        self.posses = []
+        self.delimiter = self.args.ca
+
     def start_element(self, name, attrs):
         self.start = name
         if "id" in attrs.keys() and name == "s":
             self.sfound = True
             self.sid = attrs["id"]
+        if name == "w" and self.annotations:
+            if self.anno_attrs[0] == "all_attrs":
+                for a in attrs.keys():
+                    self.posses.append(attrs[a])
+            for a in self.anno_attrs:
+                if a in attrs.keys():
+                    self.posses.append(attrs[a])
 
     def char_data(self, data):
         if self.sfound:
@@ -56,6 +70,10 @@ class SentenceParser:
             if self.start == "w" and self.end == "w":
                 newSentence = sentence + " " + self.chara
                 self.chara = ""
+                if self.annotations:
+                    for a in self.posses:
+                        newSentence += self.delimiter + a
+                    self.posses = []
         return newSentence, stop
 
     def readSentence(self):
@@ -89,6 +107,9 @@ class OpusCat:
         parser.add_argument("-m", help="Maximum number of sentences", default="all")
         parser.add_argument("-p", help="Print in plain txt", action="store_true")
         parser.add_argument("-f", help="File name (if not given, prints all files)")
+        parser.add_argument("-pa", help="Print annotations, if they exist", action="store_true")
+        parser.add_argument("-sa", help="Set sentence annotation attributes to be printed deparated by commas, e.g. -sa pos,lem. To print all available attributes use -sa all_attrs (default=pos,lem)", default="pos,lem")
+        parser.add_argument("-ca", help="Change annotation delimiter (default=|)", default="|")
 
         if len(arguments) == 0:
             self.args = parser.parse_args()

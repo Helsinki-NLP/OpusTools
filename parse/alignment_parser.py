@@ -71,12 +71,12 @@ class AlignmentParser:
 				pre = "rawos"
 
 			if self.args.f:
-				self.sPar = SentenceParser(sourcefile, "src", pre, self.args.wm, self.args.s, self.args.pa, self.args.ca)
-				self.tPar = SentenceParser(targetfile, "trg", pre, self.args.wm, self.args.t, self.args.pa, self.args.ca)
+				self.sPar = SentenceParser(sourcefile, "src", pre, self.args.wm, self.args.s, self.args.pa, self.args.sa, self.args.ca)
+				self.tPar = SentenceParser(targetfile, "trg", pre, self.args.wm, self.args.t, self.args.pa, self.args.ta, self.args.ca)
 			else:
-				self.sPar = ExhaustiveSentenceParser(sourcefile, pre, "src", self.args.wm, self.args.s, self.args.pa, self.args.ca)
+				self.sPar = ExhaustiveSentenceParser(sourcefile, pre, "src", self.args.wm, self.args.s, self.args.pa, self.args.sa, self.args.ca)
 				self.sPar.storeSentences()
-				self.tPar = ExhaustiveSentenceParser(targetfile, pre, "trg", self.args.wm, self.args.t, self.args.pa, self.args.ca)
+				self.tPar = ExhaustiveSentenceParser(targetfile, pre, "trg", self.args.wm, self.args.t, self.args.pa, self.args.ta, self.args.ca)
 				self.tPar.storeSentences()				
 
 	def processLink(self, attrs):

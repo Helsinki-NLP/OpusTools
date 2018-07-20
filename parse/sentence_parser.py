@@ -2,11 +2,13 @@ import xml.parsers.expat
 
 class SentenceParser:
     
-    def __init__(self, document, direction, preprocessing, wmode, language, annotations, delimiter):
+    def __init__(self, document, direction, preprocessing, wmode, language, annotations, anno_attrs, delimiter):
         self.document = document
         self.direction = direction
         self.pre = preprocessing
         self.annotations = annotations
+        if self.annotations:
+            self.anno_attrs = anno_attrs.split(",")
         self.delimiter = delimiter
 
         self.start = ""
@@ -14,8 +16,7 @@ class SentenceParser:
         self.chara = ""
         self.end = ""
 
-        self.lemma = ""
-        self.pos = ""
+        self.posses = []
         
         self.parser = xml.parsers.expat.ParserCreate()
         self.parser.StartElementHandler = self.start_element
@@ -36,19 +37,13 @@ class SentenceParser:
         if "id" in attrs.keys() and name == "s":
             self.sfound = True
             self.sid = attrs["id"]
-        if name == "w":
-            if self.pre == "parsed":
-                if "lemma" in attrs.keys():
-                    self.lemma = attrs["lemma"]
-                if "upos" in attrs.keys():
-                    self.pos = attrs["upos"]
-                if "feats" in attrs.keys():
-                    self.pos = self.pos + self.delimiter + attrs["feats"].replace("|", self.delimiter)
-            else:
-                if "lem" in attrs.keys():
-                    self.lemma = attrs["lem"]
-                if "pos" in attrs.keys():
-                    self.pos = attrs["pos"]
+        if name == "w" and self.annotations:
+            if self.anno_attrs[0] == "all_attrs":
+                for a in attrs.keys():
+                    self.posses.append(attrs[a])
+            for a in self.anno_attrs:
+                if a in attrs.keys():
+                    self.posses.append(attrs[a])
 
     def char_data(self, data):
         if self.sfound:
@@ -75,10 +70,10 @@ class SentenceParser:
                 newSentence = sentence + " " + self.chara
                 self.chara = ""
                 if self.annotations:
-                    newSentence = newSentence + self.delimiter + self.pos + self.delimiter + self.lemma
-                    self.pos = ""
-                    self.lemma = ""
-                    self.feats = ""
+                    for a in self.posses:
+                        newSentence += self.delimiter + a
+                    self.posses = []
+
         return newSentence, stop
 
     def processRawSentenceOS(self, sentence, ids):

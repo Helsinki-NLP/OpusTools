@@ -2,13 +2,15 @@ import xml.parsers.expat
 
 class ExhaustiveSentenceParser:
 
-    def __init__(self, document, preprocessing, direction, wmode, language, annotations, delimiter):
+    def __init__(self, document, preprocessing, direction, wmode, language, annotations, anno_attrs, delimiter):
         self.document = document
         self.pre = preprocessing
         self.direction = direction
         self.wmode = wmode
         self.language = language
         self.annotations = annotations
+        if self.annotations:
+            self.anno_attrs = anno_attrs.split(",")
         self.delimiter = delimiter
 
         self.start = ""
@@ -16,8 +18,7 @@ class ExhaustiveSentenceParser:
         self.chara = ""
         self.end = ""
 
-        self.lemma = ""
-        self.pos = ""
+        self.posses = []
 
         self.sfound = False
         self.efound = False
@@ -35,20 +36,14 @@ class ExhaustiveSentenceParser:
         if name == "s" and "id" in attrs.keys():
             self.sid = attrs["id"]
             self.sfound = True
-        if name == "w":
-            if self.pre == "parsed":
-                if "lemma" in attrs.keys():
-                    self.lemma = attrs["lemma"]
-                if "upos" in attrs.keys():
-                    self.pos = attrs["upos"]
-                if "feats" in attrs.keys():
-                    self.pos = self.pos + self.delimiter + attrs["feats"].replace("|", self.delimiter)
-            else:
-                if "lem" in attrs.keys():
-                    self.lemma = attrs["lem"]
-                if "pos" in attrs.keys():
-                    self.pos = attrs["pos"]
-
+        if name == "w" and self.annotations:
+            if self.anno_attrs[0] == "all_attrs":
+                for a in attrs.keys():
+                    self.posses.append(attrs[a])
+            for a in self.anno_attrs:
+                if a in attrs.keys():
+                    self.posses.append(attrs[a])
+                    
     def char_data(self, data):
         if self.sfound:
                 self.chara += data
@@ -76,10 +71,9 @@ class ExhaustiveSentenceParser:
                         sentence = sentence + " " + self.chara
                         self.chara = ""
                         if self.annotations:
-                            sentence = sentence + self.delimiter + self.pos + self.delimiter + self.lemma
-                            self.pos = ""
-                            self.lemma = ""
-                            self.feats = ""
+                            for a in self.posses:
+                                sentence += self.delimiter + a
+                            self.posses = []
                 elif self.pre == "raw":
                     if self.sfound and self.start == "s":
                         sentence = self.chara

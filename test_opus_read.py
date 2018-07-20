@@ -134,7 +134,7 @@ class TestOpusRead(unittest.TestCase):
                                                             '(src)="s11.1">" Excellent ! "')
 
     def test_SentenceParser_readSentence_annotations(self):
-        opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-f"])
+        opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa"])
         opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
                                              "toDoc": "fi/ep-00-01-17.xml.gz"})
 
@@ -143,7 +143,7 @@ class TestOpusRead(unittest.TestCase):
         opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_annotations_change_delimiter(self):
-        opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@", "-f"])
+        opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@"])
         opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
                                              "toDoc": "fi/ep-00-01-17.xml.gz"})
         self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please@NNP@please rise@NN@rise ,@,@,""" + \
@@ -371,7 +371,7 @@ class TestOpusRead(unittest.TestCase):
         ' dans $[officename]\n================================\n')
 
     def test_normal_parsed_write(self):
-        OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-w",
+        OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma", "-w",
                                 "test_result"]).printPairs()
         with open("test_result", "r") as f:
             self.assertEqual(f.read(), '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
@@ -379,7 +379,7 @@ class TestOpusRead(unittest.TestCase):
             '\n================================\n')
 
     def test_normal_parsed_write_fast(self):
-        OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-w",
+        OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma", "-w",
                                 "test_result", "-f"]).printPairs()
         with open("test_result", "r") as f:
             self.assertEqual(f.read(), '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
@@ -387,13 +387,13 @@ class TestOpusRead(unittest.TestCase):
             '\n================================\n')
 
     def test_normal_parsed_print(self):
-        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa"])
+        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma"])
         self.assertEqual(var, '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
             '\n(src)="1">Treaty|NOUN|Number=Sing|treaty\n(trg)="1">Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado' + \
             '\n================================\n')
 
     def test_normal_parsed_print_fast(self):
-        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-f"])
+        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma", "-f"])
         self.assertEqual(var, '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
             '\n(src)="1">Treaty|NOUN|Number=Sing|treaty\n(trg)="1">Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado' + \
             '\n================================\n')
@@ -473,7 +473,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_tmx_parsed_write(self):
         OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test_result", "-wm",
-                                "tmx", "-p", "parsed", "-pa"]).printPairs()
+                                "tmx", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma"]).printPairs()
         with open("test_result", "r") as f:
             self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n<header srclang="en"' + \
         '\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t<tuv' + \
@@ -483,7 +483,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_tmx_parsed_write_fast(self):
         OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test_result", "-wm",
-                                "tmx", "-p", "parsed", "-pa", "-f"]).printPairs()
+                                "tmx", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma", "-f"]).printPairs()
         with open("test_result", "r") as f:
             self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n<header srclang="en"' + \
         '\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t<tuv' + \
@@ -492,7 +492,7 @@ class TestOpusRead(unittest.TestCase):
         '</body>\n</tmx>') 
 
     def test_tmx_parsed_print(self):
-        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-wm", "tmx", "-p", "parsed", "-pa"])
+        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-wm", "tmx", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma"])
         self.assertEqual(var, '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n<header srclang="en"' + \
         '\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t<tuv' + \
         ' xml:lang="en"><seg>Treaty|NOUN|Number=Sing|treaty</seg></tuv>\n\t\t\t<tuv' + \
@@ -500,7 +500,7 @@ class TestOpusRead(unittest.TestCase):
         '</tmx>\n')
 
     def test_tmx_parsed_print_fast(self):
-        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-wm", "tmx", "-p", "parsed", "-pa",
+        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-wm", "tmx", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma",
                                             "-f"])
         self.assertEqual(var, '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n<header srclang="en"' + \
         '\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t<tuv' + \
@@ -559,7 +559,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_moses_parsed_write(self):
         OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test.src,test.trg", "-wm",
-                                "moses", "-p", "parsed", "-pa"]).printPairs()
+                                "moses", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma"]).printPairs()
         with open("test.src", "r") as f:
             self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
         with open("test.trg", "r") as f:
@@ -567,19 +567,19 @@ class TestOpusRead(unittest.TestCase):
 
     def test_moses_parsed_write_fast(self):
         OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-w", "test.src,test.trg", "-wm",
-                                "moses", "-p", "parsed", "-pa", "-f"]).printPairs()
+                                "moses", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma", "-f"]).printPairs()
         with open("test.src", "r") as f:
             self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
         with open("test.trg", "r") as f:
             self.assertEqual(f.read(), 'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
 
     def test_moses_parsed_print(self):
-        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-wm", "moses", "-p", "parsed", "-pa"])
+        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-wm", "moses", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma"])
         self.assertEqual(var, 'Treaty|NOUN|Number=Sing|treaty\tTratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
 
     def test_moses_parsed_print_fast(self):
-        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-wm", "moses", "-p", "parsed", "-pa", 
-                                            "-f"])
+        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-wm", "moses", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma",
+                                          "-f"])
         self.assertEqual(var, 'Treaty|NOUN|Number=Sing|treaty\tTratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
 
     def test_links_write(self):
