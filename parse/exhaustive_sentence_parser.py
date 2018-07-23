@@ -38,7 +38,9 @@ class ExhaustiveSentenceParser:
             self.sfound = True
         if name == "w" and self.annotations:
             if self.anno_attrs[0] == "all_attrs":
-                for a in attrs.keys():
+                attributes = list(attrs.keys())
+                attributes.sort()
+                for a in attributes:
                     self.posses.append(attrs[a])
             for a in self.anno_attrs:
                 if a in attrs.keys():

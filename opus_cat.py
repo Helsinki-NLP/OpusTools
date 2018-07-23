@@ -37,11 +37,15 @@ class SentenceParser:
             self.sid = attrs["id"]
         if name == "w" and self.annotations:
             if self.anno_attrs[0] == "all_attrs":
-                for a in attrs.keys():
+                attributes = list(attrs.keys())
+                attributes.sort()
+                for a in attributes:
                     self.posses.append(attrs[a])
             for a in self.anno_attrs:
                 if a in attrs.keys():
                     self.posses.append(attrs[a])
+        if name == "s":
+            self.posses = []
 
     def char_data(self, data):
         if self.sfound:
@@ -63,9 +67,9 @@ class SentenceParser:
             self.sfound = False
             self.efound = False
             stop = -1
-            if newSentence == "":
-                newSentence = self.chara
-                self.chara = ""
+#            if newSentence == "":
+#                newSentence = self.chara
+#                self.chara = ""
         if self.sfound:
             if self.start == "w" and self.end == "w":
                 newSentence = sentence + " " + self.chara

@@ -89,17 +89,16 @@ class TestOpusRead(unittest.TestCase):
                                                         '(src)="s11.1">" Excellent ! "')
 
     def test_ExhaustiveSentenceParser_readSentence_annotations(self):
-        opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa"])
-        opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
-                                             "toDoc": "fi/ep-00-01-17.xml.gz"})
-        self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please|NNP|please rise|NN|rise ,|,|,""" + \
-        """ then|RB|then ,|,|, for|IN|for this|DT|this minute|NN|minute '|POS|' s|NNS|S silence|NN|silence .|.|.""")
-        opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@"])
+        opr = OpusRead(["-d", "Books", "-s", "en", "-t", "eo", "-pa"])
+        opr.par.initializeSentenceParsers({"fromDoc": "en/Carroll_Lewis-Alice_in_wonderland.xml.gz",\
+                                             "toDoc": "eo/Carroll_Lewis-Alice_in_wonderland.xml.gz"})
+        self.assertEqual(opr.par.sPar.readSentence(["s4"]), """(src)="s4">CHAPTER|NN|chapter I|PRP|I Down|VBP|down the|DT|the Rabbit-Hole|NNP""")
         opr.par.closeFiles()
-        opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
-                                             "toDoc": "fi/ep-00-01-17.xml.gz"})
-        self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please@NNP@please rise@NN@rise ,@,@,""" + \
-        """ then@RB@then ,@,@, for@IN@for this@DT@this minute@NN@minute '@POS@' s@NNS@S silence@NN@silence .@.@.""")
+        opr = OpusRead(["-d", "Books", "-s", "en", "-t", "eo", "-pa", "-ca", "@"])
+        opr.par.initializeSentenceParsers({"fromDoc": "en/Carroll_Lewis-Alice_in_wonderland.xml.gz",\
+                                             "toDoc": "eo/Carroll_Lewis-Alice_in_wonderland.xml.gz"})
+
+        self.assertEqual(opr.par.sPar.readSentence(["s4"]), """(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down the@DT@the Rabbit-Hole@NNP""")
         opr.par.closeFiles()
 
     def test_ExhaustiveSentenceParser_readSentence_moses(self):
@@ -134,20 +133,19 @@ class TestOpusRead(unittest.TestCase):
                                                             '(src)="s11.1">" Excellent ! "')
 
     def test_SentenceParser_readSentence_annotations(self):
-        opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa"])
-        opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
-                                             "toDoc": "fi/ep-00-01-17.xml.gz"})
+        opr = OpusRead(["-d", "Books", "-s", "en", "-t", "eo", "-pa"])
+        opr.par.initializeSentenceParsers({"fromDoc": "en/Carroll_Lewis-Alice_in_wonderland.xml.gz",\
+                                             "toDoc": "eo/Carroll_Lewis-Alice_in_wonderland.xml.gz"})
 
-        self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please|NNP|please rise|NN|rise ,|,|,""" + \
-        """ then|RB|then ,|,|, for|IN|for this|DT|this minute|NN|minute '|POS|' s|NNS|S silence|NN|silence .|.|.""")
+        self.assertEqual(opr.par.sPar.readSentence(["s4"]), """(src)="s4">CHAPTER|NN|chapter I|PRP|I Down|VBP|down the|DT|the Rabbit-Hole|NNP""")
         opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_annotations_change_delimiter(self):
-        opr = OpusRead(["-d", "Europarl", "-s", "en", "-t", "fi", "-pa", "-ca", "@"])
-        opr.par.initializeSentenceParsers({"fromDoc": "en/ep-00-01-17.xml.gz",\
-                                             "toDoc": "fi/ep-00-01-17.xml.gz"})
-        self.assertEqual(opr.par.sPar.readSentence(["6"]), """(src)="6">Please@NNP@please rise@NN@rise ,@,@,""" + \
-        """ then@RB@then ,@,@, for@IN@for this@DT@this minute@NN@minute '@POS@' s@NNS@S silence@NN@silence .@.@.""")
+        opr = OpusRead(["-d", "Books", "-s", "en", "-t", "eo", "-pa", "-ca", "@"])
+        opr.par.initializeSentenceParsers({"fromDoc": "en/Carroll_Lewis-Alice_in_wonderland.xml.gz",\
+                                             "toDoc": "eo/Carroll_Lewis-Alice_in_wonderland.xml.gz"})
+
+        self.assertEqual(opr.par.sPar.readSentence(["s4"]), """(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down the@DT@the Rabbit-Hole@NNP""")
         opr.par.closeFiles()
     
     def test_SentenceParser_readSentence_moses(self):
@@ -256,6 +254,11 @@ class TestOpusRead(unittest.TestCase):
         self.opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/> ')
         ret = self.opr.par.readPair()
         self.assertEqual(ret, 1)
+
+    def test_AlignmentParser_previous_document_is_closed_before_next_is_opened(self):
+        printer = OpusRead(["-d", "Books", "-s", "en", "-t", "eo"])
+        printer.printPairs()
+        self.assertEqual(True, True)
 
     def test_PairPrinter_printPair_normal(self):
         sPair = ('(src)="s4">Chapter 1 Mr. Sherlock Holmes', '(trg)="s4">Herra Sherlock Holmes .')
@@ -370,9 +373,20 @@ class TestOpusRead(unittest.TestCase):
         '================================\n(src)="stit.1">Charts in $[officename]\n(trg)="stit.1">Diagrammes' + \
         ' dans $[officename]\n================================\n')
 
+    def test_normal_raw_print_OpenSubtitles(self):
+        var = self.pairPrinterToVariable("-d OpenSubtitles -s eo -t kk -m 1 -p raw".split())
+        self.assertEqual(var, '\n# eo/2001/245429/5818397.xml.gz\n# kk/2001/245429/6899218.xml.gz\n\n' + \
+                         '================================\n(src)="1">Filmo de "Studio Ghibli"\n(trg)="1">ГИБЛИ" ' + \
+                         'студиясы\n================================\n')
+
+    def test_normal_raw_print_OpenSubtitles_fast(self):
+        var = self.pairPrinterToVariable("-d OpenSubtitles -s eo -t kk -m 1 -p raw -f".split())
+        self.assertEqual(var, '\n# eo/2001/245429/5818397.xml.gz\n# kk/2001/245429/6899218.xml.gz\n\n' + \
+                         '================================\n(src)="1">Filmo de "Studio Ghibli"\n(trg)="1">ГИБЛИ" ' + \
+                         'студиясы\n================================\n')
+        
     def test_normal_parsed_write(self):
-        OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma", "-w",
-                                "test_result"]).printPairs()
+        OpusRead(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma", "-w", "test_result"]).printPairs()
         with open("test_result", "r") as f:
             self.assertEqual(f.read(), '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
             '\n(src)="1">Treaty|NOUN|Number=Sing|treaty\n(trg)="1">Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado' + \
@@ -396,6 +410,18 @@ class TestOpusRead(unittest.TestCase):
         var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "upos,feats,lemma", "-ta", "upos,feats,lemma", "-f"])
         self.assertEqual(var, '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
             '\n(src)="1">Treaty|NOUN|Number=Sing|treaty\n(trg)="1">Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado' + \
+            '\n================================\n')
+        
+    def test_normal_parsed_print_all_attributes(self):
+        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "all_attrs", "-ta", "all_attrs"])
+        self.assertEqual(var, '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
+            '\n(src)="1">Treaty|root|Number=Sing|0|1.1|treaty|SpaceAfter=No|NOUN|NOUN\n(trg)="1">Tratado|root|Gender=Masc|Number=Sing|VerbForm=Part|0|1.1|tratado|SpaceAfter=No|VERB' + \
+            '\n================================\n')
+        
+    def test_normal_parsed_print_all_attributes_fast(self):
+        var = self.pairPrinterToVariable(["-d", "DGT", "-s", "en", "-t", "es", "-m", "1", "-p", "parsed", "-pa", "-sa", "all_attrs", "-ta", "all_attrs", "-f"])
+        self.assertEqual(var, '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n================================' + \
+            '\n(src)="1">Treaty|root|Number=Sing|0|1.1|treaty|SpaceAfter=No|NOUN|NOUN\n(trg)="1">Tratado|root|Gender=Masc|Number=Sing|VerbForm=Part|0|1.1|tratado|SpaceAfter=No|VERB' + \
             '\n================================\n')
 
     def test_tmx_xml_write(self):
@@ -649,7 +675,7 @@ class TestOpusCat(unittest.TestCase):
         oprinter.printSentences()
         sys.stdout = old_stdout
         return printout.getvalue()
-
+    
     def test_printing_sentences(self):
         var  = self.printSentencesToVariable(["-d", "Books", "-l", "fi", "-p"])
         self.assertEqual(var[-145:], '("s1493.9")>Saanko sitten pyytää sinua laittautumaan valmiiksi puolessa tunnissa , niin'+ \
@@ -664,6 +690,28 @@ class TestOpusCat(unittest.TestCase):
         var = self.printSentencesToVariable(["-d", "Books", "-l", "fi", "-m", "1", "-i", "-p"])
         self.assertEqual(var, '\n# Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml\n\nSource :' + \
                     ' Project Gutenberg\n')
-                
+        
+    def test_print_annotations(self):
+        var = self.printSentencesToVariable("-d Books -l en -m 1 -i -p -pa".split())
+        self.assertEqual(var, '\n# Books/xml/en/Hugo_Victor-Notre_Dame_de_Paris.xml\n\nSource|NN|source :|:|: ' + \
+                         'Project|NNP|Project GutenbergTranslation|NNP :|:|: Isabel|NNP|Isabel F.|NNP|F. HapgoodAudiobook|NNP ' + \
+                         'available|NN|available here|RB|here\n')
+
+    def test_print_annotations_all_attributes(self):
+        var = self.printSentencesToVariable("-d Books -l en -m 1 -i -p -pa -sa all_attrs".split())
+        self.assertEqual(var, '\n# Books/xml/en/Hugo_Victor-Notre_Dame_de_Paris.xml\n\nSource|NN|w1.1|source|NN|NN ' + \
+                         ':|:|w1.2|:|:|: Project|NNP|w1.3|Project|NNP|NP GutenbergTranslation|NNP|w1.4|NNP|NP ' + \
+                         ':|:|w1.5|:|:|: Isabel|NNP|w1.6|Isabel|NNP|NP F.|NNP|w1.7|F.|NNP|NP HapgoodAudiobook|NNP|w1.8|NNP|NP ' + \
+                         'available|JJ|w1.9|available|NN|JJ here|RB|w1.10|here|RB|RB\n')
+
+    def test_print_xml(self):
+        var = self.printSentencesToVariable("-d Books -l eo -m 1".split())
+        self.assertEqual(var[-53:], '\n <w id="w1.8">,</w> \n <w id="w1.9">M.A.</w>\n</s>\n  \n')
+        
+    def test_printing_specific_file(self):
+        var = self.printSentencesToVariable(["-d", "Books", "-l", "eo", "-m", "1", "-i", "-p", "-f",
+                                             "Books/xml/eo/Carroll_Lewis-Alice_in_wonderland.xml"])
+        self.assertEqual(var, '\n# Books/xml/eo/Carroll_Lewis-Alice_in_wonderland.xml\n\nSource : Project GutenbergTranslation : E.L. KEARNEY , M.A.\n')
+        
 if __name__ == "__main__":
     unittest.main()
