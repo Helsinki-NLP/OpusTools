@@ -3,7 +3,7 @@ import gzip
 
 from .parse.alignment_parser import AlignmentParser
 from .parse.moses_read import MosesRead
-
+from .opus_get import OpusGet
 
 class OpusRead:
 
@@ -68,7 +68,7 @@ class OpusRead:
             else:
                 self.resultfile = open(self.filenames[0], "w")
 
-        self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile)
+        self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile, self.fromto)
 
     def printPair(self, sPair):
         ret = ""
@@ -177,8 +177,26 @@ class OpusRead:
             self.addTmxHeader()
 
         if self.alignment[-3:] == ".gz":
-            with gzip.open(self.alignment) as gzipAlign:
-                lastline = self.readAlignment(gzipAlign)
+            try:
+                try:
+                    gzipAlign = gzip.open(self.args.d+"_"+self.args.r+"_xml_"+self.fromto[0]+"-"+self.fromto[1]+".xml.gz")
+                except FileNotFoundError:
+                    gzipAlign = gzip.open(self.alignment)
+            except FileNotFoundError:
+                print("\nAlignment file " + self.alignment + " not found. The following files are available for downloading:\n")
+                arguments = ["-s", self.fromto[0], "-t", self.fromto[1], "-d", self.args.d, "-r", self.args.r, "-p", self.args.p, "-l"]
+                og = OpusGet(arguments)
+                og.get_files()
+                arguments.remove("-l")
+                og = OpusGet(arguments)
+                og.get_files()
+                try:
+                    gzipAlign = gzip.open(self.args.d+"_"+self.args.r+"_xml_"+self.fromto[0]+"-"+self.fromto[1]+".xml.gz")
+                except FileNotFoundError:
+                    return
+            
+            lastline = self.readAlignment(gzipAlign)
+            gzipAlign.close()
         else:
             with open(self.alignment) as xmlAlign:
                 lastline = self.readAlignment(xmlAlign)

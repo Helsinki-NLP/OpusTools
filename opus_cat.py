@@ -1,6 +1,7 @@
 import argparse
 import xml.parsers.expat
 import zipfile
+from .opus_get import OpusGet
 
 class SentenceParser:
     
@@ -111,6 +112,7 @@ class OpusCat:
         parser.add_argument("-m", help="Maximum number of sentences", default="all")
         parser.add_argument("-p", help="Print in plain txt", action="store_true")
         parser.add_argument("-f", help="File name (if not given, prints all files)")
+        parser.add_argument("-r", help="Release (default=latest)", default="latest")
         parser.add_argument("-pa", help="Print annotations, if they exist", action="store_true")
         parser.add_argument("-sa", help="Set sentence annotation attributes to be printed deparated by commas, e.g. -sa pos,lem. To print all available attributes use -sa all_attrs (default=pos,lem)", default="pos,lem")
         parser.add_argument("-ca", help="Change annotation delimiter (default=|)", default="|")
@@ -120,7 +122,24 @@ class OpusCat:
         else:
             self.args = parser.parse_args(arguments)
 
-        self.lzip = zipfile.ZipFile("/proj/nlpl/data/OPUS/" + self.args.d + "/latest/xml/" + self.args.l + ".zip" , "r")
+        try:
+            try:
+                self.lzip = zipfile.ZipFile(self.args.d+"_"+self.args.r+"_xml_"+self.args.l+".zip")
+            except FileNotFoundError:
+                self.lzip = zipfile.ZipFile("/proj/nlpl/data/OPUS/" + self.args.d + "/latest/xml/" + self.args.l + ".zip" , "r")
+        except FileNotFoundError:
+            print("file not found")
+            arguments = ["-d", self.args.d, "-s", self.args.l, "-t", " ", "-p", "xml", "-l"]
+            og = OpusGet(arguments)
+            og.get_files()
+            arguments.remove("-l")
+            og = OpusGet(arguments)
+            og.get_files()
+            try:
+                self.lzip = zipfile.ZipFile(self.args.d+"_"+self.args.r+"_xml_"+self.args.l+".zip")
+            except FileNotFoundError:
+                print(self.args.__dict__, type(self.args.__dict__), dir(self.args.__dict__))
+                print("No file found with parameters " + str(self.args.__dict__))
 
         if self.args.m == "all":
             self.maximum = -2

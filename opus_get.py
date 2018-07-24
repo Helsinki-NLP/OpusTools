@@ -1,3 +1,4 @@
+
 import urllib.request, json, argparse, sys
 
 class OpusGet:
@@ -81,8 +82,8 @@ class OpusGet:
         total_size = 0
 
         data = self.get_response(self.url)
-        
-        if self.args.t and not self.args.p:
+
+        if self.args.t and self.args.t != " " and not self.args.p:
             corpora = self.remove_data_with_no_alignment(data)
         else:
             corpora = data["corpora"]
