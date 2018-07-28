@@ -59,6 +59,17 @@ class SentenceParser:
     def parseLine(self, line):
         self.parser.Parse(line.strip())
 
+    def addToken(self, sentence):
+        newSentence = sentence
+        if self.sfound and  self.start == "w" and self.end == "w":
+            newSentence = sentence + " " + self.chara
+            self.chara = ""
+            if self.annotations:
+                for a in self.posses:
+                    newSentence += self.delimiter + a
+                self.posses = []
+        return newSentence
+        
     def processTokenizedSentence(self, sentence, ids):
         newSentence, stop = sentence, 0
         if self.efound:
@@ -67,14 +78,8 @@ class SentenceParser:
             if self.sid in ids:
                 stop = -1
             self.chara = ""
-        if self.sfound and self.sid in ids:
-            if self.start == "w" and self.end == "w":
-                newSentence = sentence + " " + self.chara
-                self.chara = ""
-                if self.annotations:
-                    for a in self.posses:
-                        newSentence += self.delimiter + a
-                    self.posses = []
+        if self.sid in ids:
+            newSentence = self.addToken(sentence)
 
         return newSentence, stop
 
@@ -107,9 +112,9 @@ class SentenceParser:
         sentences = sentences + '\t\t\t<tuv xml:lang="' + self.language + '"><seg>'
         return sentences
 
-    def addSentence(self, sentences, sentence):
+    def addSentence(self, sentences, sentence, sid):
         if self.wmode == "normal":
-            sentences = sentences + "\n(" + self.direction + ')="' + str(self.sid) + '">' + sentence
+            sentences = sentences + "\n(" + self.direction + ')="' + str(sid) + '">' + sentence
         elif self.wmode == "moses" or self.wmode == "tmx":
             sentences = sentences + " " + sentence
             sentences = sentences.replace("<seg> ", "<seg>")
@@ -142,7 +147,7 @@ class SentenceParser:
             if self.pre == "xml" or self.pre == "parsed":
                 sentence = sentence[1:]
 
-            sentences = self.addSentence(sentences, sentence)
+            sentences = self.addSentence(sentences, sentence, self.sid)
         
         if self.wmode == "tmx":
             sentences = self.addTuEnding(sentences)

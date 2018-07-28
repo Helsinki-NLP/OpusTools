@@ -1,66 +1,28 @@
 import argparse
-import xml.parsers.expat
 import zipfile
 from .opus_get import OpusGet
+from .parse.sentence_parser import SentenceParser
 
-class SentenceParser:
+class SentenceParser(SentenceParser):
     
     def __init__(self, document, args):
-        self.document = document
+        super().__init__(document, "", "", "", "", args.pa, args.sa, args.ca)
         self.args = args
 
-        self.start = ""
-        self.sid = ""
-        self.chara = ""
-        self.end = ""
-        
         self.stopit = False
 
-        self.parser = xml.parsers.expat.ParserCreate()
-        self.parser.StartElementHandler = self.start_element
-        self.parser.CharacterDataHandler = self.char_data
-        self.parser.EndElementHandler = self.end_element
+        self.parser.StartElementHandler = self.start_element_opuscat
+        self.parser.EndElementHandler = self.end_element_opuscat
         
-        self.sfound = False
-        self.efound = False
-
-        self.annotations = self.args.pa
-        if self.annotations:
-            self.anno_attrs = self.args.sa.split(",")
-
-        self.posses = []
-        self.delimiter = self.args.ca
-
-    def start_element(self, name, attrs):
-        self.start = name
-        if "id" in attrs.keys() and name == "s":
-            self.sfound = True
-            self.sid = attrs["id"]
-        if name == "w" and self.annotations:
-            if self.anno_attrs[0] == "all_attrs":
-                attributes = list(attrs.keys())
-                attributes.sort()
-                for a in attributes:
-                    self.posses.append(attrs[a])
-            for a in self.anno_attrs:
-                if a in attrs.keys():
-                    self.posses.append(attrs[a])
+    def start_element_opuscat(self, name, attrs):
+        self.start_element(name, attrs)
         if name == "s":
             self.posses = []
 
-    def char_data(self, data):
-        if self.sfound:
-            self.chara += data
-
-    def end_element(self, name):
-        self.end = name
-        if name == "s":
-            self.efound = True
+    def end_element_opuscat(self, name):
+        self.end_element(name)
         if name in ["document", "text"]:
             self.stopit = True
-
-    def parseLine(self, line):
-        self.parser.Parse(line.strip())
 
     def processTokenizedSentence(self, sentence):
         newSentence, stop = sentence, 0
@@ -71,14 +33,9 @@ class SentenceParser:
 #            if newSentence == "":
 #                newSentence = self.chara
 #                self.chara = ""
-        if self.sfound:
-            if self.start == "w" and self.end == "w":
-                newSentence = sentence + " " + self.chara
-                self.chara = ""
-                if self.annotations:
-                    for a in self.posses:
-                        newSentence += self.delimiter + a
-                    self.posses = []
+
+        newSentence = self.addToken(sentence)
+
         return newSentence, stop
 
     def readSentence(self):
@@ -128,7 +85,7 @@ class OpusCat:
             except FileNotFoundError:
                 self.lzip = zipfile.ZipFile("/proj/nlpl/data/OPUS/" + self.args.d + "/latest/xml/" + self.args.l + ".zip" , "r")
         except FileNotFoundError:
-            print("file not found")
+            print("\nRequested file not found. The following files are availble for downloading:\n")
             arguments = ["-d", self.args.d, "-s", self.args.l, "-t", " ", "-p", "xml", "-l"]
             og = OpusGet(arguments)
             og.get_files()
@@ -138,9 +95,8 @@ class OpusCat:
             try:
                 self.lzip = zipfile.ZipFile(self.args.d+"_"+self.args.r+"_xml_"+self.args.l+".zip")
             except FileNotFoundError:
-                print(self.args.__dict__, type(self.args.__dict__), dir(self.args.__dict__))
                 print("No file found with parameters " + str(self.args.__dict__))
-
+            
         if self.args.m == "all":
             self.maximum = -2
         else:
@@ -172,18 +128,21 @@ class OpusCat:
 
             
     def printSentences(self):
-        if self.args.f:
-            with self.lzip.open(self.args.f, "r") as f:
-                self.printFile(f, self.args.f)
-        else:
-            for n in self.lzip.namelist():
-                if n[-4:] == ".xml":
-                    with self.lzip.open(n, "r") as f:
-                        xml_break = self.printFile(f, n)
-                    if xml_break:
-                        break
+        try:
+            if self.args.f:
+                with self.lzip.open(self.args.f, "r") as f:
+                    self.printFile(f, self.args.f)
+            else:
+                for n in self.lzip.namelist():
+                    if n[-4:] == ".xml":
+                        with self.lzip.open(n, "r") as f:
+                            xml_break = self.printFile(f, n)
+                        if xml_break:
+                            break
 
-                if self.maximum == 0:
-                    break
+                    if self.maximum == 0:
+                        break
+        except AttributeError as e:
+            print("Necessary files not found.")
 
 
