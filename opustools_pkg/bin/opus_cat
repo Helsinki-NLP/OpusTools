@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+from opustools_pkg import OpusCat
+
+OpusCat([]).printSentences()

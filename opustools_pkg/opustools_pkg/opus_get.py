@@ -18,7 +18,7 @@ class OpusGet:
         else:
             self.args = parser.parse_args(arguments)
 
-        self.url = "https://vm1617.kaj.pouta.csc.fi/opusapi/?"
+        self.url = "https://translate.ling.helsinki.fi/opusapi/?"
         urlparts = {"s": "source", "t": "target", "d": "corpus", "r": "version", "p": "preprocessing"}
 
         for a in urlparts.keys():
@@ -105,10 +105,11 @@ class OpusGet:
             
         if answer == "y":
             for c in corpora:
-                self.filename = c["url"].replace("/", "_")
+                self.filename = c["url"].replace("/", "_").replace("https:__object.pouta.csc.fi_OPUS-", "")
                 self.filesize = self.format_size(c["size"])
                 try:
-                    urllib.request.urlretrieve("https://object.pouta.csc.fi/OPUS/" + c["url"],
+                    print(c["url"])
+                    urllib.request.urlretrieve(c["url"],
                                                self.args.dl + self.filename, reporthook=self.progress_status)
                     print("")
                 except urllib.error.URLError as e:

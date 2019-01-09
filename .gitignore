@@ -1,5 +1,8 @@
 __pycache__
-test_result
+dist
+dl
+build
 *.pyc
-*.log
 *~
+*.egg-info
+
