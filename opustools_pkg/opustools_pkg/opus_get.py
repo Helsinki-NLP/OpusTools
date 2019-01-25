@@ -80,7 +80,6 @@ class OpusGet:
     def get_corpora_data(self):
         file_n = 0
         total_size = 0
-
         data = self.get_response(self.url)
 
         if self.args.t and self.args.t != " " and not self.args.p:
@@ -106,9 +105,10 @@ class OpusGet:
         if answer == "y":
             for c in corpora:
                 self.filename = c["url"].replace("/", "_").replace("https:__object.pouta.csc.fi_OPUS-", "")
+                if self.args.r == "latest":
+                    self.filename = self.filename.replace("_"+c["version"]+"_", "_latest_")
                 self.filesize = self.format_size(c["size"])
                 try:
-                    print(c["url"])
                     urllib.request.urlretrieve(c["url"],
                                                self.args.dl + self.filename, reporthook=self.progress_status)
                     print("")

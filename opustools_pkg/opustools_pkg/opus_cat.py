@@ -86,7 +86,7 @@ class OpusCat:
                 self.lzip = zipfile.ZipFile("/proj/nlpl/data/OPUS/" + self.args.d + "/latest/xml/" + self.args.l + ".zip" , "r")
         except FileNotFoundError:
             print("\nRequested file not found. The following files are availble for downloading:\n")
-            arguments = ["-d", self.args.d, "-s", self.args.l, "-t", " ", "-p", "xml", "-l"]
+            arguments = ["-d", self.args.d, "-s", self.args.l, "-t", " ", "-p", "xml", "-l", "-r", self.args.r]
             og = OpusGet(arguments)
             og.get_files()
             arguments.remove("-l")
