@@ -2,5 +2,5 @@
 
 Tools for accessing and processing OPUS data.
 
-* [Documentation](files_for_PyPI/README.md)
+* [Documentation](opustools_pkg/README.md)
 * [Development plans](Development.md)
