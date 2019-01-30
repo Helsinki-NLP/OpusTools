@@ -71,7 +71,7 @@ class OpusCat:
         parser.add_argument("-f", help="File name (if not given, prints all files)")
         parser.add_argument("-r", help="Release (default=latest)", default="latest")
         parser.add_argument("-pa", help="Print annotations, if they exist", action="store_true")
-        parser.add_argument("-sa", help="Set sentence annotation attributes to be printed deparated by commas, e.g. -sa pos,lem. To print all available attributes use -sa all_attrs (default=pos,lem)", default="pos,lem")
+        parser.add_argument("-sa", help="Set sentence annotation attributes to be printed separated by commas, e.g. -sa pos,lem. To print all available attributes use -sa all_attrs (default=pos,lem)", default="pos,lem")
         parser.add_argument("-ca", help="Change annotation delimiter (default=|)", default="|")
 
         if len(arguments) == 0:

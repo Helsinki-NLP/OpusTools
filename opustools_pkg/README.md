@@ -4,6 +4,7 @@ Tools for accessing and processing OPUS data.
 
 * opus_read: read parallel data sets and convert to different output formats
 * opus_cat: extract given OPUS document from release data
+* opus_get: download files from OPUS
 
 ## opus_read
 
@@ -40,10 +41,10 @@ arguments:
 -cm CM		Change moses delimiter (default=tab)
 -pa		Print annotations, if they exist
 -sa SA		Set source sentence annotation attributes to be printed
-		deparated by commas, e.g. -sa pos,lem. To print all available
+		separated by commas, e.g. -sa pos,lem. To print all available
 		attributes use -sa all_attrs (default=pos,lem)
 -ta TA		Set target sentence annotation attributes to be printed
-		deparated by commas, e.g. -ta pos,lem. To print all available
+		separated by commas, e.g. -ta pos,lem. To print all available
 		attributes use -ta all_attrs (default=pos,lem)
 -ca CA		Change annotation delimiter (default=|)
 ```
@@ -140,7 +141,7 @@ arguments:
 -p		Print in plain txt
 -f F		File name (if not given, prints all files)
 -pa		Print annotations, if they exist
--sa SA		Set sentence annotation attributes to be printed deparated by
+-sa SA		Set sentence annotation attributes to be printed separated by
 		commas, e.g. -sa pos,lem. To print all available attributes use
 		-sa all_attrs (default=pos,lem)
 -ca CA		Change annotation delimiter (default=|)
@@ -176,5 +177,33 @@ and then run:
 
 `python3 your_script.py`
 
+### Description
 
+Read a document from OPUS and print to STDOUT
+
+## opus_get
+
+## Usage
+
+```
+opus-get [-h] -s S [-t T] [-d D] [-r R] [-p P] [-l] [-dl DL]
+```
+
+arguments:
+
+```
+-h, --help  show this help message and exit
+-s S        Source language
+-t T        Target language
+-d D        Corpus name
+-r R        Release
+-p P        Pre-process type
+-l          List resources
+-dl DL      Set download directory (default=current directory)
+```
+
+
+### Description
+
+Download files from OPUS
 

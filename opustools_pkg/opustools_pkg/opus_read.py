@@ -32,8 +32,8 @@ class OpusRead:
         parser.add_argument("-af", help="Use given alignment file", default=-1)
         parser.add_argument("-cm", help="Change moses delimiter (default=tab)", default="\t")
         parser.add_argument("-pa", help="Print annotations, if they exist", action="store_true")
-        parser.add_argument("-sa", help="Set source sentence annotation attributes to be printed deparated by commas, e.g. -sa pos,lem. To print all available attributes use -sa all_attrs (default=pos,lem)", default="pos,lem")
-        parser.add_argument("-ta", help="Set target sentence annotation attributes to be printed deparated by commas, e.g. -ta pos,lem. To print all available attributes use -ta all_attrs (default=pos,lem)", default="pos,lem")
+        parser.add_argument("-sa", help="Set source sentence annotation attributes to be printed separated by commas, e.g. -sa pos,lem. To print all available attributes use -sa all_attrs (default=pos,lem)", default="pos,lem")
+        parser.add_argument("-ta", help="Set target sentence annotation attributes to be printed separated by commas, e.g. -ta pos,lem. To print all available attributes use -ta all_attrs (default=pos,lem)", default="pos,lem")
         parser.add_argument("-ca", help="Change annotation delimiter (default=|)", default="|")
         
         if len(arguments) == 0:
