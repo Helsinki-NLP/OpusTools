@@ -26,8 +26,8 @@ arguments:
 -r R		Release (default=latest)
 -p P		Pre-process-type (raw, xml or parsed, default=xml)
 -m M		Maximum number of alignments
--S S		Maximum number of source sentences in alignments (range is allowed, eg. -S 1-2)
--T T		Maximum number of target sentences in alignments (range is allowed, eg. -T 1-2)
+-S S		Number of source sentences in alignments (range is allowed, eg. -S 1-2)
+-T T		Number of target sentences in alignments (range is allowed, eg. -T 1-2)
 -a A		Set attribute for filttering
 -tr TR		Set threshold for an attribute
 -ln		Leave non-alignments out

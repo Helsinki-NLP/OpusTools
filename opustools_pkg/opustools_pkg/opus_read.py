@@ -16,9 +16,9 @@ class OpusRead:
         parser.add_argument("-r", help="Release (default=latest)", default="latest")
         parser.add_argument("-p", help="Pre-process-type (raw, xml or parsed, default=xml)", default="xml")
         parser.add_argument("-m", help="Maximum number of alignments", default="all")
-        parser.add_argument("-S", help="Maximum number of source sentences in alignments (range is allowed, eg. -S 1-2)", \
+        parser.add_argument("-S", help="Number of source sentences in alignments (range is allowed, eg. -S 1-2)", \
                             default="all")
-        parser.add_argument("-T", help="Maximum number of target sentences in alignments (range is allowed, eg. -T 1-2)", \
+        parser.add_argument("-T", help="Number of target sentences in alignments (range is allowed, eg. -T 1-2)", \
                             default="all")
         parser.add_argument("-a", help="Set attribute for filttering", default="any")
         parser.add_argument("-tr", help="Set threshold for an attribute", default=0)

@@ -18,7 +18,7 @@ class OpusGet:
         else:
             self.args = parser.parse_args(arguments)
 
-        self.url = "https://translate.ling.helsinki.fi/opusapi/?"
+        self.url = "http://opus.nlpl.eu/opusapi/?"
         urlparts = {"s": "source", "t": "target", "d": "corpus", "r": "version", "p": "preprocessing"}
 
         for a in urlparts.keys():
