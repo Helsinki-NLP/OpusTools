@@ -50,7 +50,8 @@ class OpusGet:
 
     def get_response(self, url):
         response = urllib.request.urlopen(url[:-1])
-        data = json.loads(response.read())
+        result = response.read().decode("utf-8")
+        data = json.loads(result)
 
         return data
 
