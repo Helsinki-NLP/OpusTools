@@ -113,6 +113,7 @@ class AlignmentParser:
             self.processLink(attrs)
 
     def parseLine(self, line):
+        self.start = ""
         self.alignParser.Parse(line)
 
     def sentencesOutsideLimit(self):
