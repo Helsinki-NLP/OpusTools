@@ -62,7 +62,7 @@ class OpusRead:
 
         if self.args.w != -1:
             self.filenames = self.args.w.split(",")
-            if self.args.wm == "moses":
+            if self.args.wm == "moses" and len(self.filenames) == 2:
                 self.mosessrc = open(self.filenames[0], "w")
                 self.mosestrg = open(self.filenames[1], "w")
             else:
@@ -88,9 +88,11 @@ class OpusRead:
         if self.args.wm == "links":
             ret1 = sPair+"\n"
         else:
-            if self.args.wm == "moses":
+            if self.args.wm == "moses" and len(self.filenames) == 2:
                 ret1 = sPair[0]+"\n"
                 ret2 = sPair[1]+"\n"
+            if self.args.wm == "moses" and len(self.filenames) == 1:
+                ret1 = sPair[0] + self.args.cm + sPair[1] + "\n"
             else:
                 ret1 = sPair[0] + "\n" + sPair[1] + "\n"
             if self.args.wm == "normal":
@@ -114,7 +116,7 @@ class OpusRead:
 
         if self.args.w != -1:
             wpair = self.writePair(sPair)
-            if self.args.wm == "moses":
+            if self.args.wm == "moses" and len(self.filenames) == 2:
                 self.mosessrc.write(wpair[0])
                 self.mosestrg.write(wpair[1])
             else:
@@ -150,7 +152,7 @@ class OpusRead:
             print(" </linkGrp>\n</cesAlign>")
 
     def closeResultFiles(self):
-        if self.args.wm == "moses":    
+        if self.args.wm == "moses" and len(self.filenames) == 2:    
             self.mosessrc.close()
             self.mosestrg.close()
         else:
