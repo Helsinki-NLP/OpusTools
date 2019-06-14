@@ -18,6 +18,9 @@ class OpusGet:
         else:
             self.args = parser.parse_args(arguments)
 
+        self.fromto = [self.args.s, self.args.t]
+        self.fromto.sort()
+
         self.url = "http://opus.nlpl.eu/opusapi/?"
         urlparts = {"s": "source", "t": "target", "d": "corpus", "r": "version", "p": "preprocessing"}
 
@@ -57,7 +60,7 @@ class OpusGet:
 
     def add_data_with_aligment(self, tempdata, retdata):
         for i in tempdata:
-            if i["preprocessing"] == "xml" and i["source"] == self.args.s and i["target"] == self.args.t:
+            if i["preprocessing"] == "xml" and i["source"] == self.fromto[0] and i["target"] == self.fromto[1]:
                 retdata += tempdata
                 break
         return retdata
