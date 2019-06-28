@@ -8,7 +8,7 @@ from ..opus_get import OpusGet
 
 class AlignmentParser:
 
-    def __init__(self, source, target, args, result, fromto):
+    def __init__(self, source, target, args, result, mosessrc, mosestrg, fromto):
         self.source = source
         self.target = target
         self.fromto = fromto
@@ -33,6 +33,8 @@ class AlignmentParser:
         self.nonAlignments = self.args.ln
 
         self.result = result
+        self.mosessrc = mosessrc
+        self.mosestrg = mosestrg
 
         self.slim = self.args.S.split("-")
         self.slim.sort()
@@ -56,6 +58,17 @@ class AlignmentParser:
                     self.result.write(docnames + "\n")
                 else:
                     print(docnames)
+            elif self.args.wm == "moses" and self.args.pn:
+                sourceDoc = "\n<fromDoc>{}</fromDoc>".format(attrs["fromDoc"])
+                targetDoc = "\n<toDoc>{}</toDoc>".format(attrs["toDoc"])
+                if self.args.w != -1:
+                    if self.result:
+                        self.result.write(sourceDoc + targetDoc + "\n\n")
+                    else:
+                        self.mosessrc.write(sourceDoc + "\n\n")
+                        self.mosestrg.write(targetDoc + "\n\n")
+                else:
+                    print(sourceDoc + targetDoc + "\n")
 
             try:
                 sourcefile = open(attrs["fromDoc"][:-3], "r")

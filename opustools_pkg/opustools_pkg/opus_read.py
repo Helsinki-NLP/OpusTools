@@ -23,9 +23,10 @@ class OpusRead:
         parser.add_argument("-a", help="Set attribute for filttering", default="any")
         parser.add_argument("-tr", help="Set threshold for an attribute", default=0)
         parser.add_argument("-ln", help="Leave non-alignments out", action="store_true")
-        parser.add_argument("-w", help="Write to file. Enter two file names separated by a comma when writing in moses format \
+        parser.add_argument("-w", help="Write to file. To print moses format in separate files, enter two file names separated by a comma \
                             (e.g. -w moses.src,moses.trg). Otherwise enter one file name.", default=-1)
         parser.add_argument("-wm", help="Set writing mode (normal, moses, tmx, links)", default="normal")
+        parser.add_argument("-pn", help="Print file names when using moses format", action="store_true")
         parser.add_argument("-f", help="Fast parsing. Faster than normal parsing, if you print a small part of the whole corpus, \
                             but requires the sentence ids in alignment files to be in sequence.", action="store_true")
         parser.add_argument("-rd", help="Change root directory (default=/proj/nlpl/data/OPUS/)", default="/proj/nlpl/data/OPUS/")
@@ -59,6 +60,9 @@ class OpusRead:
         self.moses = self.args.rd+self.args.d+"/"+self.args.r+"/moses/"+self.fromto[0]+"-"+self.fromto[1]+".txt.zip"
 
         self.resultfile = None
+        self.mosessrc = None
+        self.mosestrg = None
+        self.filenames = []
 
         if self.args.w != -1:
             self.filenames = self.args.w.split(",")
@@ -68,7 +72,7 @@ class OpusRead:
             else:
                 self.resultfile = open(self.filenames[0], "w")
 
-        self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile, self.fromto)
+        self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile, self.mosessrc, self.mosestrg, self.fromto)
 
     def printPair(self, sPair):
         ret = ""
@@ -91,7 +95,7 @@ class OpusRead:
             if self.args.wm == "moses" and len(self.filenames) == 2:
                 ret1 = sPair[0]+"\n"
                 ret2 = sPair[1]+"\n"
-            if self.args.wm == "moses" and len(self.filenames) == 1:
+            elif self.args.wm == "moses" and len(self.filenames) == 1:
                 ret1 = sPair[0] + self.args.cm + sPair[1] + "\n"
             else:
                 ret1 = sPair[0] + "\n" + sPair[1] + "\n"
