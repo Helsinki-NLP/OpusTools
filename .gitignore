@@ -5,4 +5,10 @@ build
 *.pyc
 *~
 *.egg-info
-
+test_result
+test.src
+test.trg
+test_en
+test_fi
+testlinks
+.coverage
