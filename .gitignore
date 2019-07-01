@@ -12,3 +12,4 @@ test_en
 test_fi
 testlinks
 .coverage
+*.zip

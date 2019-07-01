@@ -5,6 +5,7 @@ Tools for accessing and processing OPUS data.
 * opus_read: read parallel data sets and convert to different output formats
 * opus_cat: extract given OPUS document from release data
 * opus_get: download files from OPUS
+* add_lang_ids: add language ids to sentences in xml files in xml archives
 
 ## opus_read
 
@@ -208,3 +209,22 @@ arguments:
 
 Download files from OPUS
 
+## add_lang_ids
+
+## Usage
+
+```
+add_lan_ids [-h] -f F
+```
+
+arguments:
+
+```
+-h, --help  show this help message and exit
+-f F        Zip file path
+```
+
+
+### Description
+
+Add language ids to sentence tags in xml files in zip archives using [pycld2](https://pypi.org/project/pycld2/) and [langid.py](https://github.com/saffsd/langid.py).
