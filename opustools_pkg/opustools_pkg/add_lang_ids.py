@@ -84,8 +84,9 @@ detection", action='store_true')
             self.args = parser.parse_args(arguments)
 
     def addIds(self):
+        tempname = self.args.f.replace("/","_")+"_"+"add_lang_ids_temp.temp.zip"
         with zipfile.ZipFile(self.args.f, "r") as zip_arc:
-            with zipfile.ZipFile("add_lang_ids_temp.temp.zip", "w") as new_arc:
+            with zipfile.ZipFile(tempname, "w") as new_arc:
                 for filename in zip_arc.filelist:
                     if self.args.v > 0:
                         print(filename.filename)
@@ -99,8 +100,8 @@ detection", action='store_true')
                         new_arc.writestr(filename, new_bytes)
 
         if self.args.t:
-            os.rename("add_lang_ids_temp.temp.zip", self.args.t)
+            os.rename(tempname, self.args.t)
         else:
             os.remove(self.args.f)
-            os.rename("add_lang_ids_temp.temp.zip", self.args.f)
+            os.rename(tempname, self.args.f)
 
