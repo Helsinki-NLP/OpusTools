@@ -33,9 +33,9 @@ arguments:
 -tr TR		Set threshold for an attribute
 -ln		Leave non-alignments out
 -w W		Write to file. To print moses format in separate files, enter two file names 
-            separated by a comma (e.g. -w moses.src,moses.trg). Otherwise enter one file name.
+                separated by a comma (e.g. -w moses.src,moses.trg). Otherwise enter one file name.
 -wm WM		Set writing mode (normal, moses, tmx, links)
--pn         Print file names when using moses format
+-pn             Print file names when using moses format
 -f		Fast parsing. Faster than normal parsing, if you print a small part of the whole 
 		corpus, but requires the sentence ids in alignment files to be in sequence.
 -rd RD		Change root directory (default=/proj/nlpl/data/OPUS/)
@@ -222,6 +222,10 @@ arguments:
 ```
 -h, --help  show this help message and exit
 -f F        Zip file path
+-t T        Target zip file path. By default, the original zip file is
+                  edited
+-v          Verbosity. -v: print current xml file
+-s          Suppress error messages in language detection
 ```
 
 
