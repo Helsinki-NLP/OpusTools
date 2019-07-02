@@ -20,7 +20,7 @@ class AlignmentParser:
         self.toids = []
         self.fromids = []
 
-        self.zipFilesOpened = False        
+        self.zipFilesOpened = False
 
         self.alignParser = xml.parsers.expat.ParserCreate()
 
@@ -42,7 +42,7 @@ class AlignmentParser:
         self.slim.sort()
         self.tlim = self.args.T.split("-")
         self.tlim.sort()
-    
+
     def openZipFiles(self):
         try:
             self.sourcezip = zipfile.ZipFile(self.args.d+"_"+self.args.r+"_"+self.args.p+"_"+self.fromto[0]+".zip")
@@ -94,11 +94,11 @@ class AlignmentParser:
 
                 sourcefile = self.sourcezip.open(self.args.d+"/"+self.args.p+"/"+attrs["fromDoc"][:-3], "r")
                 targetfile = self.targetzip.open(self.args.d+"/"+self.args.p+"/"+attrs["toDoc"][:-3], "r")
-                    
+
             if self.sPar and self.tPar:
                 self.sPar.document.close()
                 self.tPar.document.close()
-        
+
             pre = self.args.p
             if pre == "raw" and self.args.d == "OpenSubtitles":
                 pre = "rawos"
@@ -142,18 +142,26 @@ class AlignmentParser:
             snum = 0
         if tnum == 0 or self.toids[0] == "":
             tnum = 0
-        
+
         return (self.slim[0] != "all" and (snum < int(self.slim[0]) or snum > int(self.slim[-1]))) or \
                 (self.tlim[0] != "all" and (tnum < int(self.tlim[0]) or tnum > int(self.tlim[-1])))
 
-    def langIdConfidence(self, srcAttrs, trgAttrs):
-        #print(self.args.src_cld2_lan)
-        #print(self.args.trg_cld2_lan)
-        #print(self.args.src_langid_lan)
-        #print(self.args.trg_langid_lan)
-        #print(srcAttrs)
-        #print(trgAttrs)
+    def testConfidence(self, confidence, attrs, ider):
+        if attrs == {}:
+            return False
+        if confidence:
+            lan, conf = confidence
+            return lan == attrs[ider] \
+                    and float(conf) <= float(attrs[ider+"conf"])
         return True
+
+    def langIdConfidence(self, srcAttrs, trgAttrs):
+        return self.testConfidence(self.args.src_cld2_lan, srcAttrs, "cld2") \
+            and self.testConfidence(self.args.trg_cld2_lan, trgAttrs, "cld2") \
+            and self.testConfidence(self.args.src_langid_lan, srcAttrs, \
+                "langid") \
+            and self.testConfidence(self.args.trg_langid_lan, trgAttrs, \
+                "langid")
 
     def readPair(self):
         #tags other than link are printed in link printing mode, otherwise they are skipped

@@ -32,10 +32,10 @@ class ExhaustiveSentenceParser(SentenceParser):
                     self.chara = ""
                     break
             if self.sid != "":
-                self.sentences[self.sid] = sentence.strip()
+                self.sentences[self.sid] = (sentence.strip(), self.attrs)
                 self.sid = ""
         self.document.close()
-        
+
     def getSentence(self, sid):
         if sid in self.sentences.keys():
             return self.sentences[sid]
@@ -44,14 +44,14 @@ class ExhaustiveSentenceParser(SentenceParser):
 
     def readSentence(self, ids):
         if len(ids) == 0 or ids[0] == "":
-            return ""
+            return "", {}
         sentence = ""
         if self.wmode == "tmx":
             sentence = self.addTuBeginning()
         for sid in ids:
-            newSentence = self.getSentence(sid)
+            newSentence, attrs = self.getSentence(sid)
             sentence = self.addSentence(sentence, newSentence, sid)
         if self.wmode == "tmx":
             sentence = self.addTuEnding(sentence)
-                
-        return sentence[1:]
+
+        return sentence[1:], attrs

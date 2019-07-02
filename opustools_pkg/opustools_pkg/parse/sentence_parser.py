@@ -72,7 +72,7 @@ class SentenceParser:
                     newSentence += self.delimiter + a
                 self.posses = []
         return newSentence
-        
+
     def processTokenizedSentence(self, sentence, ids):
         newSentence, stop = sentence, 0
         if self.efound:
@@ -131,9 +131,9 @@ class SentenceParser:
 
     def readSentence(self, ids):
         if len(ids) == 0 or ids[0] == "":
-            return ""
+            return "", {}
         sentences = ""
-        
+
         if self.wmode == "tmx":
             sentences = self.addTuBeginning()
 
@@ -151,7 +151,7 @@ class SentenceParser:
                 sentence = sentence[1:]
 
             sentences = self.addSentence(sentences, sentence, self.sid)
-        
+
         if self.wmode == "tmx":
             sentences = self.addTuEnding(sentences)
 

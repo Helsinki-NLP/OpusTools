@@ -46,7 +46,7 @@ by their langid.py language id labels and confidence score, e.g. en 0.9",
         parser.add_argument("--trg_langid_lan", help="Filter target sentences \
 by their langid.py language id labels and confidence score, e.g. en 0.9",
             nargs=2)
-        
+
         if len(arguments) == 0:
             self.args = parser.parse_args()
         else:
@@ -62,9 +62,6 @@ by their langid.py language id labels and confidence score, e.g. en 0.9",
         fromto_copy = [self.args.s, self.args.t]
         self.fromto.sort()
 
-        print(self.args.src_cld2_lan, self.args.trg_cld2_lan)
-        print(self.args.src_langid_lan, self.args.trg_langid_lan)
-
         self.switch_langs = fromto_copy != self.fromto
         if self.switch_langs:
             temp = self.args.S
@@ -76,9 +73,6 @@ by their langid.py language id labels and confidence score, e.g. en 0.9",
             temp = self.args.src_langid_lan
             self.args.src_langid_lan = self.args.trg_langid_lan
             self.args.trg_langid_lan = temp
-
-        print(self.args.src_cld2_lan, self.args.trg_cld2_lan)
-        print(self.args.src_langid_lan, self.args.trg_langid_lan)
 
         if self.args.af == -1:
             self.alignment = self.args.rd+self.args.d+"/"+self.args.r+"/xml/"+self.fromto[0]+"-"+self.fromto[1]+".xml.gz"
