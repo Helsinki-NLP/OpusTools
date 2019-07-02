@@ -29,12 +29,15 @@ class SentenceParser:
         self.wmode = wmode
         self.language = language
 
+        self.attrs = {}
+
         self.processSentence = {"parsed":self.processTokenizedSentence, "xml":self.processTokenizedSentence, "raw":self.processRawSentence, 
                                 "rawos":self.processRawSentenceOS}
 
     def start_element(self, name, attrs):
         self.start = name
         if "id" in attrs.keys() and name == "s":
+            self.attrs = attrs
             self.sfound = True
             self.sid = attrs["id"]
         if name == "w" and self.annotations:
@@ -152,4 +155,4 @@ class SentenceParser:
         if self.wmode == "tmx":
             sentences = self.addTuEnding(sentences)
 
-        return sentences[1:]
+        return sentences[1:], self.attrs

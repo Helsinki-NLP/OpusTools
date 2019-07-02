@@ -13,3 +13,4 @@ test_fi
 testlinks
 .coverage
 *.zip
+*.gz

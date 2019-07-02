@@ -36,6 +36,16 @@ class OpusRead:
         parser.add_argument("-sa", help="Set source sentence annotation attributes to be printed separated by commas, e.g. -sa pos,lem. To print all available attributes use -sa all_attrs (default=pos,lem)", default="pos,lem")
         parser.add_argument("-ta", help="Set target sentence annotation attributes to be printed separated by commas, e.g. -ta pos,lem. To print all available attributes use -ta all_attrs (default=pos,lem)", default="pos,lem")
         parser.add_argument("-ca", help="Change annotation delimiter (default=|)", default="|")
+        parser.add_argument("--src_cld2_lan", help="Filter source sentences by \
+their cld2 language id labels and confidence score, e.g. en 0.9", nargs=2)
+        parser.add_argument("--trg_cld2_lan", help="Filter target sentences by \
+their cld2 language id labels and confidence score, e.g. en 0.9", nargs=2)
+        parser.add_argument("--src_langid_lan", help="Filter source sentences \
+by their langid.py language id labels and confidence score, e.g. en 0.9",
+            nargs=2)
+        parser.add_argument("--trg_langid_lan", help="Filter target sentences \
+by their langid.py language id labels and confidence score, e.g. en 0.9",
+            nargs=2)
         
         if len(arguments) == 0:
             self.args = parser.parse_args()
@@ -49,8 +59,27 @@ class OpusRead:
             raise ValueError('wm has to be "normal", "moses", "tmx" or "links"')
 
         self.fromto = [self.args.s, self.args.t]
+        fromto_copy = [self.args.s, self.args.t]
         self.fromto.sort()
-        
+
+        print(self.args.src_cld2_lan, self.args.trg_cld2_lan)
+        print(self.args.src_langid_lan, self.args.trg_langid_lan)
+
+        self.switch_langs = fromto_copy != self.fromto
+        if self.switch_langs:
+            temp = self.args.S
+            self.args.S = self.args.T
+            self.args.T = temp
+            temp = self.args.src_cld2_lan
+            self.args.src_cld2_lan = self.args.trg_cld2_lan
+            self.args.trg_cld2_lan = temp
+            temp = self.args.src_langid_lan
+            self.args.src_langid_lan = self.args.trg_langid_lan
+            self.args.trg_langid_lan = temp
+
+        print(self.args.src_cld2_lan, self.args.trg_cld2_lan)
+        print(self.args.src_langid_lan, self.args.trg_langid_lan)
+
         if self.args.af == -1:
             self.alignment = self.args.rd+self.args.d+"/"+self.args.r+"/xml/"+self.fromto[0]+"-"+self.fromto[1]+".xml.gz"
         else:
@@ -72,7 +101,7 @@ class OpusRead:
             else:
                 self.resultfile = open(self.filenames[0], "w")
 
-        self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile, self.mosessrc, self.mosestrg, self.fromto)
+        self.par = AlignmentParser(self.source, self.target, self.args, self.resultfile, self.mosessrc, self.mosestrg, self.fromto, self.switch_langs)
 
     def printPair(self, sPair):
         ret = ""

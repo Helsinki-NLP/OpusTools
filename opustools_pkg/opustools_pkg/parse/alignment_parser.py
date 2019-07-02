@@ -8,10 +8,12 @@ from ..opus_get import OpusGet
 
 class AlignmentParser:
 
-    def __init__(self, source, target, args, result, mosessrc, mosestrg, fromto):
+    def __init__(self, source, target, args, result, mosessrc, mosestrg, fromto,
+            switch_langs):
         self.source = source
         self.target = target
         self.fromto = fromto
+        self.switch_langs = switch_langs
 
         self.start = ""
 
@@ -101,13 +103,17 @@ class AlignmentParser:
             if pre == "raw" and self.args.d == "OpenSubtitles":
                 pre = "rawos"
 
+            st = ["src", "trg"]
+            if self.switch_langs:
+                st = ["trg", "src"]
+
             if self.args.f:
-                self.sPar = SentenceParser(sourcefile, "src", pre, self.args.wm, self.args.s, self.args.pa, self.args.sa, self.args.ca)
-                self.tPar = SentenceParser(targetfile, "trg", pre, self.args.wm, self.args.t, self.args.pa, self.args.ta, self.args.ca)
+                self.sPar = SentenceParser(sourcefile, st[0], pre, self.args.wm, self.args.s, self.args.pa, self.args.sa, self.args.ca)
+                self.tPar = SentenceParser(targetfile, st[1], pre, self.args.wm, self.args.t, self.args.pa, self.args.ta, self.args.ca)
             else:
-                self.sPar = ExhaustiveSentenceParser(sourcefile, pre, "src", self.args.wm, self.args.s, self.args.pa, self.args.sa, self.args.ca)
+                self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0], self.args.wm, self.args.s, self.args.pa, self.args.sa, self.args.ca)
                 self.sPar.storeSentences()
-                self.tPar = ExhaustiveSentenceParser(targetfile, pre, "trg", self.args.wm, self.args.t, self.args.pa, self.args.ta, self.args.ca)
+                self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1], self.args.wm, self.args.t, self.args.pa, self.args.ta, self.args.ca)
                 self.tPar.storeSentences()                
 
     def processLink(self, attrs):
@@ -140,6 +146,15 @@ class AlignmentParser:
         return (self.slim[0] != "all" and (snum < int(self.slim[0]) or snum > int(self.slim[-1]))) or \
                 (self.tlim[0] != "all" and (tnum < int(self.tlim[0]) or tnum > int(self.tlim[-1])))
 
+    def langIdConfidence(self, srcAttrs, trgAttrs):
+        #print(self.args.src_cld2_lan)
+        #print(self.args.trg_cld2_lan)
+        #print(self.args.src_langid_lan)
+        #print(self.args.trg_langid_lan)
+        #print(srcAttrs)
+        #print(trgAttrs)
+        return True
+
     def readPair(self):
         #tags other than link are printed in link printing mode, otherwise they are skipped
         if self.start != "link":
@@ -150,12 +165,14 @@ class AlignmentParser:
 
         #no need to parse sentences in link printing mode
         if self.args.wm != "links":
-            sourceSen = self.sPar.readSentence(self.fromids)
-            targetSen = self.tPar.readSentence(self.toids)
+            sourceSen, srcAttrs = self.sPar.readSentence(self.fromids)
+            targetSen, trgAttrs = self.tPar.readSentence(self.toids)
 
         #if either side of the alignment is outside of the sentence limit, or the attribute value is under the given attribute
         #threshold, return -1, which skips printing of the alignment in PairPrinter.outputPair()
         if self.sentencesOutsideLimit() or (self.args.a != "any" and self.overThreshold == False):
+            return -1
+        elif not self.langIdConfidence(srcAttrs, trgAttrs):
             return -1
         #if filtering non-alignments is set to True and either side of the alignment has no sentences:
         #return -1
