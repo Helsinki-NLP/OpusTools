@@ -85,7 +85,7 @@ detection", action='store_true')
 
     def addIds(self):
         with zipfile.ZipFile(self.args.f, "r") as zip_arc:
-            with zipfile.ZipFile(self.args.f+"_temp.temp", "w") as new_arc:
+            with zipfile.ZipFile("add_lang_ids_temp.temp.zip", "w") as new_arc:
                 for filename in zip_arc.filelist:
                     if self.args.v > 0:
                         print(filename.filename)
@@ -99,8 +99,8 @@ detection", action='store_true')
                         new_arc.writestr(filename, new_bytes)
 
         if self.args.t:
-            os.rename(self.args.f+"_temp.temp", self.args.t)
+            os.rename("add_lang_ids_temp.temp.zip", self.args.t)
         else:
             os.remove(self.args.f)
-            os.rename(self.args.f+"_temp.temp", self.args.f)
+            os.rename("add_lang_ids_temp.temp.zip", self.args.f)
 

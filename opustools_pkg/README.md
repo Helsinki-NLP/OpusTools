@@ -5,7 +5,7 @@ Tools for accessing and processing OPUS data.
 * opus_read: read parallel data sets and convert to different output formats
 * opus_cat: extract given OPUS document from release data
 * opus_get: download files from OPUS
-* add_lang_ids: add language ids to sentences in xml files in xml archives
+* add_lang_ids: add language ids to sentences in xml files in zip archives
 
 ## opus_read
 
