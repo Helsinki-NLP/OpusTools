@@ -2,6 +2,7 @@ import os
 import zipfile
 import argparse
 import xml.parsers.expat
+import cgi
 import pycld2
 from langid.langid import LanguageIdentifier, model
 identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
@@ -14,6 +15,7 @@ class LanguageIdAdder(SentenceParser):
             annotations, anno_attrs, delimiter, suppress):
         super().__init__(document, preprocessing, direction, wmode, language,
             annotations, anno_attrs, delimiter)
+        self.pre = preprocessing
         self.suppress = suppress
         self.done = False
 
@@ -33,7 +35,12 @@ class LanguageIdAdder(SentenceParser):
                     outbytes.append(line)
                 else:
                     sentenceTags.append(line)
-                sentence = self.addToken(sentence)
+                if self.pre == "xml":
+                    sentence = self.addToken(sentence)
+                elif self.pre == "raw":
+                    if self.sfound and self.start == "s":
+                        sentence = cgi.escape(self.chara)
+                        self.chara = ""
                 if self.efound:
                     self.sfound = False
                     self.efound = False
@@ -56,27 +63,31 @@ class LanguageIdAdder(SentenceParser):
                 lilan = "un"
                 liconf = 0.0
             stag = '<s cld2="{0}" cld2conf="{1}" langid="{2}" langidconf="{3}" \
-id="{4}">\n'.format(cldlan, round(cldconf,2), lilan, round(liconf,2), self.sid)
+id="{4}">'.format(cldlan, round(cldconf,2), lilan, round(liconf,2), self.sid)
             if len(sentenceTags) > 0:
-                sentenceTags[0]=bytes(stag, "utf-8")
+                if self.pre == "xml":
+                    sentenceTags[0]=bytes(stag+"\n", "utf-8")
+                elif self.pre == "raw":
+                    sentenceTags[0]=bytes(stag+sentence+"</s>\n", "utf-8")
             for item in sentenceTags:
                 outbytes.append(item)
         self.document.close()
         return(b"".join(outbytes))
 
-class AddLanguageIds:
+class OpusLangid:
 
     def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog="add_lan_ids", description="Add \
-language ids to sentences in xml files in zip archives using pycld2 and \
-langid.py")
+        parser = argparse.ArgumentParser(prog="add_lan_ids", description="Add" +
+                " language ids to sentences in xml files in zip archives " +
+                "using pycld2 and langid.py")
         parser.add_argument("-f", help="Zip file path", required=True)
-        parser.add_argument("-t", help="Target zip file path. By default, the \
-original zip file is edited")
+        parser.add_argument("-p", help="Preprocessing type (xml/raw)")
+        parser.add_argument("-t", help="Target zip file path. By default, the" +
+                " original zip file is edited")
         parser.add_argument("-v", help="Verbosity. -v: print current xml file",
             action='count', default=0)
-        parser.add_argument("-s", help="Suppress error messages in language \
-detection", action='store_true')
+        parser.add_argument("-s", help="Suppress error messages in language " +
+                "detection", action='store_true')
 
         if len(arguments) == 0:
             self.args = parser.parse_args()
@@ -92,8 +103,8 @@ detection", action='store_true')
                         print(filename.filename)
                     with zip_arc.open(filename.filename) as text_file:
                         if filename.filename[-4:] == ".xml":
-                            sparser = LanguageIdAdder(text_file, "", "", False,
-                                "","","","", self.args.s)
+                            sparser = LanguageIdAdder(text_file, self.args.p,
+                                    "", False, "", "", "", "", self.args.s)
                             new_bytes = sparser.addIds()
                         else:
                             new_bytes = b"".join(text_file.readlines())

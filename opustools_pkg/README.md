@@ -49,6 +49,18 @@ arguments:
 		separated by commas, e.g. -ta pos,lem. To print all available
 		attributes use -ta all_attrs (default=pos,lem)
 -ca CA		Change annotation delimiter (default=|)
+--src_cld2_lan SRC_CLD2_LAN SRC_CLD2_LAN
+        Filter source sentences by their cld2 language id
+        labels and confidence score, e.g. en 0.9
+--trg_cld2_lan TRG_CLD2_LAN TRG_CLD2_LAN
+        Filter target sentences by their cld2 language id
+        labels and confidence score, e.g. en 0.9
+--src_langid_lan SRC_LANGID_LAN SRC_LANGID_LAN
+        Filter source sentences by their langid.py language id
+        labels and confidence score, e.g. en 0.9
+--trg_langid_lan TRG_LANGID_LAN TRG_LANGID_LAN
+        Filter target sentences by their langid.py language id
+        labels and confidence score, e.g. en 0.9
 ```
 
 
@@ -222,6 +234,7 @@ arguments:
 ```
 -h, --help  show this help message and exit
 -f F        Zip file path
+-p P        Preprocessing type (xml/raw)
 -t T        Target zip file path. By default, the original zip file is
                   edited
 -v          Verbosity. -v: print current xml file
