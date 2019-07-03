@@ -12,5 +12,6 @@ test_en
 test_fi
 testlinks
 .coverage
+htmlcov
 *.zip
 *.gz
