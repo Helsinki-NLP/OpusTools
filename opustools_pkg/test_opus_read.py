@@ -71,47 +71,47 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(len(self.opr.par.tPar.sentences), 3757)
 
     def test_ExhaustiveSentenceParser_getSentence(self):
-        self.assertEqual(self.opr.par.sPar.getSentence("s1"), "Source : manybooks.netAudiobook available here")
-        self.assertEqual(self.opr.par.tPar.getSentence("s1"), "Source : Project Gutenberg")
+        self.assertEqual(self.opr.par.sPar.getSentence("s1")[0], "Source : manybooks.netAudiobook available here")
+        self.assertEqual(self.opr.par.tPar.getSentence("s1")[0], "Source : Project Gutenberg")
 
-        self.assertEqual(self.opr.par.sPar.getSentence("s4"), "Chapter 1 Mr. Sherlock Holmes")
-        self.assertEqual(self.opr.par.tPar.getSentence("s4"), "Herra Sherlock Holmes .")
+        self.assertEqual(self.opr.par.sPar.getSentence("s4")[0], "Chapter 1 Mr. Sherlock Holmes")
+        self.assertEqual(self.opr.par.tPar.getSentence("s4")[0], "Herra Sherlock Holmes .")
 
-        self.assertEqual(self.opr.par.sPar.getSentence("s5.4"), '" To James Mortimer , M.R.C.S. , from his friends of the' + \
+        self.assertEqual(self.opr.par.sPar.getSentence("s5.4")[0], '" To James Mortimer , M.R.C.S. , from his friends of the' + \
                                                         ' C.C.H. , " was engraved upon it , with the date " 1884 . "')
-        self.assertEqual(self.opr.par.tPar.getSentence("s5.5"), "James Mortimerille ystäviltänsä C. C. H : ssa ' oli" + \
+        self.assertEqual(self.opr.par.tPar.getSentence("s5.5")[0], "James Mortimerille ystäviltänsä C. C. H : ssa ' oli" + \
             " kaiverrettu tuuman-levyiselle , kädensijan alapuolella olevalle hopealevylle , sekä vielä vuosiluku 1884 .")
 
     def test_ExhaustiveSentenceParser_readSentence_format(self):
-        self.assertEqual(self.opr.par.sPar.readSentence(["s1"]), '(src)="s1">Source : manybooks.netAudiobook available here')
-        self.assertEqual(self.opr.par.tPar.readSentence(["s1"]), '(trg)="s1">Source : Project Gutenberg')
-        self.assertEqual(self.opr.par.sPar.readSentence(["s11.0", "s11.1"]), '(src)="s11.0">" Good ! " said Holmes .\n' + \
+        self.assertEqual(self.opr.par.sPar.readSentence(["s1"])[0], '(src)="s1">Source : manybooks.netAudiobook available here')
+        self.assertEqual(self.opr.par.tPar.readSentence(["s1"])[0], '(trg)="s1">Source : Project Gutenberg')
+        self.assertEqual(self.opr.par.sPar.readSentence(["s11.0", "s11.1"])[0], '(src)="s11.0">" Good ! " said Holmes .\n' + \
                                                         '(src)="s11.1">" Excellent ! "')
 
     def test_ExhaustiveSentenceParser_readSentence_annotations(self):
         opr = OpusRead(["-d", "Books", "-s", "en", "-t", "eo", "-pa"])
         opr.par.initializeSentenceParsers({"fromDoc": "en/Carroll_Lewis-Alice_in_wonderland.xml.gz",\
                                              "toDoc": "eo/Carroll_Lewis-Alice_in_wonderland.xml.gz"})
-        self.assertEqual(opr.par.sPar.readSentence(["s4"]), """(src)="s4">CHAPTER|NN|chapter I|PRP|I Down|VBP|down the|DT|the Rabbit-Hole|NNP""")
+        self.assertEqual(opr.par.sPar.readSentence(["s4"])[0], """(src)="s4">CHAPTER|NN|chapter I|PRP|I Down|VBP|down the|DT|the Rabbit-Hole|NNP""")
         opr.par.closeFiles()
         opr = OpusRead(["-d", "Books", "-s", "en", "-t", "eo", "-pa", "-ca", "@"])
         opr.par.initializeSentenceParsers({"fromDoc": "en/Carroll_Lewis-Alice_in_wonderland.xml.gz",\
                                              "toDoc": "eo/Carroll_Lewis-Alice_in_wonderland.xml.gz"})
 
-        self.assertEqual(opr.par.sPar.readSentence(["s4"]), """(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down the@DT@the Rabbit-Hole@NNP""")
+        self.assertEqual(opr.par.sPar.readSentence(["s4"])[0], """(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down the@DT@the Rabbit-Hole@NNP""")
         opr.par.closeFiles()
 
     def test_ExhaustiveSentenceParser_readSentence_moses(self):
         self.opr.par.sPar.wmode = "moses"
-        self.assertEqual(self.opr.par.sPar.readSentence(["s5.2"]), 'It was a fine , thick piece of wood , bulbous-headed ,' + \
+        self.assertEqual(self.opr.par.sPar.readSentence(["s5.2"])[0], 'It was a fine , thick piece of wood , bulbous-headed ,' + \
                                                         ' of the sort which is known as a " Penang lawyer . "')
 
     def test_ExhaustiveSentenceParser_readSentence_tmx(self):
         self.opr.par.sPar.wmode = "tmx"
-        self.assertEqual(self.opr.par.sPar.readSentence(["s5.2"]), '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>It was a fine ,' + \
+        self.assertEqual(self.opr.par.sPar.readSentence(["s5.2"])[0], '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>It was a fine ,' + \
                     ' thick piece of wood , bulbous-headed , of the sort which is known as a " Penang lawyer . "</seg></tuv>')
         self.opr.par.tPar.wmode = "tmx"
-        self.assertEqual(self.opr.par.tPar.readSentence(["s5.2", "s5.3"]), """\t\t\t<tuv xml:lang="fi"><seg>Se oli""" + \
+        self.assertEqual(self.opr.par.tPar.readSentence(["s5.2", "s5.3"])[0], """\t\t\t<tuv xml:lang="fi"><seg>Se oli""" + \
          """ jokseenkin soma ja tukeva , se oli varustettu sipulinmuotoisella kädensijalla ja näytti oikealta " tuomarin""" + \
         """ sauvalta . " ' M.R.C.S.</seg></tuv>\n\t\t</tu>""")
     
@@ -119,17 +119,17 @@ class TestOpusRead(unittest.TestCase):
         rawprint = OpusRead(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw"])
         rawprint.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
                                              "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
-        self.assertEqual(rawprint.par.sPar.readSentence(["s5.2"]), '(src)="s5.2">It was a fine, thick piece of wood,' + \
+        self.assertEqual(rawprint.par.sPar.readSentence(["s5.2"])[0], '(src)="s5.2">It was a fine, thick piece of wood,' + \
                                                     ' bulbous-headed, of the sort which is known as a "Penang lawyer."')
         rawprint.par.closeFiles()
     
     def test_ExhaustiveSentenceParser_readSentence_empty(self):
-        self.assertEqual(self.opr.par.sPar.readSentence([""]), "")
+        self.assertEqual(self.opr.par.sPar.readSentence([""])[0], "")
 
     def test_SentenceParser_readSentence_format(self):
-        self.assertEqual(self.fastopr.par.sPar.readSentence(["s1"]), '(src)="s1">Source : manybooks.netAudiobook available here')
-        self.assertEqual(self.fastopr.par.tPar.readSentence(["s1"]), '(trg)="s1">Source : Project Gutenberg')
-        self.assertEqual(self.fastopr.par.sPar.readSentence(["s11.0", "s11.1"]), '(src)="s11.0">" Good ! " said Holmes .\n' + \
+        self.assertEqual(self.fastopr.par.sPar.readSentence(["s1"])[0], '(src)="s1">Source : manybooks.netAudiobook available here')
+        self.assertEqual(self.fastopr.par.tPar.readSentence(["s1"])[0], '(trg)="s1">Source : Project Gutenberg')
+        self.assertEqual(self.fastopr.par.sPar.readSentence(["s11.0", "s11.1"])[0], '(src)="s11.0">" Good ! " said Holmes .\n' + \
                                                             '(src)="s11.1">" Excellent ! "')
 
     def test_SentenceParser_readSentence_annotations(self):
@@ -137,7 +137,7 @@ class TestOpusRead(unittest.TestCase):
         opr.par.initializeSentenceParsers({"fromDoc": "en/Carroll_Lewis-Alice_in_wonderland.xml.gz",\
                                              "toDoc": "eo/Carroll_Lewis-Alice_in_wonderland.xml.gz"})
 
-        self.assertEqual(opr.par.sPar.readSentence(["s4"]), """(src)="s4">CHAPTER|NN|chapter I|PRP|I Down|VBP|down the|DT|the Rabbit-Hole|NNP""")
+        self.assertEqual(opr.par.sPar.readSentence(["s4"])[0], """(src)="s4">CHAPTER|NN|chapter I|PRP|I Down|VBP|down the|DT|the Rabbit-Hole|NNP""")
         opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_annotations_change_delimiter(self):
@@ -145,20 +145,20 @@ class TestOpusRead(unittest.TestCase):
         opr.par.initializeSentenceParsers({"fromDoc": "en/Carroll_Lewis-Alice_in_wonderland.xml.gz",\
                                              "toDoc": "eo/Carroll_Lewis-Alice_in_wonderland.xml.gz"})
 
-        self.assertEqual(opr.par.sPar.readSentence(["s4"]), """(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down the@DT@the Rabbit-Hole@NNP""")
+        self.assertEqual(opr.par.sPar.readSentence(["s4"])[0], """(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down the@DT@the Rabbit-Hole@NNP""")
         opr.par.closeFiles()
     
     def test_SentenceParser_readSentence_moses(self):
         self.fastopr.par.sPar.wmode = "moses"
-        self.assertEqual(self.fastopr.par.sPar.readSentence(["s12"]), '" I think also that the probability is in favour of' + \
+        self.assertEqual(self.fastopr.par.sPar.readSentence(["s12"])[0], '" I think also that the probability is in favour of' + \
                                         ' his being a country practitioner who does a great deal of his visiting on foot . "')
     
     def test_SentenceParser_readSentence_tmx(self):
         self.fastopr.par.sPar.wmode = "tmx"
         self.fastopr.par.tPar.wmode = "tmx"
-        self.assertEqual(self.fastopr.par.sPar.readSentence(["s16.0"]), """\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>" And""" + \
+        self.assertEqual(self.fastopr.par.sPar.readSentence(["s16.0"])[0], """\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>" And""" + \
                                                     """ then again , there is the ' friends of the C.C.H. '</seg></tuv>""")
-        self.assertEqual(self.fastopr.par.tPar.readSentence(["s16.1", "s16.2"]), """\t\t\t<tuv xml:lang="fi"><seg>Minä""" + \
+        self.assertEqual(self.fastopr.par.tPar.readSentence(["s16.1", "s16.2"])[0], """\t\t\t<tuv xml:lang="fi"><seg>Minä""" + \
         """ otaksun , että H tarkoittaa jotain hevosurheiluseuraa . Ehkäpä hän kirurgina oli tehnyt palveluksia""" + \
         """ paikallisen urheiluseuran jäsenille , ja nämä ovat kiitollisuutensa osoitteeksi antaneet tämän pienen lahjan""" + \
         """ . "</seg></tuv>\n\t\t</tu>""")
@@ -167,12 +167,12 @@ class TestOpusRead(unittest.TestCase):
         fastprinter = OpusRead(["-d", "Books", "-s", "en", "-t", "fi", "-p", "raw", "-f"])
         fastprinter.par.initializeSentenceParsers({"fromDoc": "en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz",\
                                              "toDoc": "fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"})
-        self.assertEqual(fastprinter.par.sPar.readSentence(["s5.2"]), '(src)="s5.2">It was a fine, thick piece of wood,' + \
+        self.assertEqual(fastprinter.par.sPar.readSentence(["s5.2"])[0], '(src)="s5.2">It was a fine, thick piece of wood,' + \
                                                         ' bulbous-headed, of the sort which is known as a "Penang lawyer."')
         fastprinter.par.closeFiles()
     
     def test_SentenceParser_readSentence_empty(self):
-        self.assertEqual(self.fastopr.par.sPar.readSentence([""]), "")
+        self.assertEqual(self.fastopr.par.sPar.readSentence([""])[0], "")
     
     def test_AlignmentParser_readPair_returns_1_if_tag_is_not_link_and_write_mode_is_links(self):
         self.opr.par.args.wm="links"

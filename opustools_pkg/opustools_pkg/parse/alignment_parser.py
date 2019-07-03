@@ -14,6 +14,11 @@ class AlignmentParser:
         self.target = target
         self.fromto = fromto
         self.switch_langs = switch_langs
+        self.testConfidenceOn = False
+        for item in [args.src_cld2_lan, args.trg_cld2_lan, 
+                args.src_langid_lan, args.trg_langid_lan]:
+            if item:
+                self.testConfidenceOn = True
 
         self.start = ""
 
@@ -171,6 +176,7 @@ class AlignmentParser:
             else:
                 return -1
 
+        srcAttrs, trgAttrs = {}, {}
         #no need to parse sentences in link printing mode
         if self.args.wm != "links":
             sourceSen, srcAttrs = self.sPar.readSentence(self.fromids)
@@ -180,7 +186,9 @@ class AlignmentParser:
         #threshold, return -1, which skips printing of the alignment in PairPrinter.outputPair()
         if self.sentencesOutsideLimit() or (self.args.a != "any" and self.overThreshold == False):
             return -1
-        elif not self.langIdConfidence(srcAttrs, trgAttrs):
+        elif self.testConfidenceOn and \
+                not self.langIdConfidence(srcAttrs, trgAttrs) \
+                and self.args.wm != "links":
             return -1
         #if filtering non-alignments is set to True and either side of the alignment has no sentences:
         #return -1

@@ -40,7 +40,7 @@ class ExhaustiveSentenceParser(SentenceParser):
         if sid in self.sentences.keys():
             return self.sentences[sid]
         else:
-            return ""
+            return "", {}
 
     def readSentence(self, ids):
         if len(ids) == 0 or ids[0] == "":
