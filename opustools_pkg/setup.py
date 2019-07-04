@@ -11,7 +11,7 @@ setuptools.setup(
     description="Tools to read OPUS",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    #url="https://github.com/pypa/example-project",
+    url="https://github.com/Helsinki-NLP/OpusTools",
     packages=setuptools.find_packages(),
     scripts=["bin/opus_read", "bin/opus_cat", "bin/opus_get",
         "bin/opus_langid"],

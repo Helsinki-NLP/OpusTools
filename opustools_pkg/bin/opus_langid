@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
 from opustools_pkg.opus_langid import OpusLangid
 
-OpusLangid([]).addIds()
+#OpusLangid([]).addIds()
+OpusLangid([]).processFiles()
