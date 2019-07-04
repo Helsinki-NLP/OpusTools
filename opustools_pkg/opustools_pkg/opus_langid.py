@@ -9,7 +9,7 @@ identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
 class OpusLangid:
 
     def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog="add_lan_ids", description="Add" +
+        parser = argparse.ArgumentParser(prog="opus_langid", description="Add" +
                 " language ids to sentences in plain xml files or xml files " +
                 "in zip archives using pycld2 and langid.py")
         parser.add_argument("-f", help="File path", required=True)

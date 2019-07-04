@@ -221,12 +221,12 @@ arguments:
 
 Download files from OPUS
 
-## add_lang_ids
+## opus_langid
 
 ## Usage
 
 ```
-add_lan_ids [-h] -f F
+opus_langid [-h] -f F [-t T] [-v] [-s]
 ```
 
 arguments:

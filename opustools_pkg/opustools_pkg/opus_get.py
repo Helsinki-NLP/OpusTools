@@ -18,8 +18,9 @@ class OpusGet:
         else:
             self.args = parser.parse_args(arguments)
 
-        self.fromto = [self.args.s, self.args.t]
-        self.fromto.sort()
+        if self.args.t != None:
+            self.fromto = [self.args.s, self.args.t]
+            self.fromto.sort()
 
         self.url = "http://opus.nlpl.eu/opusapi/?"
         urlparts = {"s": "source", "t": "target", "d": "corpus", "r": "version", "p": "preprocessing"}
@@ -38,7 +39,7 @@ class OpusGet:
             size += 1
         size = str(size) + unit
         return size
-        
+
     def format_size(self, size):
         if len(str(size)) > 9:
             size = self.round_size(size, 9, " TB")
@@ -64,12 +65,12 @@ class OpusGet:
                 retdata += tempdata
                 break
         return retdata
-            
+
     def remove_data_with_no_alignment(self, data):
         retdata = []
         tempdata = []
         prev_directory = ""
-        
+
         for c in data["corpora"]:
             directory = "/{0}/{1}".format(c["corpus"], c["version"])
             if prev_directory != "" and prev_directory!=directory:
@@ -102,10 +103,10 @@ class OpusGet:
     def progress_status(self, count, blockSize, totalSize):
         percent = int(count*blockSize*100/totalSize)
         print("\r{0} ... {1}% of {2}".format(self.filename, percent, self.filesize), end="", flush=True)
-    
+
     def download(self, corpora, file_n, total_size):
         answer = input("Downloading " + str(file_n) + " file(s) with the total size of " + total_size + ". Continue? (y/n) ")
-            
+
         if answer == "y":
             for c in corpora:
                 self.filename = c["url"].replace("/", "_").replace("https:__object.pouta.csc.fi_OPUS-", "")
@@ -125,7 +126,7 @@ class OpusGet:
             print("{0:>7} {1:s}".format(self.format_size(c["size"]), c["url"]))
         print("\n{0:>7} {1:s}".format(total_size, "Total size"))
 
-    
+
     def get_files(self):
         try:
             corpora, file_n, total_size = self.get_corpora_data()
