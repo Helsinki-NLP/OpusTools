@@ -8,15 +8,15 @@ from ..opus_get import OpusGet
 
 class AlignmentParser:
 
-    def __init__(self, source, target, args, result, mosessrc, mosestrg, 
+    def __init__(self, source, target, args, result, mosessrc, mosestrg,
             fromto, switch_langs):
         self.source = source
         self.target = target
         self.fromto = fromto
         self.switch_langs = switch_langs
         self.testConfidenceOn = False
-        for item in [args.src_cld2_lan, args.trg_cld2_lan, 
-                args.src_langid_lan, args.trg_langid_lan]:
+        for item in [args.src_cld2, args.trg_cld2,
+                args.src_langid, args.trg_langid]:
             if item:
                 self.testConfidenceOn = True
 
@@ -92,8 +92,8 @@ class AlignmentParser:
                     except FileNotFoundError:
                         print(('\nZip files are not found. The following '
                             'files are available for downloading:\n'))
-                        arguments = ['-s', self.fromto[0], '-t', 
-                            self.fromto[1], '-d', self.args.d, '-r', 
+                        arguments = ['-s', self.fromto[0], '-t',
+                            self.fromto[1], '-d', self.args.d, '-r',
                             self.args.r, '-p', self.args.p, '-l']
                         og = OpusGet(arguments)
                         og.get_files()
@@ -122,21 +122,21 @@ class AlignmentParser:
                 st = ['trg', 'src']
 
             if self.args.f:
-                self.sPar = SentenceParser(sourcefile, st[0], pre, 
-                    self.args.wm, self.args.s, self.args.pa, self.args.sa, 
+                self.sPar = SentenceParser(sourcefile, st[0], pre,
+                    self.args.wm, self.args.s, self.args.pa, self.args.sa,
                     self.args.ca)
-                self.tPar = SentenceParser(targetfile, st[1], pre, 
-                    self.args.wm, self.args.t, self.args.pa, self.args.ta, 
+                self.tPar = SentenceParser(targetfile, st[1], pre,
+                    self.args.wm, self.args.t, self.args.pa, self.args.ta,
                     self.args.ca)
             else:
-                self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0], 
-                    self.args.wm, self.args.s, self.args.pa, self.args.sa, 
+                self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
+                    self.args.wm, self.args.s, self.args.pa, self.args.sa,
                     self.args.ca)
                 self.sPar.storeSentences()
-                self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1], 
-                    self.args.wm, self.args.t, self.args.pa, self.args.ta, 
+                self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
+                    self.args.wm, self.args.t, self.args.pa, self.args.ta,
                     self.args.ca)
-                self.tPar.storeSentences()                
+                self.tPar.storeSentences()
 
     def processLink(self, attrs):
         if self.args.a in attrs.keys():
@@ -179,12 +179,10 @@ class AlignmentParser:
         return True
 
     def langIdConfidence(self, srcAttrs, trgAttrs):
-        return (self.testConfidence(self.args.src_cld2_lan, srcAttrs, 'cld2')
-            and self.testConfidence(self.args.trg_cld2_lan, trgAttrs, 'cld2')
-            and self.testConfidence(self.args.src_langid_lan, srcAttrs,
-                'langid')
-            and self.testConfidence(self.args.trg_langid_lan, trgAttrs,
-                'langid'))
+        return (self.testConfidence(self.args.src_cld2, srcAttrs, 'cld2')
+            and self.testConfidence(self.args.trg_cld2, trgAttrs, 'cld2')
+            and self.testConfidence(self.args.src_langid, srcAttrs, 'langid')
+            and self.testConfidence(self.args.trg_langid, trgAttrs, 'langid'))
 
     def readPair(self):
         #tags other than link are printed in link printing mode, 

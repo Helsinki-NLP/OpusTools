@@ -8,82 +8,82 @@ from .opus_get import OpusGet
 class OpusRead:
 
     def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='opus_read', 
+        parser = argparse.ArgumentParser(prog='opus_read',
             description='Read sentence alignment in XCES align format')
 
         parser.add_argument('-d', help='Corpus name', required=True)
         parser.add_argument('-s', help='Source language', required=True)
         parser.add_argument('-t', help='Target language', required=True)
-        parser.add_argument('-r', help='Release (default=latest)', 
+        parser.add_argument('-r', help='Release (default=latest)',
             default='latest')
-        parser.add_argument('-p', 
-            help='Pre-process-type (raw, xml or parsed, default=xml)', 
+        parser.add_argument('-p',
+            help='Pre-process-type (raw, xml or parsed, default=xml)',
             default='xml')
-        parser.add_argument('-m', help='Maximum number of alignments', 
+        parser.add_argument('-m', help='Maximum number of alignments',
             default='all')
-        parser.add_argument('-S', 
+        parser.add_argument('-S',
             help=('Number of source sentences in alignments (range is '
-                'allowed, eg. -S 1-2)'), 
+                'allowed, eg. -S 1-2)'),
             default='all')
-        parser.add_argument('-T', 
+        parser.add_argument('-T',
             help=('Number of target sentences in alignments (range is '
-                'allowed, eg. -T 1-2)'), 
+                'allowed, eg. -T 1-2)'),
             default='all')
-        parser.add_argument('-a', help='Set attribute for filttering', 
+        parser.add_argument('-a', help='Set attribute for filttering',
             default='any')
-        parser.add_argument('-tr', help='Set threshold for an attribute', 
+        parser.add_argument('-tr', help='Set threshold for an attribute',
             default=0)
-        parser.add_argument('-ln', help='Leave non-alignments out', 
+        parser.add_argument('-ln', help='Leave non-alignments out',
             action='store_true')
-        parser.add_argument('-w', 
+        parser.add_argument('-w',
             help=('Write to file. To print moses format in separate files, '
                 'enter two file names separated by a comma (e.g. -w '
-                'moses.src,moses.trg). Otherwise enter one file name.'), 
+                'moses.src,moses.trg). Otherwise enter one file name.'),
             default=-1)
-        parser.add_argument('-wm', 
-            help='Set writing mode (normal, moses, tmx, links)', 
+        parser.add_argument('-wm',
+            help='Set writing mode (normal, moses, tmx, links)',
             default='normal')
-        parser.add_argument('-pn', 
-            help='Print file names when using moses format', 
+        parser.add_argument('-pn',
+            help='Print file names when using moses format',
             action='store_true')
-        parser.add_argument('-f', 
+        parser.add_argument('-f',
             help=('Fast parsing. Faster than normal parsing, if you print '
                 'a small part of the whole corpus, but requires the sentence '
-                'ids in alignment files to be in sequence.'), 
+                'ids in alignment files to be in sequence.'),
             action='store_true')
-        parser.add_argument('-rd', 
-            help='Change root directory (default=/proj/nlpl/data/OPUS/)', 
+        parser.add_argument('-rd',
+            help='Change root directory (default=/proj/nlpl/data/OPUS/)',
             default='/proj/nlpl/data/OPUS/')
         parser.add_argument('-af', help='Use given alignment file', default=-1)
         parser.add_argument('-cm', help='Change moses delimiter (default=tab)',
             default='\t')
-        parser.add_argument('-pa', help='Print annotations, if they exist', 
+        parser.add_argument('-pa', help='Print annotations, if they exist',
             action='store_true')
-        parser.add_argument('-sa', 
+        parser.add_argument('-sa',
             help=('Set source sentence annotation attributes to be printed '
-                'separated by commas, e.g. -sa pos,lem. To print all ' 
-                'available attributes use -sa all_attrs (default=pos,lem)'), 
+                'separated by commas, e.g. -sa pos,lem. To print all '
+                'available attributes use -sa all_attrs (default=pos,lem)'),
             default='pos,lem')
-        parser.add_argument('-ta', 
+        parser.add_argument('-ta',
             help=('Set target sentence annotation attributes to be printed '
                 'separated by commas, e.g. -ta pos,lem. To print all '
-                'available attributes use -ta all_attrs (default=pos,lem)'), 
+                'available attributes use -ta all_attrs (default=pos,lem)'),
             default='pos,lem')
-        parser.add_argument('-ca', 
+        parser.add_argument('-ca',
             help='Change annotation delimiter (default=|)', default='|')
-        parser.add_argument('--src_cld2_lan', 
+        parser.add_argument('--src_cld2',
             help=('Filter source sentences by their cld2 language id labels '
-                'and confidence score, e.g. en 0.9'), 
+                'and confidence score, e.g. en 0.9'),
             nargs=2)
-        parser.add_argument('--trg_cld2_lan', 
+        parser.add_argument('--trg_cld2',
             help=('Filter target sentences by their cld2 language id labels '
-                'and confidence score, e.g. en 0.9'), 
+                'and confidence score, e.g. en 0.9'),
             nargs=2)
-        parser.add_argument('--src_langid_lan', 
+        parser.add_argument('--src_langid',
             help=('Filter source sentences by their langid.py language id '
                 'labels and confidence score, e.g. en 0.9'),
             nargs=2)
-        parser.add_argument('--trg_langid_lan', 
+        parser.add_argument('--trg_langid',
             help=('Filter target sentences by their langid.py language id '
                 'labels and confidence score, e.g. en 0.9'),
             nargs=2)
@@ -108,12 +108,12 @@ class OpusRead:
             temp = self.args.S
             self.args.S = self.args.T
             self.args.T = temp
-            temp = self.args.src_cld2_lan
-            self.args.src_cld2_lan = self.args.trg_cld2_lan
-            self.args.trg_cld2_lan = temp
-            temp = self.args.src_langid_lan
-            self.args.src_langid_lan = self.args.trg_langid_lan
-            self.args.trg_langid_lan = temp
+            temp = self.args.src_cld2
+            self.args.src_cld2 = self.args.trg_cld2
+            self.args.trg_cld2 = temp
+            temp = self.args.src_langid
+            self.args.src_langid = self.args.trg_langid
+            self.args.trg_langid = temp
 
         if self.args.af == -1:
             self.alignment = (self.args.rd+self.args.d+'/'+self.args.r+
@@ -140,8 +140,8 @@ class OpusRead:
             else:
                 self.resultfile = open(self.filenames[0], 'w')
 
-        self.par = AlignmentParser(self.source, self.target, self.args, 
-            self.resultfile, self.mosessrc, self.mosestrg, self.fromto, 
+        self.par = AlignmentParser(self.source, self.target, self.args,
+            self.resultfile, self.mosessrc, self.mosestrg, self.fromto,
             self.switch_langs)
 
     def printPair(self, sPair):
@@ -156,7 +156,7 @@ class OpusRead:
             if self.args.wm == 'normal':
                 ret = ret + '\n================================'
         return ret
-    
+
     def writePair(self, sPair):
         ret1, ret2 = '', ''
         if self.args.wm == 'links':
@@ -179,13 +179,13 @@ class OpusRead:
 
         par.fromids = []
         par.toids = []
-        
+
         #if the sentence pair doesn't meet the requirements in 
         #AlignmentParser.readLine(), return -1 as the sentence pair and 
         #return 0, which won't increment the pairs-counter in printPairs()
         if sPair == -1:
             return 0, sPair
-        
+
         if sPair == 1:
             sPair = line.decode('utf-8')[:-1]
 

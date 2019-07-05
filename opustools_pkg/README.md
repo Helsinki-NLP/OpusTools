@@ -13,8 +13,11 @@ Tools for accessing and processing OPUS data.
 
 ```
 opus_read [-h] -d D -s S -t T [-r R] [-p P] [-m M] [-S S] [-T T] [-a A]
-			[-tr TR] [-ln] [-w W] [-wm WM] [-f] [-rd RD] [-af AF]
-			[-cm CM] [-pa] [-sa SA] [-ta TA] [-ca CA]
+            [-tr TR] [-ln] [-w W] [-wm WM] [-pn] [-f] [-rd RD] [-af AF]
+            [-cm CM] [-pa] [-sa SA] [-ta TA] [-ca CA]
+            [--src_cld2 SRC_CLD2 SRC_CLD2] [--trg_cld2 TRG_CLD2 TRG_CLD2]
+            [--src_langid SRC_LANGID SRC_LANGID]
+            [--trg_langid TRG_LANGID TRG_LANGID]
 ```
 
 arguments:
@@ -49,16 +52,16 @@ arguments:
 		separated by commas, e.g. -ta pos,lem. To print all available
 		attributes use -ta all_attrs (default=pos,lem)
 -ca CA		Change annotation delimiter (default=|)
---src_cld2_lan SRC_CLD2_LAN SRC_CLD2_LAN
+--src_cld2 SRC_CLD2_LAN SRC_CLD2
         Filter source sentences by their cld2 language id
         labels and confidence score, e.g. en 0.9
---trg_cld2_lan TRG_CLD2_LAN TRG_CLD2_LAN
+--trg_cld2 TRG_CLD2_LAN TRG_CLD2
         Filter target sentences by their cld2 language id
         labels and confidence score, e.g. en 0.9
---src_langid_lan SRC_LANGID_LAN SRC_LANGID_LAN
+--src_langid SRC_LANGID_LAN SRC_LANGID
         Filter source sentences by their langid.py language id
         labels and confidence score, e.g. en 0.9
---trg_langid_lan TRG_LANGID_LAN TRG_LANGID_LAN
+--trg_langid TRG_LANGID_LAN TRG_LANGID
         Filter target sentences by their langid.py language id
         labels and confidence score, e.g. en 0.9
 ```
