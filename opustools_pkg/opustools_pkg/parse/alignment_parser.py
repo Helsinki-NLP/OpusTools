@@ -169,13 +169,15 @@ class AlignmentParser:
             snum > int(self.slim[-1]))) or (self.tlim[0] != 'all' and
             (tnum < int(self.tlim[0]) or tnum > int(self.tlim[-1]))))
 
-    def testConfidence(self, confidence, attrs, ider):
-        if attrs == {}:
+    def testConfidence(self, confidence, attrsList, ider):
+        if attrsList == []:
             return False
         if confidence:
             lan, conf = confidence
-            return lan == attrs[ider] \
-                    and float(conf) <= float(attrs[ider+'conf'])
+            for attrs in attrsList:
+                if (lan != attrs[ider] or
+                        float(conf) > float(attrs[ider+'conf'])):
+                    return False
         return True
 
     def langIdConfidence(self, srcAttrs, trgAttrs):

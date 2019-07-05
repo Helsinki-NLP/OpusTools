@@ -46,14 +46,16 @@ class ExhaustiveSentenceParser(SentenceParser):
 
     def readSentence(self, ids):
         if len(ids) == 0 or ids[0] == '':
-            return '', {}
+            return '', []
         sentence = ''
+        attrsList = []
         if self.wmode == 'tmx':
             sentence = self.addTuBeginning()
         for sid in ids:
             newSentence, attrs = self.getSentence(sid)
             sentence = self.addSentence(sentence, newSentence, sid)
+            attrsList.append(attrs)
         if self.wmode == 'tmx':
             sentence = self.addTuEnding(sentence)
 
-        return sentence[1:], attrs
+        return sentence[1:], attrsList
