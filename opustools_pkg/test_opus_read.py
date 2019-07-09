@@ -92,7 +92,7 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(self.opr.par.sPar.getSentence('s5.4')[0],
             '" To James Mortimer , M.R.C.S. , from his friends of the' +
             ' C.C.H. , " was engraved upon it , with the date " 1884 . "')
-        self.assertEqual(self.opr.par.tPar.getSentence("s5.5")[0],
+        self.assertEqual(self.opr.par.tPar.getSentence('s5.5')[0],
             "James Mortimerille ystäviltänsä C. C. H : ssa ' oli" +
             " kaiverrettu tuuman-levyiselle , kädensijan alapuolella" +
             " olevalle hopealevylle , sekä vielä vuosiluku 1884 .")
@@ -386,6 +386,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
             '(src)="s5.2">It was a fine, thick piece of wood,' +
             ' bulbous-headed, of the sort which is known as a "Penang lawyer."')
         rawprint.par.closeFiles()
+
     def test_ExhaustiveSentenceParser_readSentence_raw(self):
         rawprint = OpusRead(
             ['-d', 'Books', '-s', 'en', '-t', 'fi', '-p', 'raw'])
@@ -621,7 +622,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
             '-pa', '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma',
-            '-w', 'test_result']).printPairs()
+            '-w', 'test_result', '-r', 'v4']).printPairs()
         with open('test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n' +
@@ -634,7 +635,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
             '-pa', '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma', '-w',
-            'test_result', '-f']).printPairs()
+            'test_result', '-f', '-r', 'v4']).printPairs()
         with open('test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '\n# en/12005S_TTE.xml.gz\n' +
@@ -646,7 +647,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_normal_parsed_print(self):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
-            '-pa', '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma'])
+            '-pa', '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma', 
+            '-r', 'v4'])
         self.assertEqual(var,
             '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n' +
             '================================' +
@@ -657,7 +659,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_normal_parsed_print_fast(self):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
-            '-pa', '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma', '-f'])
+            '-pa', '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma', '-f',
+            '-r', 'v4'])
         self.assertEqual(var,
             '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n' +
             '================================' +
@@ -668,7 +671,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_normal_parsed_print_all_attributes(self):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
-            '-pa', '-sa', 'all_attrs', '-ta', 'all_attrs'])
+            '-pa', '-sa', 'all_attrs', '-ta', 'all_attrs', '-r', 'v4'])
         self.assertEqual(var,
             '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n' +
             '================================' +
@@ -680,7 +683,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_normal_parsed_print_all_attributes_fast(self):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
-            '-pa', '-sa', 'all_attrs', '-ta', 'all_attrs', '-f'])
+            '-pa', '-sa', 'all_attrs', '-ta', 'all_attrs', '-f', '-r', 'v4'])
         self.assertEqual(var,
             '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n' +
             '================================' +
@@ -793,7 +796,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1',
             '-w', 'test_result', '-wm', 'tmx', '-p', 'parsed', '-pa',
-            '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma']).printPairs()
+            '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma', 
+            '-r', 'v4']).printPairs()
         with open('test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
@@ -809,7 +813,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1',
             '-w', 'test_result', '-wm', 'tmx', '-p', 'parsed', '-pa',
             '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma',
-            '-f']).printPairs()
+            '-f', '-r', 'v4']).printPairs()
         with open('test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
@@ -824,7 +828,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-wm', 'tmx',
             '-p', 'parsed', '-pa', '-sa', 'upos,feats,lemma',
-            '-ta', 'upos,feats,lemma'])
+            '-ta', 'upos,feats,lemma', '-r', 'v4'])
         self.assertEqual(var,
             '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype=' +
@@ -838,7 +842,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-wm', 'tmx',
             '-p', 'parsed', '-pa', '-sa', 'upos,feats,lemma',
-            '-ta', 'upos,feats,lemma', '-f'])
+            '-ta', 'upos,feats,lemma', '-f', '-r', 'v4'])
         self.assertEqual(var,
             '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype=' +
@@ -958,7 +962,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1',
             '-w', 'test.src,test.trg', '-wm', 'moses', '-p', 'parsed',
             '-pa', '-sa', 'upos,feats,lemma',
-            '-ta', 'upos,feats,lemma']).printPairs()
+            '-ta', 'upos,feats,lemma', '-r', 'v4']).printPairs()
         with open('test.src', 'r') as f:
             self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
         with open('test.trg', 'r') as f:
@@ -970,7 +974,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1',
             '-w', 'test.src,test.trg', '-wm', 'moses', '-p', 'parsed',
             '-pa', '-sa', 'upos,feats,lemma', '-ta', 'upos,feats,lemma',
-            '-f']).printPairs()
+            '-f', '-r', 'v4']).printPairs()
         with open('test.src', 'r') as f:
             self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
         with open('test.trg', 'r') as f:
@@ -981,7 +985,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-wm', 'moses',
             '-p', 'parsed', '-pa', '-sa', 'upos,feats,lemma',
-            '-ta', 'upos,feats,lemma'])
+            '-ta', 'upos,feats,lemma', '-r', 'v4'])
         self.assertEqual(var,
             'Treaty|NOUN|Number=Sing|treaty\tTratado|VERB|Gender=Masc|' +
             'Number=Sing|VerbForm=Part|tratado\n')
@@ -990,7 +994,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-wm', 'moses',
             '-p', 'parsed', '-pa', '-sa', 'upos,feats,lemma', '-ta',
-            'upos,feats,lemma', '-f'])
+            'upos,feats,lemma', '-f', '-r', 'v4'])
         self.assertEqual(var,
             'Treaty|NOUN|Number=Sing|treaty\tTratado|VERB|Gender=Masc|' +
             'Number=Sing|VerbForm=Part|tratado\n')
@@ -1141,7 +1145,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
             '\n(trg)="s4">Herra Sherlock Holmes .'
             '\n================================\n'))
 
-    def test_filtering_by_trg_langid(self):
+    def test_filtering_by_lang_labels(self):
         var = pairPrinterToVariable(
             ('-d Books -s en -t fi -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
             'fi 0.97 --src_langid en 0.17 --trg_langid fi 1'.split()))
@@ -1154,7 +1158,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
             '\n(trg)="s8.1">Luulenpa että sinulla on silmät niskassakin . "'
             '\n================================\n'))
 
-    def test_filtering_by_trg_langid_nonalphabetical_lang_order(self):
+    def test_filtering_by_lang_labels_nonalphabetical_lang_order(self):
         var = pairPrinterToVariable(
             ('-d Books -s fi -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
             'fi 0.97 --trg_langid en 0.17 --src_langid fi 1'.split()))
