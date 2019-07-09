@@ -9,17 +9,17 @@ identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
 class OpusLangid:
 
     def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='opus_langid', 
+        parser = argparse.ArgumentParser(prog='opus_langid',
             description=('Add language ids to sentences in plain xml '
                 'files or xml files in zip archives using pycld2 and '
                 'langid.py'))
         parser.add_argument('-f', help='File path', required=True)
-        parser.add_argument('-t', 
+        parser.add_argument('-t',
             help='Target file path. By default, the original file is edited')
         parser.add_argument('-v', help='Verbosity. -v: print current xml file',
             action='count', default=0)
-        parser.add_argument('-s', 
-            help='Suppress error messages in language detection', 
+        parser.add_argument('-s',
+            help='Suppress error messages in language detection',
             action='store_true')
 
         if len(arguments) == 0:
@@ -27,25 +27,28 @@ class OpusLangid:
         else:
             self.args = parser.parse_args(arguments)
 
+        self.suppress = self.args.s
+
     def detectLanguage(self, sentence, sid):
         try:
-            clddetails = pycld2.detect(sentence)[2][0]
-            cldlan = clddetails[1]
-            cldconf = clddetails[2]/100
+            clddetails = pycld2.detect(sentence)
         except Exception as e:
             if not self.suppress:
                 print('Sentence id <{0}>: {1}'.format(sid, e))
-            cldlan = 'un'
-            cldconf = '0.0'
+            clddetails = (0, 0, ((0, 'un', 0.0), 0))
         try:
-            lilan, liconf = identifier.classify(sentence)
+            lidetails = identifier.classify(sentence)
         except Exception as e:
             if not self.suppress:
                 print('Sentence id <{0}>: {1}'.format(sid, e))
-            lilan = 'un'
-            liconf = '0.0'
+            lidetails = ('un', 0.0)
 
-        return cldlan, str(round(cldconf, 2)), lilan, str(round(liconf, 2))
+        cldlan = clddetails[2][0][1]
+        cldconf = str(round(clddetails[2][0][2]/100, 2))
+        lilan, liconf = [str(round(x,2)) if type(x) == float
+                else x for x in lidetails]
+
+        return cldlan, cldconf, lilan, liconf
 
     def addIds(self, filename):
         tree = ET.parse(filename)
