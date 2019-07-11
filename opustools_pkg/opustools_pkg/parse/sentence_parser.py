@@ -1,8 +1,8 @@
 import xml.parsers.expat
 
 class SentenceParser:
-    
-    def __init__(self, document, direction, preprocessing, wmode, 
+
+    def __init__(self, document, direction, preprocessing, wmode,
             language, annotations, anno_attrs, delimiter):
         self.document = document
         self.direction = direction
@@ -18,12 +18,12 @@ class SentenceParser:
         self.end = ''
 
         self.posses = []
-        
+
         self.parser = xml.parsers.expat.ParserCreate()
         self.parser.StartElementHandler = self.start_element
         self.parser.CharacterDataHandler = self.char_data
         self.parser.EndElementHandler = self.end_element
-        
+
         self.sfound = False
         self.efound = False
 
@@ -32,9 +32,9 @@ class SentenceParser:
 
         self.attrs = {}
 
-        self.processSentence = {'parsed':self.processTokenizedSentence, 
-                                'xml':self.processTokenizedSentence, 
-                                'raw':self.processRawSentence, 
+        self.processSentence = {'parsed':self.processTokenizedSentence,
+                                'xml':self.processTokenizedSentence,
+                                'raw':self.processRawSentence,
                                 'rawos':self.processRawSentenceOS}
 
     def start_element(self, name, attrs):
@@ -42,6 +42,7 @@ class SentenceParser:
         if 'id' in attrs.keys() and name == 's':
             self.attrs = attrs
             self.sfound = True
+            self.oneLineSStart = True
             self.sid = attrs['id']
         if name == 'w' and self.annotations:
             if self.anno_attrs[0] == 'all_attrs':
@@ -61,6 +62,7 @@ class SentenceParser:
         self.end = name
         if name == 's':
             self.efound = True
+            self.oneLineSEnd = True
 
     def parseLine(self, line):
         self.parser.Parse(line.strip())

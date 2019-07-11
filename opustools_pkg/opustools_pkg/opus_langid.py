@@ -1,33 +1,19 @@
 import os
 import zipfile
 import argparse
-import xml.etree.ElementTree as ET
 import pycld2
+import cgi
 from langid.langid import LanguageIdentifier, model
 identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
 
-class OpusLangid:
+from .parse.sentence_parser import SentenceParser
 
-    def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='opus_langid',
-            description=('Add language ids to sentences in plain xml '
-                'files or xml files in zip archives using pycld2 and '
-                'langid.py'))
-        parser.add_argument('-f', help='File path', required=True)
-        parser.add_argument('-t',
-            help='Target file path. By default, the original file is edited')
-        parser.add_argument('-v', help='Verbosity. -v: print current xml file',
-            action='count', default=0)
-        parser.add_argument('-s',
-            help='Suppress error messages in language detection',
-            action='store_true')
+class LanguageIdAdder(SentenceParser):
 
-        if len(arguments) == 0:
-            self.args = parser.parse_args()
-        else:
-            self.args = parser.parse_args(arguments)
-
-        self.suppress = self.args.s
+    def __init__(self, suppress, iszip):
+        super().__init__('', '', '', False, '', '', '', '')
+        self.iszip = iszip
+        self.suppress = suppress
 
     def detectLanguage(self, sentence, sid):
         try:
@@ -50,58 +36,106 @@ class OpusLangid:
 
         return cldlan, cldconf, lilan, liconf
 
-    def addIds(self, filename):
-        tree = ET.parse(filename)
-        root = tree.getroot()
-        for stag in root.iter('s'):
-            if stag.find('w') != None:
-                sentence = []
-                for wtag in stag.iter('w'):
-                    sentence.append(wtag.text)
-                sentence = ' '.join(sentence)
-            else:
-                sentence = stag.text
-            cldlan, cldconf, lilan, liconf = self.detectLanguage(
-                sentence, stag.attrib['id'])
-            stag.attrib['cld2'] = cldlan
-            stag.attrib['cld2conf'] = cldconf
-            stag.attrib['langid'] = lilan
-            stag.attrib['langidconf'] = liconf
+    def addIds(self, infile, outfile):
+        done = False
+        outfile.write(infile.readline())
+        while not done:
+            skippedTags = []
+            sentence = []
+            while True:
+                self.oneLineSStart = False
+                self.oneLineSEnd = False
+                line = infile.readline()
+                if not line:
+                    done = True
+                    break
+                self.parseLine(line)
+                if not self.sfound:
+                    outfile.write(line)
+                else:
+                    skippedTags.append(line)
+                    sentence.append(self.chara)
+                    self.chara = ''
+                if self.efound:
+                    self.sfound = False
+                    self.efound = False
+                    self.chara = ''
+                    break
+            sentence = ' '.join(sentence)
+            indent = ''
+            if len(skippedTags) > 0:
+                for c in skippedTags[0]:
+                    if c == ' ':
+                        indent += ' '
+                    else:
+                        break
+            cldlan, cldconf, lilan, liconf = self.detectLanguage(sentence,
+                    self.sid)
+            stag = (('{0}<s id="{1}" cld2="{2}" cld2conf="{3}" langid="{4}" '
+                    'langidconf="{5}">\n'.format(indent, self.sid, cldlan,
+                        cldconf, lilan, liconf)))
+            if self.oneLineSStart and self.oneLineSEnd:
+                stag = stag[:-1] + cgi.escape(sentence) + '</s>\n'
+            if self.iszip:
+                stag = bytes(stag, 'utf-8')
+            if len(skippedTags) > 0:
+                skippedTags[0]=stag
+            for item in skippedTags:
+                outfile.write(item)
 
-        return tree
+class OpusLangid:
 
-    def editOrRemove(self, tempname):
+    def __init__(self, arguments):
+        parser = argparse.ArgumentParser(prog='add_lan_ids',
+            description= ('Add language ids to sentences in plain xml files '
+                        'or xml files in zip archives using pycld2 and '
+                        'langid.py'))
+        parser.add_argument('-f', help='File path', required=True)
+        parser.add_argument('-t',
+            help='Target file path. By default, the original file is edited')
+        parser.add_argument('-v', help='Verbosity. -v: print current xml file',
+            action='count', default=0)
+        parser.add_argument('-s',
+            help='Suppress error messages in language detection',
+            action='store_true')
+
+        if len(arguments) == 0:
+            self.args = parser.parse_args()
+        else:
+            self.args = parser.parse_args(arguments)
+
+    def processFiles(self):
+        try:
+            tempname = (self.args.f.replace('/','_')+
+                    '_opus_langid_temp.temp.zip')
+            with zipfile.ZipFile(self.args.f, 'r') as zip_arc:
+                with zipfile.ZipFile(tempname, 'w') as new_arc:
+                    for filename in zip_arc.filelist:
+                        if self.args.v > 0:
+                            print(filename.filename)
+                        with zip_arc.open(filename.filename) as infile:
+                            if filename.filename[-4:] == '.xml':
+                                tempxml = (filename.filename.replace('/','_')+
+                                        '_opus_langid_temp.temp.xml')
+                                with open(tempxml, 'wb') as outfile:
+                                    sparser = LanguageIdAdder(self.args.s, True)
+                                    sparser.addIds(infile, outfile)
+                                new_arc.write(tempxml, filename.filename)
+                                os.remove(tempxml)
+                            else:
+                                new_bytes = b''.join(infile.readlines())
+                                new_arc.writestr(filename, new_bytes)
+        except zipfile.BadZipfile:
+            tempname = (self.args.f.replace('/','_')+
+                    '_opus_langid_temp.temp.xml')
+            sparser = LanguageIdAdder(self.args.s, False)
+            with open(self.args.f, 'r') as infile:
+                with open(tempname, 'w') as outfile:
+                    sparser.addIds(infile, outfile)
+
         if self.args.t:
             os.rename(tempname, self.args.t)
         else:
             os.remove(self.args.f)
             os.rename(tempname, self.args.f)
-
-    def writeIdsToFile(self, filename, fileobj):
-        if self.args.v > 0:
-            print(filename)
-        filename = filename.replace('/','_')+'_opus_langid_temp.temp.xml'
-        tree = self.addIds(fileobj)
-        tree.write(filename, encoding='utf-8', xml_declaration=True)
-        return filename
-
-    def processFiles(self):
-        try:
-            tempname = self.args.f.replace('/','_')+'_opus_langid_temp.temp.zip'
-            with zipfile.ZipFile(self.args.f, 'r') as zip_arc:
-                with zipfile.ZipFile(tempname, 'w') as new_arc:
-                    for filename in zip_arc.filelist:
-                        with zip_arc.open(filename.filename) as text_file:
-                            if filename.filename[-4:] == '.xml':
-                                temp_xml = self.writeIdsToFile(
-                                        filename.filename, text_file)
-                                with open(temp_xml, 'rb') as temp_bytes:
-                                    new_bytes = b''.join(temp_bytes.readlines())
-                                os.remove(temp_xml)
-                            else:
-                                new_bytes = b''.join(text_file.readlines())
-                            new_arc.writestr(filename, new_bytes)
-        except zipfile.BadZipFile:
-            tempname = self.writeIdsToFile(self.args.f, self.args.f)
-        self.editOrRemove(tempname)
 
