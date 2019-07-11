@@ -27,6 +27,9 @@ class SentenceParser:
         self.sfound = False
         self.efound = False
 
+        self.oneLineSStart = False
+        self.oneLineSEnd = False
+
         self.wmode = wmode
         self.language = language
 
