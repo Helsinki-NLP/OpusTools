@@ -7,7 +7,9 @@ class TestOpusLangid(unittest.TestCase):
 
     def run_opuslangid_and_assertEqual(self, source, target, lines, iszip,
             correct_line):
+        source = 'test_files/'+source
         if target != None:
+            target = 'test_files/'+target
             command = '-f {0} -t {1}'.format(source, target)
             result = target
         else:

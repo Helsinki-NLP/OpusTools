@@ -26,7 +26,8 @@ class ExhaustiveSentenceParser(SentenceParser):
                         sentence = self.chara
                         self.chara = ''
                 elif self.pre == 'rawos':
-                    if self.sfound and self.start == 'time' or self.start == 's':
+                    if (self.sfound and self.start == 'time' 
+                            or self.start == 's'):
                         sentence = self.chara
                 if self.efound:
                     self.sfound = False
