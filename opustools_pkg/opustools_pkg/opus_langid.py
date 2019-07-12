@@ -71,9 +71,15 @@ class LanguageIdAdder(SentenceParser):
                         break
             cldlan, cldconf, lilan, liconf = self.detectLanguage(sentence,
                     self.sid)
-            stag = (('{0}<s id="{1}" cld2="{2}" cld2conf="{3}" langid="{4}" '
-                    'langidconf="{5}">\n'.format(indent, self.sid, cldlan,
-                        cldconf, lilan, liconf)))
+            self.attrs['cld2'] = cldlan
+            self.attrs['cld2conf'] = cldconf
+            self.attrs['langid'] = lilan
+            self.attrs['langidconf'] = liconf
+            attributes = []
+            for k in sorted(self.attrs.keys()):
+                attributes.append('{0}="{1}"'.format(k, self.attrs[k]))
+
+            stag = '{0}<s {1}>\n'.format(indent, ' '.join(attributes))
             if self.oneLineSStart and self.oneLineSEnd:
                 stag = stag[:-1] + cgi.escape(sentence) + '</s>\n'
             if self.iszip:
