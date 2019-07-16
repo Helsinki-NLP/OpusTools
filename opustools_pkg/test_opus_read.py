@@ -1,8 +1,11 @@
 import unittest
 import io
 import sys
-from opustools_pkg import OpusRead, OpusCat
 import xml.parsers.expat
+import gzip
+import shutil
+
+from opustools_pkg import OpusRead, OpusCat
 
 def pairPrinterToVariable(arguments):
     old_stdout = sys.stdout
@@ -1075,8 +1078,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
             f.write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign ' +
                 'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'+
-                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_en.gz" ' +
-                'toDoc="test_fi.gz" >\n<link xtargets="s1;s1"/>\n </'+
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_en" ' +
+                'toDoc="test_fi" >\n<link xtargets="s1;s1"/>\n </'+
                 'linkGrp>+\n</cesAlign>')
         with open('test_en', 'w') as f:
             f.write(
@@ -1091,6 +1094,37 @@ class TestOpusReadNoSetup(unittest.TestCase):
         var = pairPrinterToVariable(
             ['-d', 'Books', '-s', 'en', '-t', 'fi', '-af', 'testlinks'])
         self.assertEqual(var,
+            '\n# test_en\n# test_fi\n\n' +
+            '================================\n(src)="s1">test_en1 test_en2\n' +
+            '(trg)="s1">test_fi1 test_fi2\n================================\n')
+
+    def test_checks_first_whether_documents_are_in_path_gz(self):
+        with open('testlinks', 'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign ' +
+                'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'+
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_en.gz" ' +
+                'toDoc="test_fi.gz" >\n<link xtargets="s1;s1"/>\n </'+
+                'linkGrp>+\n</cesAlign>')
+        with open('test_en', 'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n' +
+                '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2' +
+                '</w>\n</s>\n </body>\n</text>')
+        with open('test_fi', 'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n' +
+                '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2' +
+                '</w>\n</s>\n </body>\n</text>')
+        with open('test_en', 'rb') as f:
+            with gzip.open('test_en.gz', 'wb') as gf:
+                shutil.copyfileobj(f, gf)
+        with open('test_fi', 'rb') as f:
+            with gzip.open('test_fi.gz', 'wb') as gf:
+                shutil.copyfileobj(f, gf)
+        var = pairPrinterToVariable(
+            ['-d', 'Books', '-s', 'en', '-t', 'fi', '-af', 'testlinks'])
+        self.assertEqual(var,
             '\n# test_en.gz\n# test_fi.gz\n\n' +
             '================================\n(src)="s1">test_en1 test_en2\n' +
             '(trg)="s1">test_fi1 test_fi2\n================================\n')
@@ -1098,7 +1132,7 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_filtering_by_src_cld2(self):
         var = pairPrinterToVariable(
                 '-d Books -s en -t fi -r v1 -m 1 --src_cld2 en 0.98'.split())
-        self.assertEqual(var, 
+        self.assertEqual(var,
             ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
             '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
             '\n================================'

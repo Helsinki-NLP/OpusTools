@@ -1,4 +1,5 @@
 import zipfile
+import gzip
 import xml.parsers.expat
 import re
 
@@ -82,8 +83,14 @@ class AlignmentParser:
                     print(sourceDoc + targetDoc + '\n')
 
             try:
-                sourcefile = open(attrs['fromDoc'][:-3], 'r')
-                targetfile = open(attrs['toDoc'][:-3], 'r')
+                if attrs['fromDoc'][-3:] == '.gz':
+                    sourcefile = gzip.open(attrs['fromDoc'], 'rb')
+                else:
+                    sourcefile = open(attrs['fromDoc'], 'r')
+                if attrs['toDoc'][-3:] == '.gz':
+                    targetfile = gzip.open(attrs['toDoc'], 'rb')
+                else:
+                    targetfile = open(attrs['toDoc'], 'r')
             except FileNotFoundError:
                 if self.zipFilesOpened == False:
                     try:
