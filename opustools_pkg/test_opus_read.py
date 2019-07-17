@@ -659,6 +659,17 @@ class TestOpusReadNoSetup(unittest.TestCase):
             'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado' +
             '\n================================\n')
 
+    def test_normal_parsed_print_unalphabetical(self):
+        var = pairPrinterToVariable(
+            ['-d', 'DGT', '-s', 'es', '-t', 'en', '-m', '1', '-p', 'parsed',
+            '-pa', '-sa', 'upos', 'lemma', '-ta', 'upos', 'feats', 
+            'lemma', '-r', 'v4'])
+        self.assertEqual(var,
+            '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n' +
+            '================================' +
+            '\n(src)="1">Tratado|VERB|tratado\n(trg)="1">Treaty|NOUN|' +
+            'Number=Sing|treaty\n================================\n')
+
     def test_normal_parsed_print_fast(self):
         var = pairPrinterToVariable(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
@@ -708,6 +719,19 @@ class TestOpusReadNoSetup(unittest.TestCase):
                 '</seg></tuv>\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans ' +
                 '$[officename ]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
 
+    def test_tmx_xml_write_unalphabetical(self):
+        var = pairPrinterToVariable(
+            ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
+            '-w', 'test_result', '-wm', 'tmx'])
+        with open('test_result', 'r') as f:
+            self.assertEqual(f.read(),
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n' +
+                '<header srclang="fr"\n\tadminlang="en"\n\tsegtype="sentence"' +
+                '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t' +
+                '<tuv xml:lang="fr"><seg>Diagrammes dans $[officename ]' +
+                '</seg></tuv>\n\t\t\t<tuv xml:lang="en_GB"><seg>Charts in ' +
+                '$[ officename ]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
+
     def test_tmx_xml_write_fast(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
@@ -732,6 +756,18 @@ class TestOpusReadNoSetup(unittest.TestCase):
             '<tuv xml:lang="en_GB"><seg>Charts in $[ officename ]</seg></tuv>' +
             '\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans $[officename ]' +
             '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
+
+    def test_tmx_xml_print_unalphabetical(self):
+        var = pairPrinterToVariable(
+            ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
+            '-wm', 'tmx'])
+        self.assertEqual(var,
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n' +
+            '<header srclang="fr"\n\tadminlang="en"\n\tsegtype="sentence"' +
+            '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t' +
+            '<tuv xml:lang="fr"><seg>Diagrammes dans $[officename ]' +
+            '</seg></tuv>\n\t\t\t<tuv xml:lang="en_GB"><seg>Charts in ' +
+            '$[ officename ]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_xml_print_fast(self):
         var = pairPrinterToVariable(
@@ -864,6 +900,15 @@ class TestOpusReadNoSetup(unittest.TestCase):
         with open('test.trg', 'r') as f:
             self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
 
+    def test_moses_xml_write_unalphabetical(self):
+        OpusRead(
+            ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
+            '-w', 'test.src', 'test.trg', '-wm', 'moses']).printPairs()
+        with open('test.src', 'r') as f:
+            self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
+        with open('test.trg', 'r') as f:
+            self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
+
     def test_moses_xml_write_with_file_names(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
@@ -885,6 +930,14 @@ class TestOpusReadNoSetup(unittest.TestCase):
             self.assertEqual(f.read(),
                 'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n')
 
+    def test_moses_xml_write_single_file_unalphabetical(self):
+        OpusRead(
+            ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
+            '-w', 'test.src', '-wm', 'moses']).printPairs()
+        with open('test.src', 'r') as f:
+            self.assertEqual(f.read(),
+                'Diagrammes dans $[officename ]\tCharts in $[ officename ]\n')
+
     def test_moses_xml_write_single_file_with_file_names(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
@@ -894,6 +947,16 @@ class TestOpusReadNoSetup(unittest.TestCase):
                 '\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n' +
                 '<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\n' +
                 'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n')
+
+    def test_moses_xml_write_single_file_with_file_names_unalphabetical(self):
+        OpusRead(
+            ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
+            '-w', 'test.src', '-wm', 'moses', '-pn']).printPairs()
+        with open('test.src', 'r') as f:
+            self.assertEqual(f.read(),
+                '\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n' +
+                '<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\n' +
+                'Diagrammes dans $[officename ]\tCharts in $[ officename ]\n')
 
     def test_moses_xml_write_fast(self):
         OpusRead(
@@ -910,6 +973,13 @@ class TestOpusReadNoSetup(unittest.TestCase):
             '-wm', 'moses'])
         self.assertEqual(var,
             'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n')
+
+    def test_moses_xml_print_unalphabetical(self):
+        var = pairPrinterToVariable(
+            ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
+            '-wm', 'moses'])
+        self.assertEqual(var,
+            'Diagrammes dans $[officename ]\tCharts in $[ officename ]\n')
 
     def test_moses_xml_print_with_file_names(self):
         var = pairPrinterToVariable(
@@ -1016,6 +1086,23 @@ class TestOpusReadNoSetup(unittest.TestCase):
                 '<link certainty="3.118182" xtargets="stit.1;stit.1" id="SL1"' +
                 ' />\n </linkGrp>\n</cesAlign>')
 
+    def test_links_write_unalphabetical(self):
+        OpusRead(
+            ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
+            '-w', 'test_result', '-wm', 'links', '-S', '1', '-T', '2']
+            ).printPairs()
+        with open('test_result', 'r') as f:
+            self.assertEqual(f.read(),
+                ('<?xml version="1.0" encoding="utf-8"?>'
+                '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+                '\n<cesAlign version="1.0">\n <linkGrp targType="s" '
+                'toDoc="fr/text/schart/main0000.xml.gz" '
+                'fromDoc="en_GB/text/schart/main0000.xml.gz">'
+                '\n <linkGrp targType="s" toDoc="fr/text/schart/main0202.xml.gz"'
+                ' fromDoc="en_GB/text/schart/main0202.xml.gz">'
+                '\n<link certainty="0.1794861" xtargets="s7.2 s7.3;s7.2" '
+                'id="SL20" />\n </linkGrp>\n</cesAlign>'))
+
     def test_links_print(self):
         var = pairPrinterToVariable(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
@@ -1028,6 +1115,21 @@ class TestOpusReadNoSetup(unittest.TestCase):
             ' fromDoc="en_GB/text/schart/main0000.xml.gz">\n' +
             '<link certainty="3.118182" xtargets="stit.1;stit.1" id="SL1" />' +
             '\n </linkGrp>\n</cesAlign>\n')
+
+    def test_links_print_unalphabetical(self):
+        var = pairPrinterToVariable(
+            ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
+            '-wm', 'links', '-S', '1', '-T', '2'])
+        self.assertEqual(var,
+            ('<?xml version="1.0" encoding="utf-8"?>'
+            '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+            '\n<cesAlign version="1.0">\n <linkGrp targType="s" '
+            'toDoc="fr/text/schart/main0000.xml.gz" '
+            'fromDoc="en_GB/text/schart/main0000.xml.gz">'
+            '\n <linkGrp targType="s" toDoc="fr/text/schart/main0202.xml.gz"'
+            ' fromDoc="en_GB/text/schart/main0202.xml.gz">'
+            '\n<link certainty="0.1794861" xtargets="s7.2 s7.3;s7.2" '
+            'id="SL20" />\n </linkGrp>\n</cesAlign>\n'))
 
     def test_iteration_stops_at_the_end_of_the_document_even_if_max_is_not_filled(self):
         var = pairPrinterToVariable(
@@ -1200,9 +1302,9 @@ class TestOpusReadNoSetup(unittest.TestCase):
             ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
             '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
             '\n================================'
+            '\n(src)="s8.1">Luulenpa että sinulla on silmät niskassakin . "'
             '\n(trg)="s8.1">I believe you have eyes in the back '
             'of your head . "'
-            '\n(src)="s8.1">Luulenpa että sinulla on silmät niskassakin . "'
             '\n================================\n'))
 
     def test_use_given_zip_files(self):
@@ -1214,6 +1316,17 @@ class TestOpusReadNoSetup(unittest.TestCase):
             '\n\n================================'
             '\n(src)="s1">Source : manybooks.netAudiobook available here'
             '\n(trg)="s1">Source : Project Gutenberg'
+            '\n================================\n'))
+
+    def test_use_given_zip_files_unalphabetical(self):
+        var = pairPrinterToVariable(
+            ('-d Books -s fi -t en -m1 -sz fi.zip -tz en.zip'.split()))
+        self.assertEqual(var,
+            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
+            '\n# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
+            '\n\n================================'
+            '\n(src)="s1">Source : Project Gutenberg'
+            '\n(trg)="s1">Source : manybooks.netAudiobook available here'
             '\n================================\n'))
 
     def test_source_zip_given_and_target_automatic(self):
@@ -1228,6 +1341,18 @@ class TestOpusReadNoSetup(unittest.TestCase):
         self.assertEqual(opr.par.targetzip.filename,
             '/proj/nlpl/data/OPUS/Books/latest/xml/fi.zip')
 
+    def test_source_zip_given_and_target_automatic_unalphabetical(self):
+        opr = OpusRead('-d Books -s fi -t en -sz fi.zip'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc':
+                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
+             'toDoc':
+                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+        self.assertEqual(opr.par.sourcezip.filename,
+            '/proj/nlpl/data/OPUS/Books/latest/xml/en.zip')
+        self.assertEqual(opr.par.targetzip.filename,
+            'fi.zip')
+
     def test_target_zip_given_and_source_automatic(self):
         opr = OpusRead('-d Books -s en -t fi -tz fi.zip'.split())
         opr.par.initializeSentenceParsers(
@@ -1239,6 +1364,78 @@ class TestOpusReadNoSetup(unittest.TestCase):
             '/proj/nlpl/data/OPUS/Books/latest/xml/en.zip')
         self.assertEqual(opr.par.targetzip.filename,
             'fi.zip')
+
+    def test_target_zip_given_and_source_local(self):
+        opr = OpusRead('-d Books -s en -t fi -r v1 -tz fi.zip'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc':
+                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
+             'toDoc':
+                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+        self.assertEqual(opr.par.sourcezip.filename,
+            'Books_v1_xml_en.zip')
+        self.assertEqual(opr.par.targetzip.filename,
+            'fi.zip')
+
+    def test_target_zip_given_and_source_local_unalphabetical(self):
+        opr = OpusRead('-d Books -s fi -t en -r v1 -tz en.zip'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc':
+                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
+             'toDoc':
+                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+        self.assertEqual(opr.par.sourcezip.filename,
+            'en.zip')
+        self.assertEqual(opr.par.targetzip.filename,
+            'Books_v1_xml_fi.zip')
+
+    def test_source_zip_given_and_target_local(self):
+        opr = OpusRead('-d Books -s en -t fi -r v1 -sz en.zip'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc':
+                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
+             'toDoc':
+                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+        self.assertEqual(opr.par.sourcezip.filename,
+            'en.zip')
+        self.assertEqual(opr.par.targetzip.filename,
+            'Books_v1_xml_fi.zip')
+
+    def test_source_zip_local_and_target_automatic(self):
+        opr = OpusRead('-d Books -s en -t es -r v1'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc':
+                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
+             'toDoc':
+                'es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+        self.assertEqual(opr.par.sourcezip.filename,
+            'Books_v1_xml_en.zip')
+        self.assertEqual(opr.par.targetzip.filename,
+            '/proj/nlpl/data/OPUS/Books/v1/xml/es.zip')
+
+    def test_source_zip_local_and_target_automatic_unalphabetical(self):
+        opr = OpusRead('-d Books -s fi -t es -r v1'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc':
+                'es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
+             'toDoc':
+                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+        self.assertEqual(opr.par.sourcezip.filename,
+            '/proj/nlpl/data/OPUS/Books/v1/xml/es.zip')
+        self.assertEqual(opr.par.targetzip.filename,
+            'Books_v1_xml_fi.zip')
+
+    def test_target_zip_local_and_source_automatic(self):
+        opr = OpusRead('-d Books -s es -t fi -r v1'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc':
+                'es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
+             'toDoc':
+                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+        self.assertEqual(opr.par.sourcezip.filename,
+            '/proj/nlpl/data/OPUS/Books/v1/xml/es.zip')
+        self.assertEqual(opr.par.targetzip.filename,
+            'Books_v1_xml_fi.zip')
 
 class TestOpusCat(unittest.TestCase):
 

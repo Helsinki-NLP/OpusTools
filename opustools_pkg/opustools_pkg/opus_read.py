@@ -103,11 +103,10 @@ class OpusRead:
         if self.args.wm not in ['normal', 'moses', 'tmx', 'links']:
             raise ValueError('wm has to be "normal", "moses", "tmx" or "links"')
 
-        self.fromto = [self.args.s, self.args.t]
+        self.fromto = sorted([self.args.s, self.args.t])
         fromto_copy = [self.args.s, self.args.t]
-        self.fromto.sort()
-
         self.switch_langs = fromto_copy != self.fromto
+
         if self.switch_langs:
             temp = self.args.S
             self.args.S = self.args.T
@@ -118,6 +117,12 @@ class OpusRead:
             temp = self.args.src_langid
             self.args.src_langid = self.args.trg_langid
             self.args.trg_langid = temp
+            temp = self.args.sz
+            self.args.sz = self.args.tz
+            self.args.tz = temp
+            temp = self.args.sa.copy()
+            self.args.sa = self.args.ta.copy()
+            self.args.ta = temp.copy()
 
         if self.args.af == -1:
             self.alignment = (self.args.rd+self.args.d+'/'+self.args.r+
@@ -178,6 +183,9 @@ class OpusRead:
     def outputPair(self, par, line):
         par.parseLine(line)
         sPair = par.readPair()
+        if self.switch_langs and type(sPair) == tuple:
+            copypair = [sPair[1], sPair[0]]
+            sPair = copypair.copy()
 
         par.fromids = []
         par.toids = []
@@ -210,7 +218,7 @@ class OpusRead:
 
     def addTmxHeader(self):
         tmxheader = ('<?xml version="1.0" encoding="utf-8"?>\n<tmx '
-            'version="1.4.">\n<header srclang="' + self.fromto[0] +
+            'version="1.4.">\n<header srclang="' + self.args.s +
             '"\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype='
             '"PlainText" />\n\t<body>')
         if self.args.w != None:

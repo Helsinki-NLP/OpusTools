@@ -136,23 +136,25 @@ class AlignmentParser:
                 pre = 'rawos'
 
             st = ['src', 'trg']
+            langs = [self.args.s, self.args.t]
             if self.switch_langs:
                 st = ['trg', 'src']
+                langs = [self.args.t, self.args.s]
 
             if self.args.f:
                 self.sPar = SentenceParser(sourcefile, st[0], pre,
-                    self.args.wm, self.args.s, self.args.pa, self.args.sa,
+                    self.args.wm, langs[0], self.args.pa, self.args.sa,
                     self.args.ca)
                 self.tPar = SentenceParser(targetfile, st[1], pre,
-                    self.args.wm, self.args.t, self.args.pa, self.args.ta,
+                    self.args.wm, langs[1], self.args.pa, self.args.ta,
                     self.args.ca)
             else:
                 self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
-                    self.args.wm, self.args.s, self.args.pa, self.args.sa,
+                    self.args.wm, langs[0], self.args.pa, self.args.sa,
                     self.args.ca)
                 self.sPar.storeSentences()
                 self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
-                    self.args.wm, self.args.t, self.args.pa, self.args.ta,
+                    self.args.wm, langs[1], self.args.pa, self.args.ta,
                     self.args.ca)
                 self.tPar.storeSentences()
 
