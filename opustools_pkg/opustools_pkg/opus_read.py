@@ -37,9 +37,8 @@ class OpusRead:
             action='store_true')
         parser.add_argument('-w',
             help=('Write to file. To print moses format in separate files, '
-                'enter two file names separated by a comma (e.g. -w '
-                'moses.src,moses.trg). Otherwise enter one file name.'),
-            default=-1)
+                'enter two file names. Otherwise enter one file name.'),
+            nargs='+')
         parser.add_argument('-wm',
             help='Set writing mode (normal, moses, tmx, links)',
             default='normal')
@@ -55,20 +54,24 @@ class OpusRead:
             help='Change root directory (default=/proj/nlpl/data/OPUS/)',
             default='/proj/nlpl/data/OPUS/')
         parser.add_argument('-af', help='Use given alignment file', default=-1)
+        parser.add_argument('-sz', help='Use given source zip file')
+        parser.add_argument('-tz', help='Use given target zip file')
         parser.add_argument('-cm', help='Change moses delimiter (default=tab)',
             default='\t')
         parser.add_argument('-pa', help='Print annotations, if they exist',
             action='store_true')
         parser.add_argument('-sa',
-            help=('Set source sentence annotation attributes to be printed '
-                'separated by commas, e.g. -sa pos,lem. To print all '
-                'available attributes use -sa all_attrs (default=pos,lem)'),
-            default='pos,lem')
+            help=('Set source sentence annotation attributes to be printed'
+                ', e.g. -sa pos lem. To print all available attributes use '
+                '-sa all_attrs (default=pos,lem)'),
+            nargs='+',
+            default=['pos', 'lem'])
         parser.add_argument('-ta',
-            help=('Set target sentence annotation attributes to be printed '
-                'separated by commas, e.g. -ta pos,lem. To print all '
-                'available attributes use -ta all_attrs (default=pos,lem)'),
-            default='pos,lem')
+            help=('Set target sentence annotation attributes to be printed'
+                ', e.g. -ta pos lem. To print all available attributes use '
+                '-ta all_attrs (default=pos,lem)'),
+            nargs='+',
+            default=['pos', 'lem'])
         parser.add_argument('-ca',
             help='Change annotation delimiter (default=|)', default='|')
         parser.add_argument('--src_cld2',
@@ -87,6 +90,7 @@ class OpusRead:
             help=('Filter target sentences by their langid.py language id '
                 'labels and confidence score, e.g. en 0.9'),
             nargs=2)
+                
 
         if len(arguments) == 0:
             self.args = parser.parse_args()
@@ -130,15 +134,13 @@ class OpusRead:
         self.resultfile = None
         self.mosessrc = None
         self.mosestrg = None
-        self.filenames = []
 
-        if self.args.w != -1:
-            self.filenames = self.args.w.split(',')
-            if self.args.wm == 'moses' and len(self.filenames) == 2:
-                self.mosessrc = open(self.filenames[0], 'w')
-                self.mosestrg = open(self.filenames[1], 'w')
+        if self.args.w != None:
+            if self.args.wm == 'moses' and len(self.args.w) == 2:
+                self.mosessrc = open(self.args.w[0], 'w')
+                self.mosestrg = open(self.args.w[1], 'w')
             else:
-                self.resultfile = open(self.filenames[0], 'w')
+                self.resultfile = open(self.args.w[0], 'w')
 
         self.par = AlignmentParser(self.source, self.target, self.args,
             self.resultfile, self.mosessrc, self.mosestrg, self.fromto,
@@ -162,10 +164,10 @@ class OpusRead:
         if self.args.wm == 'links':
             ret1 = sPair+'\n'
         else:
-            if self.args.wm == 'moses' and len(self.filenames) == 2:
+            if self.args.wm == 'moses' and len(self.args.w) == 2:
                 ret1 = sPair[0]+'\n'
                 ret2 = sPair[1]+'\n'
-            elif self.args.wm == 'moses' and len(self.filenames) == 1:
+            elif self.args.wm == 'moses' and len(self.args.w) == 1:
                 ret1 = sPair[0] + self.args.cm + sPair[1] + '\n'
             else:
                 ret1 = sPair[0] + '\n' + sPair[1] + '\n'
@@ -189,9 +191,9 @@ class OpusRead:
         if sPair == 1:
             sPair = line.decode('utf-8')[:-1]
 
-        if self.args.w != -1:
+        if self.args.w != None:
             wpair = self.writePair(sPair)
-            if self.args.wm == 'moses' and len(self.filenames) == 2:
+            if self.args.wm == 'moses' and len(self.args.w) == 2:
                 self.mosessrc.write(wpair[0])
                 self.mosestrg.write(wpair[1])
             else:
@@ -211,25 +213,25 @@ class OpusRead:
             'version="1.4.">\n<header srclang="' + self.fromto[0] +
             '"\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype='
             '"PlainText" />\n\t<body>')
-        if self.args.w != -1:
+        if self.args.w != None:
             self.resultfile.write(tmxheader + '\n')
         else:
             print(tmxheader)
 
     def addTmxEnding(self):
-        if self.args.w != -1:
+        if self.args.w != None:
             self.resultfile.write('\t</body>\n</tmx>')
         else:
             print('\t</body>\n</tmx>')
 
     def addLinkFileEnding(self):
-        if self.args.w != -1:
+        if self.args.w != None:
             self.resultfile.write(' </linkGrp>\n</cesAlign>')
         else:
             print(' </linkGrp>\n</cesAlign>')
 
     def closeResultFiles(self):
-        if self.args.wm == 'moses' and len(self.filenames) == 2:    
+        if self.args.wm == 'moses' and len(self.args.w) == 2:    
             self.mosessrc.close()
             self.mosestrg.close()
         else:
@@ -292,7 +294,7 @@ class OpusRead:
             
         self.par.closeFiles()
 
-        if self.args.w != -1:
+        if self.args.w != None:
             self.closeResultFiles()
 
     def printPairsMoses(self):

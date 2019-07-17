@@ -49,15 +49,26 @@ class AlignmentParser:
         self.tlim = self.args.T.split('-')
         self.tlim.sort()
 
+    def getZipFile(self, zipname, soutar, localfile):
+        if localfile != None:
+            openedzip = zipfile.ZipFile(localfile, 'r')
+        else:
+            try:
+                openedzip = zipfile.ZipFile(zipname, 'r')
+            except FileNotFoundError:
+                openedzip = zipfile.ZipFile(soutar, 'r')
+
+        return openedzip
+
     def openZipFiles(self):
-        try:
-            self.sourcezip = zipfile.ZipFile((self.args.d+'_'+self.args.r+'_'+
-                self.args.p+'_'+self.fromto[0]+'.zip'))
-            self.targetzip = zipfile.ZipFile((self.args.d+'_'+self.args.r+'_'+
-                self.args.p+'_'+self.fromto[1]+'.zip'))
-        except FileNotFoundError:
-            self.sourcezip = zipfile.ZipFile(self.source, 'r')
-            self.targetzip = zipfile.ZipFile(self.target, 'r')
+        self.sourcezip = self.getZipFile((self.args.d+'_'+self.args.r+'_'+
+                        self.args.p+'_'+self.fromto[0]+'.zip'),
+                        self.source,
+                        self.args.sz)
+        self.targetzip = self.getZipFile((self.args.d+'_'+self.args.r+'_'+
+                        self.args.p+'_'+self.fromto[1]+'.zip'),
+                        self.target,
+                        self.args.tz)
 
     def initializeSentenceParsers(self, attrs):
         #if link printing mode is activated, no need to open 
@@ -66,14 +77,14 @@ class AlignmentParser:
             if self.args.wm == 'normal':
                 docnames = ('\n# ' + attrs['fromDoc'] + '\n# ' +
                     attrs['toDoc'] + '\n\n================================')
-                if self.args.w != -1:
+                if self.args.w != None:
                     self.result.write(docnames + '\n')
                 else:
                     print(docnames)
             elif self.args.wm == 'moses' and self.args.pn:
                 sourceDoc = '\n<fromDoc>{}</fromDoc>'.format(attrs['fromDoc'])
                 targetDoc = '\n<toDoc>{}</toDoc>'.format(attrs['toDoc'])
-                if self.args.w != -1:
+                if self.args.w != None:
                     if self.result:
                         self.result.write(sourceDoc + targetDoc + '\n\n')
                     else:

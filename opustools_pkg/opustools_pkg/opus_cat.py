@@ -79,10 +79,11 @@ class OpusCat:
         parser.add_argument('-pa', help='Print annotations, if they exist', 
             action='store_true')
         parser.add_argument('-sa', 
-            help=('Set sentence annotation attributes to be printed '
-                'separated by commas, e.g. -sa pos,lem. To print all '
-                'available attributes use -sa all_attrs (default=pos,lem)'), 
-            default='pos,lem')
+            help=('Set sentence annotation attributes to be printed'
+                ', e.g. -sa pos lem. To print all available attributes '
+                'use -sa all_attrs (default=pos,lem)'), 
+            nargs='+',
+            default=['pos', 'lem'])
         parser.add_argument('-ca', 
             help='Change annotation delimiter (default=|)', 
             default='|')

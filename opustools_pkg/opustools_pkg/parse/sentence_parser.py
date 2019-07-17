@@ -9,7 +9,7 @@ class SentenceParser:
         self.pre = preprocessing
         self.annotations = annotations
         if self.annotations:
-            self.anno_attrs = anno_attrs.split(',')
+            self.anno_attrs = anno_attrs
         self.delimiter = delimiter
 
         self.start = ''

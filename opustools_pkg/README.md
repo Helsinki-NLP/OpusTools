@@ -13,9 +13,10 @@ Tools for accessing and processing OPUS data.
 
 ```
 opus_read [-h] -d D -s S -t T [-r R] [-p P] [-m M] [-S S] [-T T] [-a A]
-            [-tr TR] [-ln] [-w W] [-wm WM] [-pn] [-f] [-rd RD] [-af AF]
-            [-cm CM] [-pa] [-sa SA] [-ta TA] [-ca CA]
-            [--src_cld2 SRC_CLD2 SRC_CLD2] [--trg_cld2 TRG_CLD2 TRG_CLD2]
+            [-tr TR] [-ln] [-w W [W ...]] [-wm WM] [-pn] [-f] [-rd RD]
+            [-af AF] [-sz SZ] [-tz TZ] [-cm CM] [-pa] [-sa SA [SA ...]]
+            [-ta TA [TA ...]] [-ca CA] [--src_cld2 SRC_CLD2 SRC_CLD2]
+            [--trg_cld2 TRG_CLD2 TRG_CLD2]
             [--src_langid SRC_LANGID SRC_LANGID]
             [--trg_langid TRG_LANGID TRG_LANGID]
 ```
@@ -23,47 +24,53 @@ opus_read [-h] -d D -s S -t T [-r R] [-p P] [-m M] [-S S] [-T T] [-a A]
 arguments:
 
 ```
--h, --help	show this help message and exit
--d D		Corpus name
--s S		Source language
--t T		Target language
--r R		Release (default=latest)
--p P		Pre-process-type (raw, xml or parsed, default=xml)
--m M		Maximum number of alignments
--S S		Number of source sentences in alignments (range is allowed, eg. -S 1-2)
--T T		Number of target sentences in alignments (range is allowed, eg. -T 1-2)
--a A		Set attribute for filttering
--tr TR		Set threshold for an attribute
--ln		Leave non-alignments out
--w W		Write to file. To print moses format in separate files, enter two file names 
-                separated by a comma (e.g. -w moses.src,moses.trg). Otherwise enter one file name.
--wm WM		Set writing mode (normal, moses, tmx, links)
--pn             Print file names when using moses format
--f		Fast parsing. Faster than normal parsing, if you print a small part of the whole 
-		corpus, but requires the sentence ids in alignment files to be in sequence.
--rd RD		Change root directory (default=/proj/nlpl/data/OPUS/)
--af AF		Use given alignment file
--cm CM		Change moses delimiter (default=tab)
--pa		Print annotations, if they exist
--sa SA		Set source sentence annotation attributes to be printed
-		separated by commas, e.g. -sa pos,lem. To print all available
-		attributes use -sa all_attrs (default=pos,lem)
--ta TA		Set target sentence annotation attributes to be printed
-		separated by commas, e.g. -ta pos,lem. To print all available
-		attributes use -ta all_attrs (default=pos,lem)
--ca CA		Change annotation delimiter (default=|)
---src_cld2 SRC_CLD2_LAN SRC_CLD2
-        Filter source sentences by their cld2 language id
-        labels and confidence score, e.g. en 0.9
---trg_cld2 TRG_CLD2_LAN TRG_CLD2
-        Filter target sentences by their cld2 language id
-        labels and confidence score, e.g. en 0.9
---src_langid SRC_LANGID_LAN SRC_LANGID
-        Filter source sentences by their langid.py language id
-        labels and confidence score, e.g. en 0.9
---trg_langid TRG_LANGID_LAN TRG_LANGID
-        Filter target sentences by their langid.py language id
-        labels and confidence score, e.g. en 0.9
+-h, --help            show this help message and exit
+-d D                  Corpus name
+-s S                  Source language
+-t T                  Target language
+-r R                  Release (default=latest)
+-p P                  Pre-process-type (raw, xml or parsed, default=xml)
+-m M                  Maximum number of alignments
+-S S                  Number of source sentences in alignments (range is
+                      allowed, eg. -S 1-2)
+-T T                  Number of target sentences in alignments (range is
+                      allowed, eg. -T 1-2)
+-a A                  Set attribute for filttering
+-tr TR                Set threshold for an attribute
+-ln                   Leave non-alignments out
+-w W [W ...]          Write to file. To print moses format in separate
+                      files, enter two file names. Otherwise enter one file
+                      name.
+-wm WM                Set writing mode (normal, moses, tmx, links)
+-pn                   Print file names when using moses format
+-f                    Fast parsing. Faster than normal parsing, if you print
+                      a small part of the whole corpus, but requires the
+                      sentence ids in alignment files to be in sequence.
+-rd RD                Change root directory (default=/proj/nlpl/data/OPUS/)
+-af AF                Use given alignment file
+-sz SZ                Use given source zip file
+-tz TZ                Use given target zip file
+-cm CM                Change moses delimiter (default=tab)
+-pa                   Print annotations, if they exist
+-sa SA [SA ...]       Set source sentence annotation attributes to be
+                      printed, e.g. -sa pos lem. To print all available
+                      attributes use -sa all_attrs (default=pos,lem)
+-ta TA [TA ...]       Set target sentence annotation attributes to be
+                      printed, e.g. -ta pos lem. To print all available
+                      attributes use -ta all_attrs (default=pos,lem)
+-ca CA                Change annotation delimiter (default=|)
+--src_cld2 SRC_CLD2 SRC_CLD2
+                      Filter source sentences by their cld2 language id
+                      labels and confidence score, e.g. en 0.9
+--trg_cld2 TRG_CLD2 TRG_CLD2
+                      Filter target sentences by their cld2 language id
+                      labels and confidence score, e.g. en 0.9
+--src_langid SRC_LANGID SRC_LANGID
+                      Filter source sentences by their langid.py language id
+                      labels and confidence score, e.g. en 0.9
+--trg_langid TRG_LANGID TRG_LANGID
+                      Filter target sentences by their langid.py language id
+                      labels and confidence score, e.g. en 0.9
 ```
 
 
@@ -144,25 +151,26 @@ Using the "-f" flag allows the usage of `SentenceParser`, which is faster than E
 ### Usage
 
 ```
-opus_cat [-h] -d D -l L [-i] [-m M] [-p] [-f F] [-pa] [-sa SA] [-ca CA]
+usage: opus_cat [-h] -d D -l L [-i] [-m M] [-p] [-f F] [-r R] [-pa]
+                [-sa SA [SA ...]] [-ca CA]
 ```
 
 arguments:
 
 ```
--h, --help	show this help message and exit
--d D		Corpus name
--l L		Language
--i		Print without ids
--m M		Maximum number of sentences
--p		Print in plain txt
--f F		File name (if not given, prints all files)
--pa		Print annotations, if they exist
--sa SA		Set sentence annotation attributes to be printed separated by
-		commas, e.g. -sa pos,lem. To print all available attributes use
-		-sa all_attrs (default=pos,lem)
--ca CA		Change annotation delimiter (default=|)
-
+-h, --help       show this help message and exit
+-d D             Corpus name
+-l L             Language
+-i               Print without ids when using -p
+-m M             Maximum number of sentences
+-p               Print in plain txt
+-f F             File name (if not given, prints all files)
+-r R             Release (default=latest)
+-pa              Print annotations, if they exist
+-sa SA [SA ...]  Set sentence annotation attributes to be printed, e.g. -sa
+                 pos lem. To print all available attributes use -sa
+                 all_attrs (default=pos,lem)
+-ca CA           Change annotation delimiter (default=|)
 ```
 
 
