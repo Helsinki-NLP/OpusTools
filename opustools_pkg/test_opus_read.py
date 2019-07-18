@@ -1308,10 +1308,36 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s8.1">Luulenpa että sinulla on silmät niskassakin . "'
             '\n================================\n'))
 
+    def test_filtering_by_lang_labels_fast(self):
+        var = pairPrinterToVariable(
+            ('-d Books -s en -t fi -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
+            'fi 0.97 --src_langid en 0.17 --trg_langid fi 1 -f'.split()))
+        self.assertEqual(var,
+            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n================================'
+            '\n(src)="s8.1">I believe you have eyes in the back '
+            'of your head . "'
+            '\n(trg)="s8.1">Luulenpa että sinulla on silmät niskassakin . "'
+            '\n================================\n'))
+
     def test_filtering_by_lang_labels_nonalphabetical_lang_order(self):
         var = pairPrinterToVariable(
             ('-d Books -s fi -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
             'fi 0.97 --trg_langid en 0.17 --src_langid fi 1'.split()))
+        self.assertEqual(var,
+            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n================================'
+            '\n(src)="s8.1">Luulenpa että sinulla on silmät niskassakin . "'
+            '\n(trg)="s8.1">I believe you have eyes in the back '
+            'of your head . "'
+            '\n================================\n'))
+
+    def test_filtering_by_lang_labels_nonalphabetical_lang_order_fast(self):
+        var = pairPrinterToVariable(
+            ('-d Books -s fi -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
+            'fi 0.97 --trg_langid en 0.17 --src_langid fi 1 -f'.split()))
         self.assertEqual(var,
             ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
             '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'

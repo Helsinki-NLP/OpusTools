@@ -143,6 +143,7 @@ class SentenceParser:
         if len(ids) == 0 or ids[0] == '':
             return '', {}
         sentences = ''
+        attrsList = []
 
         if self.wmode == 'tmx':
             sentences = self.addTuBeginning()
@@ -162,8 +163,9 @@ class SentenceParser:
                 sentence = sentence[1:]
 
             sentences = self.addSentence(sentences, sentence, self.sid)
+            attrsList.append(self.attrs)
 
         if self.wmode == 'tmx':
             sentences = self.addTuEnding(sentences)
 
-        return sentences[1:], self.attrs
+        return sentences[1:], attrsList
