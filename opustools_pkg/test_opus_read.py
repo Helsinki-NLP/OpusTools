@@ -1,3 +1,4 @@
+import os
 import unittest
 import io
 import sys
@@ -21,6 +22,11 @@ class TestOpusRead(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
+        try:
+            os.mkdir('test_files')
+        except FileExistsError:
+            pass
+
         self.opr = OpusRead(['-d', 'Books', '-s', 'en', '-t', 'fi'])
         self.opr.par.initializeSentenceParsers(
             {'fromDoc':
@@ -33,6 +39,7 @@ class TestOpusRead(unittest.TestCase):
                 'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
              'toDoc':
                 'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+
         self.maxDiff= None
 
     @classmethod
@@ -306,7 +313,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_PairPrinter_writePair_moses(self):
         self.opr.par.args.wm = 'moses'
-        self.opr.par.args.w = 'test.src'
+        self.opr.par.args.w = 'test_files/test.src'
         sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
         self.assertEqual(self.opr.writePair(sPair),
             ('Chapter 1 Mr. Sherlock Holmes\nHerra Sherlock Holmes .\n', ''))
@@ -323,11 +330,6 @@ class TestOpusRead(unittest.TestCase):
             ('(src)="3">Director PARK Jae-sik\n\n' +
             '================================\n', ''))
 
-class TestOpusReadNoSetup(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(self):
-        self.maxDiff= None
 
     def test_switch_labels_when_languages_are_in_unalphabetical_order(self):
         opr = OpusRead(['-d', 'Books', '-s', 'fi', '-t', 'en'])
@@ -514,8 +516,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_normal_xml_write(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '\n# en_GB/text/schart/main0000.xml.gz\n' +
                 '# fr/text/schart/main0000.xml.gz\n\n' +
@@ -526,8 +528,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_normal_xml_write_fast(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result', '-f']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-f']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '\n# en_GB/text/schart/main0000.xml.gz\n' +
                 '# fr/text/schart/main0000.xml.gz\n\n' +
@@ -558,8 +560,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_normal_raw_write(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result', '-p', 'raw']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-p', 'raw']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '\n# en_GB/text/schart/main0000.xml.gz\n' +
                 '# fr/text/schart/main0000.xml.gz\n\n' +
@@ -570,8 +572,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_normal_raw_write_fast(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result', '-p', 'raw', '-f']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-p', 'raw', '-f']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '\n# en_GB/text/schart/main0000.xml.gz\n' +
                 '# fr/text/schart/main0000.xml.gz\n\n' +
@@ -625,8 +627,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
             '-pa', '-sa', 'upos', 'feats', 'lemma', '-ta', 'upos', 'feats', 
-            'lemma', '-w', 'test_result', '-r', 'v4']).printPairs()
-        with open('test_result', 'r') as f:
+            'lemma', '-w', 'test_files/test_result', '-r', 'v4']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n' +
                 '================================' +
@@ -638,8 +640,9 @@ class TestOpusReadNoSetup(unittest.TestCase):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1', '-p', 'parsed',
             '-pa', '-sa', 'upos', 'feats', 'lemma', '-ta', 'upos', 'feats', 
-            'lemma', '-w', 'test_result', '-f', '-r', 'v4']).printPairs()
-        with open('test_result', 'r') as f:
+            'lemma', '-w', 'test_files/test_result', '-f', '-r', 'v4']
+            ).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '\n# en/12005S_TTE.xml.gz\n' +
                 '# es/12005S_TTE.xml.gz\n\n================================' +
@@ -709,8 +712,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_tmx_xml_write(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result', '-wm', 'tmx']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-wm', 'tmx']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
                 '\n<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype=' +
@@ -722,21 +725,22 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_tmx_xml_write_unalphabetical(self):
         var = pairPrinterToVariable(
             ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
-            '-w', 'test_result', '-wm', 'tmx'])
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-wm', 'tmx'])
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n' +
-                '<header srclang="fr"\n\tadminlang="en"\n\tsegtype="sentence"' +
-                '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t' +
-                '<tuv xml:lang="fr"><seg>Diagrammes dans $[officename ]' +
-                '</seg></tuv>\n\t\t\t<tuv xml:lang="en_GB"><seg>Charts in ' +
-                '$[ officename ]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4."' +
+                '>\n<header srclang="fr"\n\tadminlang="en"\n\tsegtype="' +
+                'sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>' +
+                '\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans ' +
+                '$[officename ]</seg></tuv>\n\t\t\t<tuv xml:lang="en_GB">' +
+                '<seg>Charts in $[ officename ]</seg></tuv>\n\t\t</tu>\n\t' +
+                '</body>\n</tmx>')
 
     def test_tmx_xml_write_fast(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result', '-wm', 'tmx', '-f']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-wm', 'tmx', '-f']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
                 '\n<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype=' +
@@ -784,8 +788,9 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_tmx_raw_write(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result', '-wm', 'tmx', '-p', 'raw']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-wm', 'tmx', '-p', 'raw']
+            ).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
                 '\n<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype=' +
@@ -797,8 +802,9 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_tmx_raw_write_fast(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result', '-wm', 'tmx', '-p', 'raw', '-f']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-wm', 'tmx', '-p', 'raw', '-f']
+            ).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
                 '\n<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype=' +
@@ -834,10 +840,10 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_tmx_parsed_write(self):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1',
-            '-w', 'test_result', '-wm', 'tmx', '-p', 'parsed', '-pa',
+            '-w', 'test_files/test_result', '-wm', 'tmx', '-p', 'parsed', '-pa',
             '-sa', 'upos', 'feats', 'lemma', '-ta', 'upos', 'feats', 'lemma', 
             '-r', 'v4']).printPairs()
-        with open('test_result', 'r') as f:
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype=' +
@@ -850,10 +856,10 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_tmx_parsed_write_fast(self):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1',
-            '-w', 'test_result', '-wm', 'tmx', '-p', 'parsed', '-pa',
+            '-w', 'test_files/test_result', '-wm', 'tmx', '-p', 'parsed', '-pa',
             '-sa', 'upos', 'feats', 'lemma', '-ta', 'upos', 'feats', 'lemma',
             '-f', '-r', 'v4']).printPairs()
-        with open('test_result', 'r') as f:
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">' +
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype=' +
@@ -894,30 +900,33 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_moses_xml_write(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test.src', 'test.trg', '-wm', 'moses']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', 'test_files/test.trg', '-wm', 'moses']
+            ).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
-        with open('test.trg', 'r') as f:
+        with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
 
     def test_moses_xml_write_unalphabetical(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
-            '-w', 'test.src', 'test.trg', '-wm', 'moses']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', 'test_files/test.trg', '-wm', 'moses']
+            ).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
-        with open('test.trg', 'r') as f:
+        with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
 
     def test_moses_xml_write_with_file_names(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test.src', 'test.trg', '-wm', 'moses', '-pn']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', 'test_files/test.trg', '-wm',
+            'moses', '-pn']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
                 '\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n\n' +
                 'Charts in $[ officename ]\n')
-        with open('test.trg', 'r') as f:
+        with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
                 '\n<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\n' +
                 'Diagrammes dans $[officename ]\n')
@@ -925,24 +934,24 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_moses_xml_write_single_file(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test.src', '-wm', 'moses']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', '-wm', 'moses']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
                 'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n')
 
     def test_moses_xml_write_single_file_unalphabetical(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
-            '-w', 'test.src', '-wm', 'moses']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', '-wm', 'moses']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
                 'Diagrammes dans $[officename ]\tCharts in $[ officename ]\n')
 
     def test_moses_xml_write_single_file_with_file_names(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test.src', '-wm', 'moses', '-pn']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', '-wm', 'moses', '-pn']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
                 '\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n' +
                 '<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\n' +
@@ -951,8 +960,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_moses_xml_write_single_file_with_file_names_unalphabetical(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
-            '-w', 'test.src', '-wm', 'moses', '-pn']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', '-wm', 'moses', '-pn']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
                 '\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n' +
                 '<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\n' +
@@ -961,10 +970,11 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_moses_xml_write_fast(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test.src', 'test.trg', '-wm', 'moses', '-f']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', 'test_files/test.trg', '-wm', 'moses',
+            '-f']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
-        with open('test.trg', 'r') as f:
+        with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
 
     def test_moses_xml_print(self):
@@ -1000,20 +1010,21 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_moses_raw_write(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1', '-w',
-            'test.src', 'test.trg', '-wm', 'moses', '-p', 'raw']).printPairs()
-        with open('test.src', 'r') as f:
+            'test_files/test.src', 'test_files/test.trg', '-wm', 'moses', '-p',
+            'raw']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'Charts in $[officename]\n')
-        with open('test.trg', 'r') as f:
+        with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'Diagrammes dans $[officename]\n')
 
     def test_moses_raw_write_fast(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test.src', 'test.trg', '-wm', 'moses', '-p', 'raw',
-            '-f']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', 'test_files/test.trg', '-wm',
+            'moses', '-p', 'raw', '-f']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'Charts in $[officename]\n')
-        with open('test.trg', 'r') as f:
+        with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'Diagrammes dans $[officename]\n')
 
     def test_moses_raw_print(self):
@@ -1033,24 +1044,24 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_moses_parsed_write(self):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1',
-            '-w', 'test.src', 'test.trg', '-wm', 'moses', '-p', 'parsed',
-            '-pa', '-sa', 'upos', 'feats', 'lemma',
+            '-w', 'test_files/test.src', 'test_files/test.trg', '-wm',
+            'moses', '-p', 'parsed', '-pa', '-sa', 'upos', 'feats', 'lemma',
             '-ta', 'upos', 'feats', 'lemma', '-r', 'v4']).printPairs()
-        with open('test.src', 'r') as f:
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
-        with open('test.trg', 'r') as f:
+        with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
                 'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
 
     def test_moses_parsed_write_fast(self):
         OpusRead(
             ['-d', 'DGT', '-s', 'en', '-t', 'es', '-m', '1',
-            '-w', 'test.src', 'test.trg', '-wm', 'moses', '-p', 'parsed',
-            '-pa', '-sa', 'upos', 'feats', 'lemma', '-ta', 'upos', 'feats', 
-            'lemma', '-f', '-r', 'v4']).printPairs()
-        with open('test.src', 'r') as f:
+            '-w', 'test_files/test.src', 'test_files/test.trg', '-wm', 'moses', '-p',
+            'parsed', '-pa', '-sa', 'upos', 'feats', 'lemma', '-ta',
+            'upos', 'feats', 'lemma', '-f', '-r', 'v4']).printPairs()
+        with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
-        with open('test.trg', 'r') as f:
+        with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
                 'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
 
@@ -1075,8 +1086,8 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_links_write(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'en_GB', '-t', 'fr', '-m', '1',
-            '-w', 'test_result', '-wm', 'links']).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-wm', 'links']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 '<?xml version="1.0" encoding="utf-8"?>\n' +
                 '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD' +
@@ -1089,9 +1100,9 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_links_write_unalphabetical(self):
         OpusRead(
             ['-d', 'OpenOffice', '-s', 'fr', '-t', 'en_GB', '-m', '1',
-            '-w', 'test_result', '-wm', 'links', '-S', '1', '-T', '2']
-            ).printPairs()
-        with open('test_result', 'r') as f:
+            '-w', 'test_files/test_result', '-wm', 'links', '-S', '1', '-T',
+            '2']).printPairs()
+        with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 ('<?xml version="1.0" encoding="utf-8"?>'
                 '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
@@ -1155,9 +1166,10 @@ class TestOpusReadNoSetup(unittest.TestCase):
     def test_use_given_sentence_alignment_file(self):
         OpusRead(
             ['-d', 'Books', '-s', 'en', '-t', 'fi', '-S', '5', '-T', '2',
-            '-wm', 'links', '-w', 'testlinks']).printPairs()
+            '-wm', 'links', '-w', 'test_files/testlinks']).printPairs()
         var = pairPrinterToVariable(
-            ['-d', 'Books', '-s', 'en', '-t', 'fi', '-af', 'testlinks'])
+            ['-d', 'Books', '-s', 'en', '-t', 'fi', '-af',
+            'test_files/testlinks'])
         self.assertEqual(var,
             '\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n' +
             '# fi/Doyle_Arthur_Conan-Hound_of_the_' +
@@ -1176,58 +1188,60 @@ class TestOpusReadNoSetup(unittest.TestCase):
             'olevan tekeminen ? "\n================================\n')
 
     def test_checks_first_whether_documents_are_in_path(self):
-        with open('testlinks', 'w') as f:
+        with open('test_files/testlinks', 'w') as f:
             f.write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign ' +
                 'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'+
-                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_en" ' +
-                'toDoc="test_fi" >\n<link xtargets="s1;s1"/>\n </'+
-                'linkGrp>+\n</cesAlign>')
-        with open('test_en', 'w') as f:
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'+
+                'test_en" toDoc="test_files/test_fi" >\n<link xtargets=' +
+                '"s1;s1"/>\n </linkGrp>+\n</cesAlign>')
+        with open('test_files/test_en', 'w') as f:
             f.write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<text>\n' +
                 '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2' +
                 '</w>\n</s>\n </body>\n</text>')
-        with open('test_fi', 'w') as f:
+        with open('test_files/test_fi', 'w') as f:
             f.write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n' +
                 '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2' +
                 '</w>\n</s>\n </body>\n</text>')
         var = pairPrinterToVariable(
-            ['-d', 'Books', '-s', 'en', '-t', 'fi', '-af', 'testlinks'])
+            ['-d', 'Books', '-s', 'en', '-t', 'fi', '-af',
+            'test_files/testlinks'])
         self.assertEqual(var,
-            '\n# test_en\n# test_fi\n\n' +
+            '\n# test_files/test_en\n# test_files/test_fi\n\n' +
             '================================\n(src)="s1">test_en1 test_en2\n' +
             '(trg)="s1">test_fi1 test_fi2\n================================\n')
 
     def test_checks_first_whether_documents_are_in_path_gz(self):
-        with open('testlinks', 'w') as f:
+        with open('test_files/testlinks', 'w') as f:
             f.write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign ' +
                 'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'+
-                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_en.gz" ' +
-                'toDoc="test_fi.gz" >\n<link xtargets="s1;s1"/>\n </'+
-                'linkGrp>+\n</cesAlign>')
-        with open('test_en', 'w') as f:
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/' +
+                'test_en.gz" toDoc="test_files/test_fi.gz" >\n<link ' +
+                'xtargets="s1;s1"/>\n </linkGrp>+\n</cesAlign>')
+        with open('test_files/test_en', 'w') as f:
             f.write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<text>\n' +
                 '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2' +
                 '</w>\n</s>\n </body>\n</text>')
-        with open('test_fi', 'w') as f:
+        with open('test_files/test_fi', 'w') as f:
             f.write(
                 '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n' +
                 '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2' +
                 '</w>\n</s>\n </body>\n</text>')
-        with open('test_en', 'rb') as f:
-            with gzip.open('test_en.gz', 'wb') as gf:
+        with open('test_files/test_en', 'rb') as f:
+            with gzip.open('test_files/test_en.gz', 'wb') as gf:
                 shutil.copyfileobj(f, gf)
-        with open('test_fi', 'rb') as f:
-            with gzip.open('test_fi.gz', 'wb') as gf:
+        with open('test_files/test_fi', 'rb') as f:
+            with gzip.open('test_files/test_fi.gz', 'wb') as gf:
                 shutil.copyfileobj(f, gf)
         var = pairPrinterToVariable(
-            ['-d', 'Books', '-s', 'en', '-t', 'fi', '-af', 'testlinks'])
+            ['-d', 'Books', '-s', 'en', '-t', 'fi', '-af',
+            'test_files/testlinks'])
         self.assertEqual(var,
-            '\n# test_en.gz\n# test_fi.gz\n\n' +
+            '\n# test_files/test_en.gz\n# test_files/test_fi.gz\n\n' +
             '================================\n(src)="s1">test_en1 test_en2\n' +
             '(trg)="s1">test_fi1 test_fi2\n================================\n')
 
