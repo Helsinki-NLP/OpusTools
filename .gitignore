@@ -8,4 +8,5 @@ build
 test_files
 .coverage
 htmlcov
-tatoeba.xml
+*.xml
+*.zip
