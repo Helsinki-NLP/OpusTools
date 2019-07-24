@@ -2,7 +2,7 @@ import argparse
 import gzip
 
 from .parse.alignment_parser import AlignmentParser
-from .parse.moses_read import MosesRead
+#from .parse.moses_read import MosesRead
 from .opus_get import OpusGet
 
 class OpusRead:
@@ -18,7 +18,7 @@ class OpusRead:
             default='latest')
         parser.add_argument('-p',
             help='Pre-process-type (raw, xml or parsed, default=xml)',
-            default='xml')
+            default='xml', choices=['raw', 'xml', 'parsed'])
         parser.add_argument('-m', help='Maximum number of alignments',
             default='all')
         parser.add_argument('-S',
@@ -41,7 +41,7 @@ class OpusRead:
             nargs='+')
         parser.add_argument('-wm',
             help='Set writing mode (normal, moses, tmx, links)',
-            default='normal')
+            default='normal', choices=['normal', 'moses', 'tmx', 'links'])
         parser.add_argument('-pn',
             help='Print file names when using moses format',
             action='store_true')
@@ -96,12 +96,6 @@ class OpusRead:
             self.args = parser.parse_args()
         else:
             self.args = parser.parse_args(arguments)
-
-        if self.args.p not in ['raw', 'xml', 'parsed']:
-            raise ValueError('p has to be "raw", "xml" or "parsed"')
-
-        if self.args.wm not in ['normal', 'moses', 'tmx', 'links']:
-            raise ValueError('wm has to be "normal", "moses", "tmx" or "links"')
 
         self.fromto = sorted([self.args.s, self.args.t])
         fromto_copy = [self.args.s, self.args.t]
@@ -305,6 +299,7 @@ class OpusRead:
         if self.args.w != None:
             self.closeResultFiles()
 
+'''
     def printPairsMoses(self):
         mread = MosesRead(self.moses, self.args.d, self.fromto[0], 
             self.fromto[1])
@@ -317,4 +312,4 @@ class OpusRead:
                 print(mread.readPair())
 
             mread.closeFiles()
-
+'''

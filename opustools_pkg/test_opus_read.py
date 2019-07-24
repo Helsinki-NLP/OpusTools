@@ -1,5 +1,6 @@
 import os
 import unittest
+from unittest import mock
 import io
 import sys
 import xml.parsers.expat
@@ -1548,6 +1549,35 @@ class TestOpusRead(unittest.TestCase):
             '/proj/nlpl/data/OPUS/Books/v1/xml/es.zip')
         self.assertEqual(opr.par.targetzip.filename,
             'Books_v1_xml_fi.zip')
+
+    def test_empty_argument_list(self):
+        temp_args = sys.argv.copy()
+        sys.argv = [temp_args[0]] + '-d Books -s en -t fi -m 1 -f'.split()
+        var = pairPrinterToVariable([])
+        self.assertEqual(var,
+            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
+            '\n# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
+            '\n\n================================'
+            '\n(src)="s1">Source : manybooks.netAudiobook available here'
+            '\n(trg)="s1">Source : Project Gutenberg'
+            '\n================================\n'))
+        sys.argv = temp_args.copy()
+
+    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    def test_alignment_file_not_found(self, mocked_input):
+        try:
+            mocked_input.side_effect = ['y', 'n']
+            opr = OpusRead(
+                '-d Books -s en -t fi -m 1 -af unfound.xml.gz'.split())
+            opr.printPairs()
+            os.remove('Books_latest_xml_en-fi.xml.gz')
+            os.remove('Books_latest_xml_en.zip')
+            os.remove('Books_latest_xml_fi.zip')
+            opr = OpusRead(
+                '-d Books -s en -t fi -m 1 -af unfound.xml.gz'.split())
+            opr.printPairs()
+        except Exception as e:
+            self.assertEqual(e.args[1], 'No such file or directory')
 
 class TestOpusCat(unittest.TestCase):
 
