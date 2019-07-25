@@ -92,14 +92,23 @@ class OpusCat:
             self.args = parser.parse_args()
         else:
             self.args = parser.parse_args(arguments)
+            
+        self.openFiles(
+            self.args.d+'_'+self.args.r+'_xml_'+self.args.l+'.zip',
+            ('/proj/nlpl/data/OPUS/'+self.args.d+'/latest/xml/'+self.args.l
+            +'.zip'))
 
+        if self.args.m == 'all':
+            self.maximum = -2
+        else:
+            self.maximum = int(self.args.m)
+
+    def openFiles(self, localfile, defaultpath):
         try:
             try:
-                self.lzip = zipfile.ZipFile((self.args.d+'_'+self.args.r+
-                    '_xml_'+self.args.l+'.zip'))
+                self.lzip = zipfile.ZipFile(localfile)
             except FileNotFoundError:
-                self.lzip = zipfile.ZipFile(('/proj/nlpl/data/OPUS/' +
-                    self.args.d + '/latest/xml/' + self.args.l + '.zip') , 'r')
+                self.lzip = zipfile.ZipFile(defaultpath)
         except FileNotFoundError:
             print(('\nRequested file not found. The following files are '
                 'availble for downloading:\n'))
@@ -111,15 +120,9 @@ class OpusCat:
             og = OpusGet(arguments)
             og.get_files()
             try:
-                self.lzip = zipfile.ZipFile((self.args.d+'_'+self.args.r+
-                    '_xml_'+self.args.l+'.zip'))
+                self.lzip = zipfile.ZipFile(localfile)
             except FileNotFoundError:
-                print('No file found with parameters ' + str(self.args.__dict__))
-            
-        if self.args.m == 'all':
-            self.maximum = -2
-        else:
-            self.maximum = int(self.args.m)
+                print('No file found with parameters '+str(self.args.__dict__))
 
     def printFile(self, f, n):
         xml_break = False

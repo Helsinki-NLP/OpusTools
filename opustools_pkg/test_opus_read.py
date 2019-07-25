@@ -8,7 +8,7 @@ import gzip
 import shutil
 import zipfile
 
-from opustools_pkg import OpusRead, OpusCat
+from opustools_pkg import OpusRead, OpusCat, OpusGet
 
 def pairPrinterToVariable(arguments):
     old_stdout = sys.stdout
@@ -24,101 +24,94 @@ class TestOpusRead(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        try:
-            os.mkdir('test_files')
-        except FileExistsError:
-            pass
+        os.mkdir('test_files')
 
-        try:
-            os.mkdir('Books')
-            os.mkdir('Books/xml')
-            os.mkdir('Books/xml/en')
-            with open(('Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_'
-                    'Baskervilles.xml'), 'w') as f:
-                f.write(('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text>'
-                '<head>\n<meta id="1"> \n <w id="w1.1">The</w> \n <w id="'
-                'w1.2">Hound</w> \n <w id="w1.3">of</w> \n <w id="w1.4">the'
-                '</w> \n <w id="w1.5">Baskervilles</w>   \n <w id="w1.6">by'
-                '</w> \n <w id="w1.7">Sir</w> \n <w id="w1.8">Arthur</w> \n '
-                '<w id="w1.9">Conan</w> \n <w id="w1.10">Doyle</w>   \n <w '
-                'id="w1.11">Aligned</w> \n <w id="w1.12">by</w>\n <w id="w1.'
-                '13">:</w> \n <w id="w1.14">András</w> \n <w id="w1.15">'
-                'Farkas</w> \n <w id="w1.16">(</w>\n <w id="w1.17">fully</w> '
-                '\n <w id="w1.18">reviewed</w>\n <w id="w1.19">)</w> \n</'
-                'meta></head><body>\n<s cld2="en" cld2conf="0.97" id="s1" '
-                'langid="en" langidconf="0.99">\n <chunk id="c1-1" type="NP'
-                '">\n  <w hun="NN" id="w1.1" lem="source" pos="NN" tree="NN'
-                '">Source</w>\n </chunk>\n <w hun=":" id="w1.2" lem=":" pos'
-                '=":" tree=":">:</w>\n <chunk id="c1-3" type="NP">\n  <w '
-                'hun="NNP" id="w1.3" pos="NNP" tree="NN">manybooks.'
-                'netAudiobook</w>\n  <w hun="JJ" id="w1.4" lem="available" '
-                'pos="NN" tree="JJ">available</w>\n </chunk>\n <chunk id="'
-                'c1-4" type="ADVP">\n  <w hun="RB" id="w1.5" lem="here" '
-                'pos="RB" tree="RB">here</w>\n </chunk>\n</s>\n\n\n\n<s '
-                'cld2="un" cld2conf="0.0" id="s4" langid="en" langidconf'
-                '="0.17">\n <chunk id="c4-1" type="NP">\n  <w hun="NNP" '
-                'id="w4.1" lem="Chapter" pos="NNP" tree="NP">Chapter</w>\n  '
-                '<w hun="CD" id="w4.2" lem="1" pos="CD" tree="CD">1</w>\n  '
-                '<w hun="NNP" id="w4.3" lem="Mr." pos="NNP" tree="NP">Mr.</'
-                'w>\n  <w hun="NNP" id="w4.4" lem="Sherlock" pos="NNP" tree'
-                '="NP">Sherlock</w>\n  <w hun="NNP" id="w4.5" lem="Holmes" '
-                'pos="NNP" tree="NP">Holmes</w>\n </chunk>\n</s><p id="p5'
-                '">\n<s cld2="en" cld2conf="0.99" id="s5.0" langid="en" '
-                'langidconf="1.0">\n <chunk id="c5.0-1" type="NP">\n  <w hun'
-                '="NNP" id="w5.0.1" lem="Mr." pos="NNP" tree="NP">Mr.</w>\n  '
-                '<w hun="NNP" id="w5.0.2" lem="Sherlock" pos="NNP" tree="NP">'
-                'Sherlock</w>\n  <w hun="NNP" id="w5.0.3" lem="Holmes" pos="'
-                'NNP" tree="NP">Holmes</w>\n</chunk>\n</s>\n\n\n<s cld2="un" '
-                'cld2conf="0.0" id="s8.1" langid="en" langidconf="0.17">\n '
-                '<chunk id="c8.1-1" type="NP">\n  <w hun="PRP" id="w8.1.1" '
-                'lem="I" pos="PRP" tree="PP">I</w>\n </chunk>\n <chunk id="c8'
-                '.1-2" type="VP">\n  <w hun="VBP" id="w8.1.2" lem="believe" '
-                'pos="VBP" tree="VVP">believe</w>\n </chunk>\n</s></p>\n\n<p '
-                'id="p167">\n<s cld2="un" cld2conf="0.0" id="s167.0" langid="'
-                'de" langidconf="0.47">\n <chunk id="c167.0-1" type="NP">\n  '
-                '<w hun="JJ" id="w167.0.1" lem="&quot;" pos="NN" tree="``">"</'
-                'w>\n  <w hun="NN" id="w167.0.2" lem="excellent" pos="NNP" '
-                'tree="JJ">Excellent</w>\n </chunk>\n <w hun="." id="w167.0.'
-                '3" lem="!" pos="." tree="SENT">!</w>\n</s>\n \n\n\n</p>\n '
-                '</body>\n</text>\n'))
+        os.mkdir('Books')
+        os.mkdir('Books/xml')
+        os.mkdir('Books/xml/en')
+        with open(('Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_'
+                'Baskervilles.xml'), 'w') as f:
+            f.write(('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text>'
+            '<head>\n<meta id="1"> \n <w id="w1.1">The</w> \n <w id="'
+            'w1.2">Hound</w> \n <w id="w1.3">of</w> \n <w id="w1.4">the'
+            '</w> \n <w id="w1.5">Baskervilles</w>   \n <w id="w1.6">by'
+            '</w> \n <w id="w1.7">Sir</w> \n <w id="w1.8">Arthur</w> \n '
+            '<w id="w1.9">Conan</w> \n <w id="w1.10">Doyle</w>   \n <w '
+            'id="w1.11">Aligned</w> \n <w id="w1.12">by</w>\n <w id="w1.'
+            '13">:</w> \n <w id="w1.14">András</w> \n <w id="w1.15">'
+            'Farkas</w> \n <w id="w1.16">(</w>\n <w id="w1.17">fully</w> '
+            '\n <w id="w1.18">reviewed</w>\n <w id="w1.19">)</w> \n</'
+            'meta></head><body>\n<s cld2="en" cld2conf="0.97" id="s1" '
+            'langid="en" langidconf="0.99">\n <chunk id="c1-1" type="NP'
+            '">\n  <w hun="NN" id="w1.1" lem="source" pos="NN" tree="NN'
+            '">Source</w>\n </chunk>\n <w hun=":" id="w1.2" lem=":" pos'
+            '=":" tree=":">:</w>\n <chunk id="c1-3" type="NP">\n  <w '
+            'hun="NNP" id="w1.3" pos="NNP" tree="NN">manybooks.'
+            'netAudiobook</w>\n  <w hun="JJ" id="w1.4" lem="available" '
+            'pos="NN" tree="JJ">available</w>\n </chunk>\n <chunk id="'
+            'c1-4" type="ADVP">\n  <w hun="RB" id="w1.5" lem="here" '
+            'pos="RB" tree="RB">here</w>\n </chunk>\n</s>\n\n\n\n<s '
+            'cld2="un" cld2conf="0.0" id="s4" langid="en" langidconf'
+            '="0.17">\n <chunk id="c4-1" type="NP">\n  <w hun="NNP" '
+            'id="w4.1" lem="Chapter" pos="NNP" tree="NP">Chapter</w>\n  '
+            '<w hun="CD" id="w4.2" lem="1" pos="CD" tree="CD">1</w>\n  '
+            '<w hun="NNP" id="w4.3" lem="Mr." pos="NNP" tree="NP">Mr.</'
+            'w>\n  <w hun="NNP" id="w4.4" lem="Sherlock" pos="NNP" tree'
+            '="NP">Sherlock</w>\n  <w hun="NNP" id="w4.5" lem="Holmes" '
+            'pos="NNP" tree="NP">Holmes</w>\n </chunk>\n</s><p id="p5'
+            '">\n<s cld2="en" cld2conf="0.99" id="s5.0" langid="en" '
+            'langidconf="1.0">\n <chunk id="c5.0-1" type="NP">\n  <w hun'
+            '="NNP" id="w5.0.1" lem="Mr." pos="NNP" tree="NP">Mr.</w>\n  '
+            '<w hun="NNP" id="w5.0.2" lem="Sherlock" pos="NNP" tree="NP">'
+            'Sherlock</w>\n  <w hun="NNP" id="w5.0.3" lem="Holmes" pos="'
+            'NNP" tree="NP">Holmes</w>\n</chunk>\n</s>\n\n\n<s cld2="un" '
+            'cld2conf="0.0" id="s8.1" langid="en" langidconf="0.17">\n '
+            '<chunk id="c8.1-1" type="NP">\n  <w hun="PRP" id="w8.1.1" '
+            'lem="I" pos="PRP" tree="PP">I</w>\n </chunk>\n <chunk id="c8'
+            '.1-2" type="VP">\n  <w hun="VBP" id="w8.1.2" lem="believe" '
+            'pos="VBP" tree="VVP">believe</w>\n </chunk>\n</s></p>\n\n<p '
+            'id="p167">\n<s cld2="un" cld2conf="0.0" id="s167.0" langid="'
+            'de" langidconf="0.47">\n <chunk id="c167.0-1" type="NP">\n  '
+            '<w hun="JJ" id="w167.0.1" lem="&quot;" pos="NN" tree="``">"</'
+            'w>\n  <w hun="NN" id="w167.0.2" lem="excellent" pos="NNP" '
+            'tree="JJ">Excellent</w>\n </chunk>\n <w hun="." id="w167.0.'
+            '3" lem="!" pos="." tree="SENT">!</w>\n</s>\n \n\n\n</p>\n '
+            '</body>\n</text>\n'))
 
-            with zipfile.ZipFile('Books_v1_xml_en.zip', 'w') as zf:
-                zf.write(('Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_'
-                    'Baskervilles.xml'))
+        with zipfile.ZipFile('Books_v1_xml_en.zip', 'w') as zf:
+            zf.write(('Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_'
+                'Baskervilles.xml'))
 
-            os.mkdir('Books/xml/fi')
-            with open(('Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_'
-                    'Baskervilles.xml'), 'w') as f:
-                f.write(('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text'
-                '>\n <head>\n  <meta> The Hound of the Baskervilles \n by '
-                'Sir Arthur Conan Doyle \n Aligned by: András Farkas (fully '
-                'reviewed) \n </meta>\n </head>\n <body>\n<s cld2="en" '
-                'cld2conf="0.96" id="s1" langid="de" langidconf="0.66">\n '
-                '<w id="w1.1">Source</w>\n <w id="w1.2">:</w> \n <w id="w1.'
-                '3">Project</w> \n <w id="w1.4">Gutenberg</w>\n</s>\n\n<s '
-                'cld2="ia" cld2conf="0.95" id="s4" langid="et" langidconf'
-                '="0.42">\n <w id="w4.1">Herra</w> \n <w id="w4.2">Sherlock'
-                '</w> \n <w id="w4.3">Holmes</w>\n <w id="w4.4">.</w>\n</s'
-                '><p id="p5">\n<s cld2="fi" cld2conf="0.99" id="s5.0" langid'
-                '="fi" langidconf="1.0">\n <w id="w5.0.1">Herra</w> \n <w '
-                'id="w5.0.2">Sherlock</w> \n <w id="w5.0.3">Holmes</w>\n</'
-                's>\n   \n<s cld2="fi" cld2conf="0.97" id="s8.1" langid="fi" '
-                'langidconf="1.0">\n <w id="w8.1.1">Luulenpa</w> \n <w id="'
-                'w8.1.2">että</w> \n <w id="w8.1.3">sinulla</w> \n</s></p>\n'
-                '<p id="p167">\n<s cld2="un" cld2conf="0.0" id="s167.0" '
-                'langid="fi" langidconf="0.38">\n <w id="w167.0.1">"</w>\n '
-                '<w id="w167.0.2">Erinomaista</w>\n <w id="w167.0.3">.</w>\n'
-                '</s></p>\n </body>\n</text>\n'))
+        os.mkdir('Books/xml/fi')
+        with open(('Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_'
+                'Baskervilles.xml'), 'w') as f:
+            f.write(('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text'
+            '>\n <head>\n  <meta> The Hound of the Baskervilles \n by '
+            'Sir Arthur Conan Doyle \n Aligned by: András Farkas (fully '
+            'reviewed) \n </meta>\n </head>\n <body>\n<s cld2="en" '
+            'cld2conf="0.96" id="s1" langid="de" langidconf="0.66">\n '
+            '<w id="w1.1">Source</w>\n <w id="w1.2">:</w> \n <w id="w1.'
+            '3">Project</w> \n <w id="w1.4">Gutenberg</w>\n</s>\n\n<s '
+            'cld2="ia" cld2conf="0.95" id="s4" langid="et" langidconf'
+            '="0.42">\n <w id="w4.1">Herra</w> \n <w id="w4.2">Sherlock'
+            '</w> \n <w id="w4.3">Holmes</w>\n <w id="w4.4">.</w>\n</s'
+            '><p id="p5">\n<s cld2="fi" cld2conf="0.99" id="s5.0" langid'
+            '="fi" langidconf="1.0">\n <w id="w5.0.1">Herra</w> \n <w '
+            'id="w5.0.2">Sherlock</w> \n <w id="w5.0.3">Holmes</w>\n</'
+            's>\n   \n<s cld2="fi" cld2conf="0.97" id="s8.1" langid="fi" '
+            'langidconf="1.0">\n <w id="w8.1.1">Luulenpa</w> \n <w id="'
+            'w8.1.2">että</w> \n <w id="w8.1.3">sinulla</w> \n</s></p>\n'
+            '<p id="p167">\n<s cld2="un" cld2conf="0.0" id="s167.0" '
+            'langid="fi" langidconf="0.38">\n <w id="w167.0.1">"</w>\n '
+            '<w id="w167.0.2">Erinomaista</w>\n <w id="w167.0.3">.</w>\n'
+            '</s></p>\n </body>\n</text>\n'))
 
-            with zipfile.ZipFile('Books_v1_xml_fi.zip', 'w') as zf:
-                zf.write(('Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_'
-                    'Baskervilles.xml'))
+        with zipfile.ZipFile('Books_v1_xml_fi.zip', 'w') as zf:
+            zf.write(('Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_'
+                'Baskervilles.xml'))
 
-            shutil.copyfile('Books_v1_xml_en.zip', 'en.zip')
-            shutil.copyfile('Books_v1_xml_fi.zip', 'fi.zip')
-
-        except FileExistsError:
-            pass
+        shutil.copyfile('Books_v1_xml_en.zip', 'en.zip')
+        shutil.copyfile('Books_v1_xml_fi.zip', 'fi.zip')
 
         with open('books_alignment.xml', 'w') as f:
             f.write(('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE '
@@ -153,6 +146,13 @@ class TestOpusRead(unittest.TestCase):
         self.fastopr.par.sPar.document.close()
         self.fastopr.par.tPar.document.close()
         self.fastopr.par.closeFiles()
+        shutil.rmtree('test_files')
+        shutil.rmtree('Books')
+        os.remove('books_alignment.xml')
+        os.remove('Books_v1_xml_en.zip')
+        os.remove('Books_v1_xml_fi.zip')
+        os.remove('en.zip')
+        os.remove('fi.zip')
 
     def tearDown(self):
         self.opr.par.args.wm='normal'
@@ -480,18 +480,6 @@ class TestOpusRead(unittest.TestCase):
             ('(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down '
             'the@DT@the Rabbit-Hole@NNP'))
         opr.par.closeFiles()
-
-    def test_ExhaustiveSentenceParser_readSentence_raw(self):
-        rawprint = OpusRead('-d Books -s en -t fi -p raw'.split())
-        rawprint.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
-        self.assertEqual(rawprint.par.sPar.readSentence(['s5.2'])[0],
-            ('(src)="s5.2">It was a fine, thick piece of wood, bulbous-'
-            'headed, of the sort which is known as a "Penang lawyer."'))
-        rawprint.par.closeFiles()
 
     def test_ExhaustiveSentenceParser_readSentence_raw(self):
         rawprint = OpusRead('-d Books -s en -t fi -p raw'.split())
@@ -1565,21 +1553,48 @@ class TestOpusRead(unittest.TestCase):
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_alignment_file_not_found(self, mocked_input):
-        try:
-            mocked_input.side_effect = ['y', 'n']
-            opr = OpusRead(
-                '-d Books -s en -t fi -m 1 -af unfound.xml.gz'.split())
-            opr.printPairs()
-            os.remove('Books_latest_xml_en-fi.xml.gz')
-            os.remove('Books_latest_xml_en.zip')
-            os.remove('Books_latest_xml_fi.zip')
-            opr = OpusRead(
-                '-d Books -s en -t fi -m 1 -af unfound.xml.gz'.split())
-            opr.printPairs()
-        except Exception as e:
-            self.assertEqual(e.args[1], 'No such file or directory')
+        mocked_input.side_effect = ['y', 'n']
+        opr = OpusRead(
+            '-d RF -s en -t sv -m 1 -af unfound.xml.gz'.split())
+        opr.printPairs()
+        os.remove('RF_latest_xml_en-sv.xml.gz')
+        os.remove('RF_latest_xml_en.zip')
+        os.remove('RF_latest_xml_sv.zip')
+        var = pairPrinterToVariable(
+            '-d RF -s en -t sv -m 1 -af unfound.xml.gz'.split())
+        self.assertEqual(var[-18:], '128 KB Total size\n') 
+
+    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    def test_zip_file_not_found(self, mocked_input):
+        mocked_input.side_effect = ['y']
+        opr = OpusRead('-d RF -s en -t sv -m 1'.split())
+        opr.par.source = ''
+
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
+        opr.printPairs()
+        sys.stdout = old_stdout
+
+        os.remove('RF_latest_xml_en-sv.xml.gz')
+        os.remove('RF_latest_xml_en.zip')
+        os.remove('RF_latest_xml_sv.zip')
+        
+        self.assertEqual(printout.getvalue()[-230:],
+            ('(src)="s1.1">S'
+            'tatement of Government Policy by the Prime Minister , Mr'
+            ' Ingvar Carlsson , at the Opening of the Swedish Parliame'
+            'nt on Tuesday , 4 October , 1988 .\n(trg)="s1.1">REGERIN'
+            'GSFÖRKLARING .\n================================\n'))
+
+    def test_testConfidence_with_empty_attrsList(self):
+        self.assertFalse(self.opr.par.testConfidence('', [], ''))
 
 class TestOpusCat(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        self.maxDiff = None
 
     def printSentencesToVariable(self, arguments):
         old_stdout = sys.stdout
@@ -1643,6 +1658,93 @@ class TestOpusCat(unittest.TestCase):
             ('\n# Books/xml/eo/Carroll_Lewis-Alice_in_wonderland.'
             'xml\n\nSource : Project GutenbergTranslation : E.L. '
             'KEARNEY , M.A.\n'))
+
+    def test_empty_argument_list(self):
+        temp_args = sys.argv.copy()
+        sys.argv = [temp_args[0]] + '-d RF -l en -m 1 -p'.split()
+        var = self.printSentencesToVariable([])
+        self.assertEqual(var,
+            ('\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN '
+            'AFFAIRS Press Section Check against delivery\n'))
+        sys.argv = temp_args.copy()
+
+    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    def test_file_not_found(self, mocked_input):
+        mocked_input.side_effect = ['y']
+        var = self.printSentencesToVariable('-d RFOSIAJ -l en -m 1 -p'.split())
+
+        self.assertEqual(var[-28:],
+            '\nNecessary files not found.\n')
+
+    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    def test_download_necessary_files(self, mocked_input):
+        mocked_input.side_effect = ['y', 'n']
+
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
+        OpusCat.openFiles(OpusCat('-d RF -l en'.split()),
+            'RF_latest_xml_en.zip', '')
+        os.remove('RF_latest_xml_en.zip')
+        OpusCat.openFiles(OpusCat('-d RF -l en'.split()),
+            'RF_latest_xml_en.zip', '')
+        sys.stdout = old_stdout
+        
+        self.assertEqual(printout.getvalue()[-161:-132],
+           'No file found with parameters')
+
+class TestOpusGet(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        self.maxDiff = None
+
+    def test_empty_argument_list(self):
+        temp_args = sys.argv.copy()
+        sys.argv = [temp_args[0]] + '-s eo'.split()
+        opg = OpusGet([])
+        self.assertEqual(opg.url, 'http://opus.nlpl.eu/opusapi/?source=eo&')
+        sys.argv = temp_args.copy()
+
+    def test_format_size(self):
+        opg = OpusGet('-s eo'.split())
+        self.assertEqual(opg.format_size(1), '1 KB')
+        self.assertEqual(opg.format_size(291), '291 KB')
+        self.assertEqual(opg.format_size(1000), '1 MB')
+        self.assertEqual(opg.format_size(2514), '3 MB')
+        self.assertEqual(opg.format_size(1000000), '1 GB')
+        self.assertEqual(opg.format_size(3385993), '3 GB')
+        self.assertEqual(opg.format_size(1000000000), '1 TB')
+        self.assertEqual(opg.format_size(2304006273), '2 TB')
+
+    def test_remove_data_with_no_alignment_if_needed(self):
+        opg = OpusGet('-s en -t sv -l'.split())
+        self.assertEqual(opg.get_corpora_data()[2], '247 GB')
+
+    def test_get_files_invalid_url(self):
+        opg = OpusGet('-d RF -s en -t sv -l'.split())
+        opg.url = 'http://slkdfjlks'
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
+        opg.get_files()
+        sys.stdout = old_stdout
+
+        self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
+
+    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    def test_download_invalid_url(self, mocked_input):
+        mocked_input.side_effect = ['y']
+        opg = OpusGet('-d RF -s en -t sv -l'.split())
+        corpora, file_n, total_size = opg.get_corpora_data()
+        corpora[0]['url'] = 'http://alskdjfl'
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
+        opg.download(corpora, file_n, total_size)
+        sys.stdout = old_stdout
+
+        self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
 
 if __name__ == '__main__':
     unittest.main()

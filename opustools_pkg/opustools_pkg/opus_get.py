@@ -128,7 +128,7 @@ class OpusGet:
                         reporthook=self.progress_status)
                     print('')
                 except urllib.error.URLError as e:
-                    print('Unable the retrieve the data.')
+                    print('Unable to retrieve the data.')
                     return
 
     def print_files(self, corpora, file_n, total_size):
