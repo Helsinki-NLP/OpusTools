@@ -48,6 +48,7 @@ class SentenceParser:
             self.oneLineSStart = True
             self.sid = attrs['id']
         if name == 'w' and self.annotations:
+            self.posses = []
             if self.anno_attrs[0] == 'all_attrs':
                 attributes = list(attrs.keys())
                 attributes.sort()

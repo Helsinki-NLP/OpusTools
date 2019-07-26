@@ -124,6 +124,7 @@ class TestOpusRead(unittest.TestCase):
             'xtargets="s8.1;s8.1" id="SL8.1"/>\n<link xtargets="s167.0'
             ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n'))
 
+        '''
         self.opr = OpusRead('-d Books -s en -t fi'.split())
         self.opr.par.initializeSentenceParsers(
             {'fromDoc':
@@ -136,6 +137,13 @@ class TestOpusRead(unittest.TestCase):
                 'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
              'toDoc':
                 'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+        '''
+        self.opr = OpusRead('-d RF -s en -t sv'.split())
+        self.opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.fastopr = OpusRead('-d RF -s en -t sv -f'.split())
+        self.fastopr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
 
         self.maxDiff= None
     @classmethod
@@ -188,90 +196,88 @@ class TestOpusRead(unittest.TestCase):
         self.fastopr.par.tPar.annotations = False
 
     def test_ExhaustiveSentenceParser_initializing(self):
-        self.assertEqual(len(self.opr.par.sPar.sentences), 3831)
-        self.assertEqual(len(self.opr.par.tPar.sentences), 3757)
+        self.assertEqual(len(self.opr.par.sPar.sentences), 29)
+        self.assertEqual(len(self.opr.par.tPar.sentences), 68)
 
     def test_ExhaustiveSentenceParser_getSentence(self):
-        self.assertEqual(self.opr.par.sPar.getSentence('s1')[0],
-            'Source : manybooks.netAudiobook available here')
-        self.assertEqual(self.opr.par.tPar.getSentence('s1')[0],
-            'Source : Project Gutenberg')
+        self.assertEqual(self.opr.par.sPar.getSentence('s3.1')[0],
+            '( Unofficial translation )')
+        self.assertEqual(self.opr.par.tPar.getSentence('s3.1')[0],
+            'Fru talman , ärade ledamöter av Sveriges riksdag !')
 
-        self.assertEqual(self.opr.par.sPar.getSentence('s4')[0],
-            'Chapter 1 Mr. Sherlock Holmes')
-        self.assertEqual(self.opr.par.tPar.getSentence('s4')[0],
-            'Herra Sherlock Holmes .')
+        self.assertEqual(self.opr.par.sPar.getSentence('s8.1')[0],
+            ("The Government 's policy to combat unemployment will re"
+            "st on four corner- stones :"))
+        self.assertEqual(self.opr.par.tPar.getSentence('s8.1')[0],
+            'Goda statsfinanser är grunden för alla politiska ambitioner .')
 
-        self.assertEqual(self.opr.par.sPar.getSentence('s5.4')[0],
-            ('" To James Mortimer , M.R.C.S. , from his friends of the'
-            ' C.C.H. , " was engraved upon it , with the date " 1884 . "'))
-        self.assertEqual(self.opr.par.tPar.getSentence('s5.5')[0],
-            ("James Mortimerille ystäviltänsä C. C. H : ssa ' oli"
-            " kaiverrettu tuuman-levyiselle , kädensijan alapuolella"
-            " olevalle hopealevylle , sekä vielä vuosiluku 1884 ."))
+        self.assertEqual(self.opr.par.sPar.getSentence('s10.1')[0],
+            ('Sound public finances are the basis for all political a'
+            'mbitions .'))
+        self.assertEqual(self.opr.par.tPar.getSentence('s10.1')[0],
+            ('Den andra hörnstenen är goda villkor för företag och fö'
+            'retagande .'))
 
     def test_ExhaustiveSentenceParser_readSentence_format(self):
-        self.assertEqual(self.opr.par.sPar.readSentence(['s1'])[0],
-            '(src)="s1">Source : manybooks.netAudiobook available here')
-        self.assertEqual(self.opr.par.tPar.readSentence(['s1'])[0],
-            '(trg)="s1">Source : Project Gutenberg')
-        self.assertEqual(self.opr.par.sPar.readSentence(['s11.0', 's11.1'])[0],
-            ('(src)="s11.0">" Good ! " said Holmes .\n'
-            '(src)="s11.1">" Excellent ! "'))
+        self.assertEqual(self.opr.par.sPar.readSentence(['s3.1'])[0],
+            '(src)="s3.1">( Unofficial translation )')
+        self.assertEqual(self.opr.par.tPar.readSentence(['s3.1'])[0],
+            '(trg)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
+        self.assertEqual(self.opr.par.sPar.readSentence(['s3.1', 's10.1'])[0],
+            ('(src)="s3.1">( Unofficial translation )\n'
+            '(src)="s10.1">Sound public finances are the basis for all'
+            ' political ambitions .'))
 
     def test_ExhaustiveSentenceParser_readSentence_moses(self):
         self.opr.par.sPar.wmode = 'moses'
-        self.assertEqual(self.opr.par.sPar.readSentence(['s5.2'])[0],
-            ('It was a fine , thick piece of wood , bulbous-headed ,'
-            ' of the sort which is known as a " Penang lawyer . "'))
+        self.assertEqual(self.opr.par.sPar.readSentence(['s3.1'])[0],
+            '( Unofficial translation )')
 
     def test_ExhaustiveSentenceParser_readSentence_tmx(self):
         self.opr.par.sPar.wmode = 'tmx'
-        self.assertEqual(self.opr.par.sPar.readSentence(['s5.2'])[0],
-            ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>It was a fine ,'
-            ' thick piece of wood , bulbous-headed , of the sort which '
-            'is known as a " Penang lawyer . "</seg></tuv>'))
+        self.assertEqual(self.opr.par.sPar.readSentence(['s3.1'])[0],
+            ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>( Unofficial tr'
+            'anslation )</seg></tuv>'))
         self.opr.par.tPar.wmode = 'tmx'
-        self.assertEqual(self.opr.par.tPar.readSentence(['s5.2', 's5.3'])[0],
-            ("""\t\t\t<tuv xml:lang="fi"><seg>Se oli jokseenkin soma ja """
-            """tukeva , se oli varustettu sipulinmuotoisella kädensijalla """
-            """ja näytti oikealta " tuomarin sauvalta . " ' M.R.C.S.</seg>"""
-            """</tuv>\n\t\t</tu>"""))
+        self.assertEqual(self.opr.par.tPar.readSentence(['s5.1', 's5.2'])[0],
+            ('\t\t\t<tuv xml:lang="sv"><seg>Fundamenten för ett gott '
+            'samhälle undergrävs av dagens höga arbetslöshet . Såväl '
+            'samhällsekonomi som moral och vilja försvagas .</seg></t'
+            'uv>\n\t\t</tu>'))
 
     def test_ExhaustiveSentenceParser_readSentence_empty(self):
         self.assertEqual(self.opr.par.sPar.readSentence([''])[0], '')
 
     def test_SentenceParser_readSentence_format(self):
-        self.assertEqual(self.fastopr.par.sPar.readSentence(['s1'])[0],
-            '(src)="s1">Source : manybooks.netAudiobook available here')
-        self.assertEqual(self.fastopr.par.tPar.readSentence(['s1'])[0],
-            '(trg)="s1">Source : Project Gutenberg')
+        self.assertEqual(self.fastopr.par.sPar.readSentence(['s3.1'])[0],
+            '(src)="s3.1">( Unofficial translation )')
+        self.assertEqual(self.fastopr.par.tPar.readSentence(['s3.1'])[0],
+            '(trg)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
         self.assertEqual(self.fastopr.par.sPar.readSentence(
-            ['s11.0', 's11.1'])[0],
-            ('(src)="s11.0">" Good ! " said Holmes .\n'
-            '(src)="s11.1">" Excellent ! "'))
+            ['s8.1', 's10.1'])[0],
+            ("""(src)="s8.1">The Government 's policy to combat unemp"""
+            """loyment will rest on four corner- stones :\n(src)="s10"""
+            """.1">Sound public finances are the basis for all politi"""
+            """cal ambitions ."""))
 
     def test_SentenceParser_readSentence_moses(self):
         self.fastopr.par.sPar.wmode = 'moses'
-        self.assertEqual(self.fastopr.par.sPar.readSentence(['s12'])[0],
-            ('" I think also that the probability is in favour of'
-            ' his being a country practitioner who does a great deal '
-            'of his visiting on foot . "'))
+        self.assertEqual(self.fastopr.par.sPar.readSentence(['s13.1'])[0],
+            'Sweden is a good country for enterprise .')
 
     def test_SentenceParser_readSentence_tmx(self):
         self.fastopr.par.sPar.wmode = 'tmx'
+        self.assertEqual(self.fastopr.par.sPar.readSentence(['s15.1'])[0],
+            ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>The local and r'
+            'egional role of economic policy will be emphasized .</se'
+            'g></tuv>'))
         self.fastopr.par.tPar.wmode = 'tmx'
-        self.assertEqual(self.fastopr.par.sPar.readSentence(['s16.0'])[0],
-            ("""\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>" And"""
-            """ then again , there is the ' friends of the C.C.H. '"""
-            """</seg></tuv>"""))
         self.assertEqual(self.fastopr.par.tPar.readSentence(
-            ['s16.1', 's16.2'])[0],
-            ("""\t\t\t<tuv xml:lang="fi"><seg>Minä otaksun , että H """
-            """tarkoittaa jotain hevosurheiluseuraa . Ehkäpä hän """
-            """kirurgina oli tehnyt palveluksia paikallisen urheiluseuran """
-            """jäsenille , ja nämä ovat kiitollisuutensa osoitteeksi """
-            """antaneet tämän pienen lahjan . "</seg></tuv>\n\t\t</tu>"""))
+            ['s11.1', 's11.2'])[0],
+            ('\t\t\t<tuv xml:lang="sv"><seg>Sverige är ett bra land f'
+            'ör företagsamhet . Här finns en flexibel ekonomi , ett k'
+            'onstruktivt samarbetsklimat och en kunnig och välutbilda'
+            'd arbetskraft .</seg></tuv>\n\t\t</tu>'))
 
     def test_SentenceParser_readSentence_empty(self):
         self.assertEqual(self.fastopr.par.sPar.readSentence([''])[0], '')
@@ -435,109 +441,78 @@ class TestOpusRead(unittest.TestCase):
 
 
     def test_switch_labels_when_languages_are_in_unalphabetical_order(self):
-        opr = OpusRead('-d Books -s fi -t en'.split())
+        opr = OpusRead('-d RF -s sv -t en'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s1'])[0],
-            '(trg)="s1">Source : manybooks.netAudiobook available here')
-        self.assertEqual(opr.par.tPar.readSentence(['s1'])[0],
-            '(src)="s1">Source : Project Gutenberg')
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
+            '(trg)="s3.1">( Unofficial translation )')
+        self.assertEqual(opr.par.tPar.readSentence(['s3.1'])[0],
+            '(src)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
+
         opr.par.closeFiles()
-        fastopr = OpusRead('-d Books -s fi -t en -f'.split())
+        fastopr = OpusRead('-d RF -s sv -t en -f'.split())
         fastopr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
-        self.assertEqual(fastopr.par.sPar.readSentence(['s1'])[0],
-            '(trg)="s1">Source : manybooks.netAudiobook available here')
-        self.assertEqual(fastopr.par.tPar.readSentence(['s1'])[0],
-            '(src)="s1">Source : Project Gutenberg')
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.assertEqual(fastopr.par.sPar.readSentence(['s3.1'])[0],
+            '(trg)="s3.1">( Unofficial translation )')
+        self.assertEqual(fastopr.par.tPar.readSentence(['s3.1'])[0],
+            '(src)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
         fastopr.par.closeFiles()
 
     def test_ExhaustiveSentenceParser_readSentence_annotations(self):
-        opr = OpusRead('-d Books -s en -t eo -pa'.split())
+        opr = OpusRead('-d RF -s en -t sv -pa'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Carroll_Lewis-Alice_in_wonderland.xml.gz',
-             'toDoc':
-                'eo/Carroll_Lewis-Alice_in_wonderland.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s4'])[0],
-            ('(src)="s4">CHAPTER|NN|chapter I|PRP|I Down|VBP|down'
-            ' the|DT|the Rabbit-Hole|NNP'))
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
+            ('(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
+            'n|NN|translation )|)|)'))
         opr.par.closeFiles()
-        opr = OpusRead( '-d Books -s en -t eo -pa -ca @'.split())
+        opr = OpusRead('-d RF -s en -t sv -pa -ca @'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Carroll_Lewis-Alice_in_wonderland.xml.gz',
-             'toDoc':
-                'eo/Carroll_Lewis-Alice_in_wonderland.xml.gz'})
-
-        self.assertEqual(opr.par.sPar.readSentence(['s4'])[0],
-            ('(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down '
-            'the@DT@the Rabbit-Hole@NNP'))
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
+            ('(src)="s3.1">(@(@( Unofficial@NNP@unofficial translatio'
+            'n@NN@translation )@)@)'))
         opr.par.closeFiles()
 
     def test_ExhaustiveSentenceParser_readSentence_raw(self):
-        rawprint = OpusRead('-d Books -s en -t fi -p raw'.split())
-        rawprint.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
-        self.assertEqual(rawprint.par.sPar.readSentence(['s5.2'])[0],
-            ('(src)="s5.2">It was a fine, thick piece of wood, bulbous-'
-            'headed, of the sort which is known as a "Penang lawyer."'))
-        rawprint.par.closeFiles()
+        opr = OpusRead('-d RF -s en -t sv -p raw'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
+            ('(src)="s3.1">(Unofficial translation)'))
+        opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_annotations(self):
-        opr = OpusRead('-d Books -s en -t eo -pa'.split())
+        opr = OpusRead('-d RF -s en -t sv -pa -f'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Carroll_Lewis-Alice_in_wonderland.xml.gz',
-             'toDoc':
-                'eo/Carroll_Lewis-Alice_in_wonderland.xml.gz'})
-
-        self.assertEqual(opr.par.sPar.readSentence(['s4'])[0],
-            ('(src)="s4">CHAPTER|NN|chapter I|PRP|I Down|VBP|down '
-            'the|DT|the Rabbit-Hole|NNP'))
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
+            ('(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
+            'n|NN|translation )|)|)'))
         opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_annotations_change_delimiter(self):
-        opr = OpusRead('-d Books -s en -t eo -pa -ca @'.split())
+        opr = OpusRead('-d RF -s en -t sv -pa -f -ca @'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Carroll_Lewis-Alice_in_wonderland.xml.gz',
-             'toDoc':
-                'eo/Carroll_Lewis-Alice_in_wonderland.xml.gz'})
-
-        self.assertEqual(opr.par.sPar.readSentence(['s4'])[0],
-            '(src)="s4">CHAPTER@NN@chapter I@PRP@I Down@VBP@down ' +
-            'the@DT@the Rabbit-Hole@NNP')
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
+            ('(src)="s3.1">(@(@( Unofficial@NNP@unofficial translatio'
+            'n@NN@translation )@)@)'))
         opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_raw(self):
-        fastprinter = OpusRead('-d Books -s en -t fi -p raw -f'.split())
-        fastprinter.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
-        self.assertEqual(fastprinter.par.sPar.readSentence(['s5.2'])[0],
-            ('(src)="s5.2">It was a fine, thick piece of wood, bulbous-'
-            'headed, of the sort which is known as a "Penang lawyer."'))
-        fastprinter.par.closeFiles()
-
-    def test_AlignmentParser_readPair_sentence_limits_when_languages_in_unalphabetical_order(self):
-        opr = OpusRead('-d Books -s fi -t en -T 0'.split())
+        opr = OpusRead('-d RF -s en -t sv -p raw -f'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
+            ('(src)="s3.1">(Unofficial translation)'))
+        opr.par.closeFiles()
+
+    def test_AlignmentParser_readPair_sentence_limits(self):
+        opr = OpusRead('-d RF -s en -t sv -T 0'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
 
         opr.par.parseLine('<s>')
         opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
@@ -546,12 +521,9 @@ class TestOpusRead(unittest.TestCase):
 
         opr.par.closeFiles()
 
-        opr = OpusRead('-d Books -s fi -t en -T 1'.split())
+        opr = OpusRead('-d RF -s en -t sv -T 1'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
 
         opr.par.parseLine('<s>')
         opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
@@ -560,12 +532,64 @@ class TestOpusRead(unittest.TestCase):
 
         opr.par.closeFiles()
 
-        opr = OpusRead('-d Books -s fi -t en -S 3-4 -T 1'.split())
+        opr = OpusRead('-d RF -s en -t sv -S 3-4 -T 1'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+
+        opr.par.parseLine('<s>')
+        opr.par.parseLine('<link xtargets="s1;s1 s2" id="SL1"/>')
+        ret = opr.par.readPair()
+        self.assertEqual(ret, -1)
+
+        opr.par.parseLine('<link xtargets="s1 s2 s3;s1" id="SL1"/>')
+        ret = opr.par.readPair()
+        self.assertEqual(type(ret[0]), str)
+
+        opr.par.parseLine('<link xtargets="s1 s2 s3 s4;s1" id="SL1"/>')
+        ret = opr.par.readPair()
+        self.assertEqual(type(ret[0]), str)
+
+        opr.par.parseLine('<link xtargets="s1 s2 s3 s4;s1 s2" id="SL1"/>')
+        ret = opr.par.readPair()
+        self.assertEqual(ret, -1)
+
+        opr.par.parseLine('<link xtargets="s1 s2 s3 s4;" id="SL1"/>')
+        ret = opr.par.readPair()
+        self.assertEqual(ret, -1)
+
+        opr.par.parseLine('<link xtargets="s1 s2 s3 s4 s5;s1" id="SL1"/>')
+        ret = opr.par.readPair()
+        self.assertEqual(ret, -1)
+
+        opr.par.closeFiles()
+        
+    def test_AlignmentParser_readPair_sentence_limits_when_languages_in_unalphabetical_order(self):
+        opr = OpusRead('-d RF -s sv -t en -T 0'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+
+        opr.par.parseLine('<s>')
+        opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
+        ret = opr.par.readPair()
+        self.assertEqual(ret, -1)
+
+        opr.par.closeFiles()
+
+        opr = OpusRead('-d RF -s sv -t en -T 1'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+
+        opr.par.parseLine('<s>')
+        opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
+        ret = opr.par.readPair()
+        self.assertEqual(type(ret[0]), str)
+
+        opr.par.closeFiles()
+
+        opr = OpusRead('-d RF -s sv -t en -S 3-4 -T 1'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+
         opr.par.parseLine('<s>')
         opr.par.parseLine('<link xtargets="s1;s1 s2" id="SL1"/>')
         ret = opr.par.readPair()
@@ -594,94 +618,117 @@ class TestOpusRead(unittest.TestCase):
         opr.par.closeFiles()
 
     def test_AlignmentParser_previous_document_is_closed_before_next_is_opened(self):
-        printer = OpusRead('-d Books -s en -t eo'.split())
+        printer = OpusRead('-d RF -s en -t sv'.split())
         printer.printPairs()
         self.assertEqual(True, True)
 
     def test_normal_xml_write(self):
-        OpusRead(('-d OpenOffice -s en_GB -t fr -m 1 -w '
+        OpusRead(('-d RF -s en -t sv -m 1 -w '
             'test_files/test_result').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en_GB/text/schart/main0000.xml.gz\n'
-                '# fr/text/schart/main0000.xml.gz\n\n'
-                '================================\n(src)="stit.1">Charts '
-                'in $[ officename ]\n(trg)="stit.1">Diagrammes dans'
-                ' $[officename ]\n================================\n'))
+                ('\n# en/1988.xml.gz\n'
+                '# sv/1988.xml.gz\n\n'
+                '================================\n(src)="s1.1">State'
+                'ment of Government Policy by the Prime Minister , Mr'
+                ' Ingvar Carlsson , at the Opening of the Swedish Parl'
+                'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
+                '>REGERINGSFÖRKLARING .\n============================'
+                '====\n'))
 
     def test_normal_xml_write_fast(self):
-        OpusRead(('-d OpenOffice -s en_GB -t fr -m 1 -w '
+        OpusRead(('-d RF -s en -t sv -m 1 -w '
             'test_files/test_result -f').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en_GB/text/schart/main0000.xml.gz\n'
-                '# fr/text/schart/main0000.xml.gz\n\n'
-                '================================\n(src)="stit.1">Charts '
-                'in $[ officename ]\n(trg)="stit.1">Diagrammes dans'
-                ' $[officename ]\n================================\n'))
+                ('\n# en/1988.xml.gz\n'
+                '# sv/1988.xml.gz\n\n'
+                '================================\n(src)="s1.1">State'
+                'ment of Government Policy by the Prime Minister , Mr'
+                ' Ingvar Carlsson , at the Opening of the Swedish Parl'
+                'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
+                '>REGERINGSFÖRKLARING .\n============================'
+                '====\n'))
 
     def test_normal_xml_print(self):
-        var = pairPrinterToVariable('-d OpenOffice -s en_GB -t fr -m 1'.split())
+        var = pairPrinterToVariable(
+            '-d RF -s en -t sv -m 1'.split())
         self.assertEqual(var,
-            ('\n# en_GB/text/schart/main0000.xml.gz\n'
-            '# fr/text/schart/main0000.xml.gz\n\n'
-            '================================\n(src)="stit.1">Charts '
-            'in $[ officename ]\n(trg)="stit.1">Diagrammes'
-            ' dans $[officename ]\n================================\n'))
+            ('\n# en/1988.xml.gz\n'
+            '# sv/1988.xml.gz\n\n'
+            '================================\n(src)="s1.1">State'
+            'ment of Government Policy by the Prime Minister , Mr'
+            ' Ingvar Carlsson , at the Opening of the Swedish Parl'
+            'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
+            '>REGERINGSFÖRKLARING .\n============================'
+            '====\n'))
 
     def test_normal_xml_print_fast(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -f'.split())
+            '-d RF -s en -t sv -m 1 -f'.split())
         self.assertEqual(var,
-            ('\n# en_GB/text/schart/main0000.xml.gz\n'
-            '# fr/text/schart/main0000.xml.gz\n\n'
-            '================================\n(src)="stit.1">Charts '
-            'in $[ officename ]\n(trg)="stit.1">Diagrammes'
-            ' dans $[officename ]\n================================\n'))
+            ('\n# en/1988.xml.gz\n'
+            '# sv/1988.xml.gz\n\n'
+            '================================\n(src)="s1.1">State'
+            'ment of Government Policy by the Prime Minister , Mr'
+            ' Ingvar Carlsson , at the Opening of the Swedish Parl'
+            'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
+            '>REGERINGSFÖRKLARING .\n============================'
+            '====\n'))
 
     def test_normal_raw_write(self):
-        OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test_result '
-            '-p raw').split()).printPairs()
+        OpusRead(('-d RF -s en -t sv -m 1 -w '
+            'test_files/test_result -p raw').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en_GB/text/schart/main0000.xml.gz\n'
-                '# fr/text/schart/main0000.xml.gz\n\n'
-                '================================\n(src)="stit.1">Charts '
-                'in $[officename]\n(trg)="stit.1">Diagrammes'
-                ' dans $[officename]\n================================\n'))
+                ('\n# en/1988.xml.gz\n'
+                '# sv/1988.xml.gz\n\n'
+                '================================\n(src)="s1.1">State'
+                'ment of Government Policy by the Prime Minister, Mr'
+                ' Ingvar Carlsson, at the Opening of the Swedish Parl'
+                'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
+                '>REGERINGSFÖRKLARING.\n============================'
+                '====\n'))
 
     def test_normal_raw_write_fast(self):
-        OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test_result '
-            '-p raw -f').split()).printPairs()
+        OpusRead(('-d RF -s en -t sv -m 1 -w '
+            'test_files/test_result -p raw -f').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en_GB/text/schart/main0000.xml.gz\n'
-                '# fr/text/schart/main0000.xml.gz\n\n'
-                '================================\n(src)="stit.1">Charts '
-                'in $[officename]\n(trg)="stit.1">Diagrammes'
-                ' dans $[officename]\n================================\n'))
+                ('\n# en/1988.xml.gz\n'
+                '# sv/1988.xml.gz\n\n'
+                '================================\n(src)="s1.1">State'
+                'ment of Government Policy by the Prime Minister, Mr'
+                ' Ingvar Carlsson, at the Opening of the Swedish Parl'
+                'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
+                '>REGERINGSFÖRKLARING.\n============================'
+                '====\n'))
 
     def test_normal_raw_print(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -p raw'.split())
+            '-d RF -s en -t sv -m 1 -p raw'.split())
         self.assertEqual(var,
-            ('\n# en_GB/text/schart/main0000.xml.gz\n'
-            '# fr/text/schart/main0000.xml.gz\n\n'
-            '================================\n(src)="stit.1">Charts '
-            'in $[officename]\n(trg)="stit.1">Diagrammes'
-            ' dans $[officename]\n================================\n'))
+            ('\n# en/1988.xml.gz\n'
+            '# sv/1988.xml.gz\n\n'
+            '================================\n(src)="s1.1">State'
+            'ment of Government Policy by the Prime Minister, Mr'
+            ' Ingvar Carlsson, at the Opening of the Swedish Parl'
+            'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
+            '>REGERINGSFÖRKLARING.\n============================'
+            '====\n'))
 
     def test_normal_raw_print_fast(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -p raw -f'.split())
+            '-d RF -s en -t sv -m 1 -p raw -f'.split())
         self.assertEqual(var,
-            ('\n# en_GB/text/schart/main0000.xml.gz\n'
-            '# fr/text/schart/main0000.xml.gz\n\n'
-            '================================\n(src)="stit.1">Charts '
-            'in $[officename]\n(trg)="stit.1">Diagrammes'
-            ' dans $[officename]\n================================\n'))
+            ('\n# en/1988.xml.gz\n'
+            '# sv/1988.xml.gz\n\n'
+            '================================\n(src)="s1.1">State'
+            'ment of Government Policy by the Prime Minister, Mr'
+            ' Ingvar Carlsson, at the Opening of the Swedish Parl'
+            'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
+            '>REGERINGSFÖRKLARING.\n============================'
+            '====\n'))
 
     def test_normal_raw_print_OpenSubtitles(self):
         var = pairPrinterToVariable(
@@ -706,293 +753,514 @@ class TestOpusRead(unittest.TestCase):
 
     def test_normal_parsed_write(self):
         OpusRead(
-            ('-d DGT -s en -t es -m 1 -p parsed -pa -sa upos '
-            'feats lemma -ta upos feats lemma -w test_files/test_result '
-            '-r v4').split()).printPairs()
+            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma '
+            '-w test_files/test_result ').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n'
+                ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
                 '================================'
-                '\n(src)="1">Treaty|NOUN|Number=Sing|treaty\n(trg)="1">'
-                'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado'
+                '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
+                'of|ADP|of Government|NOUN|Number=Sing|government Pol'
+                'icy|NOUN|Number=Sing|policy by|ADP|by the|DET|Defini'
+                'te=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prim'
+                'e Minister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|P'
+                'ROPN|Number=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar '
+                'Carlsson|PROPN|Number=Sing|Carlsson ,|PUNCT|, at|ADP'
+                '|at the|DET|Definite=Def|PronType=Art|the Opening|NO'
+                'UN|Number=Sing|opening of|ADP|of the|DET|Definite=De'
+                'f|PronType=Art|the Swedish|ADJ|Degree=Pos|swedish Pa'
+                'rliament|NOUN|Number=Sing|parliament on|ADP|on Tuesd'
+                'ay|PROPN|Number=Sing|Tuesday ,|PUNCT|, 4|NUM|NumType'
+                '=Card|4 October|PROPN|Number=Sing|October ,|PUNCT|, '
+                '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
+                'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
+                '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
                 '\n================================\n'))
 
     def test_normal_parsed_write_fast(self):
         OpusRead(
-            ('-d DGT -s en -t es -m 1 -p parsed -pa -sa upos feats lemma '
-            '-ta upos feats lemma -w test_files/test_result -f '
-            '-r v4').split()).printPairs()
+            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma '
+            '-w test_files/test_result -f').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en/12005S_TTE.xml.gz\n'
-                '# es/12005S_TTE.xml.gz\n\n================================'
-                '\n(src)="1">Treaty|NOUN|Number=Sing|treaty\n(trg)="1">'
-                'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado'
+                ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+                '================================'
+                '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
+                'of|ADP|of Government|NOUN|Number=Sing|government Pol'
+                'icy|NOUN|Number=Sing|policy by|ADP|by the|DET|Defini'
+                'te=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prim'
+                'e Minister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|P'
+                'ROPN|Number=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar '
+                'Carlsson|PROPN|Number=Sing|Carlsson ,|PUNCT|, at|ADP'
+                '|at the|DET|Definite=Def|PronType=Art|the Opening|NO'
+                'UN|Number=Sing|opening of|ADP|of the|DET|Definite=De'
+                'f|PronType=Art|the Swedish|ADJ|Degree=Pos|swedish Pa'
+                'rliament|NOUN|Number=Sing|parliament on|ADP|on Tuesd'
+                'ay|PROPN|Number=Sing|Tuesday ,|PUNCT|, 4|NUM|NumType'
+                '=Card|4 October|PROPN|Number=Sing|October ,|PUNCT|, '
+                '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
+                'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
+                '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
                 '\n================================\n'))
 
     def test_normal_parsed_print(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s en -t es -m 1 -p parsed -pa -sa upos feats lemma '
-            '-ta upos feats lemma -r v4').split())
+            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma ').split())
         self.assertEqual(var,
-            ('\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n'
+            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
-            '\n(src)="1">Treaty|NOUN|Number=Sing|treaty\n(trg)="1">'
-            'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado'
+            '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
+            'of|ADP|of Government|NOUN|Number=Sing|government Pol'
+            'icy|NOUN|Number=Sing|policy by|ADP|by the|DET|Defini'
+            'te=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prim'
+            'e Minister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|P'
+            'ROPN|Number=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar '
+            'Carlsson|PROPN|Number=Sing|Carlsson ,|PUNCT|, at|ADP'
+            '|at the|DET|Definite=Def|PronType=Art|the Opening|NO'
+            'UN|Number=Sing|opening of|ADP|of the|DET|Definite=De'
+            'f|PronType=Art|the Swedish|ADJ|Degree=Pos|swedish Pa'
+            'rliament|NOUN|Number=Sing|parliament on|ADP|on Tuesd'
+            'ay|PROPN|Number=Sing|Tuesday ,|PUNCT|, 4|NUM|NumType'
+            '=Card|4 October|PROPN|Number=Sing|October ,|PUNCT|, '
+            '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
+            'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
+            '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
             '\n================================\n'))
 
     def test_normal_parsed_print_unalphabetical(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s es -t en -m 1 -p parsed -pa -sa upos lemma '
-            '-ta upos feats lemma -r v4').split())
+            ('-d RF -s sv -t en -m 1 -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma ').split())
         self.assertEqual(var,
-            ('\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n'
+            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
-            '\n(src)="1">Tratado|VERB|tratado\n(trg)="1">Treaty|NOUN|'
-            'Number=Sing|treaty\n================================\n'))
+            '\n(src)="s1.1">REGERINGSFÖRKLARING|NOUN|Case=Nom|Definit'
+            'e=Ind|Gender=Neut|Number=Sing|Regeringsförklaring .|PUNC'
+            'T|.\n(trg)="s1.1">Statement|NOUN|Number=Sing|statement '
+            'of|ADP|of Government|NOUN|Number=Sing|government Pol'
+            'icy|NOUN|Number=Sing|policy by|ADP|by the|DET|Defini'
+            'te=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prim'
+            'e Minister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|P'
+            'ROPN|Number=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar '
+            'Carlsson|PROPN|Number=Sing|Carlsson ,|PUNCT|, at|ADP'
+            '|at the|DET|Definite=Def|PronType=Art|the Opening|NO'
+            'UN|Number=Sing|opening of|ADP|of the|DET|Definite=De'
+            'f|PronType=Art|the Swedish|ADJ|Degree=Pos|swedish Pa'
+            'rliament|NOUN|Number=Sing|parliament on|ADP|on Tuesd'
+            'ay|PROPN|Number=Sing|Tuesday ,|PUNCT|, 4|NUM|NumType'
+            '=Card|4 October|PROPN|Number=Sing|October ,|PUNCT|, '
+            '1988|NUM|NumType=Card|1988 .|PUNCT|.'
+            '\n================================\n'))
 
     def test_normal_parsed_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s en -t es -m 1 -p parsed -pa -sa upos feats lemma '
-            '-ta upos feats lemma -f -r v4').split())
+            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma -f').split())
         self.assertEqual(var,
-            ('\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n'
+            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
-            '\n(src)="1">Treaty|NOUN|Number=Sing|treaty\n(trg)="1">'
-            'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado'
+            '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
+            'of|ADP|of Government|NOUN|Number=Sing|government Pol'
+            'icy|NOUN|Number=Sing|policy by|ADP|by the|DET|Defini'
+            'te=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prim'
+            'e Minister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|P'
+            'ROPN|Number=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar '
+            'Carlsson|PROPN|Number=Sing|Carlsson ,|PUNCT|, at|ADP'
+            '|at the|DET|Definite=Def|PronType=Art|the Opening|NO'
+            'UN|Number=Sing|opening of|ADP|of the|DET|Definite=De'
+            'f|PronType=Art|the Swedish|ADJ|Degree=Pos|swedish Pa'
+            'rliament|NOUN|Number=Sing|parliament on|ADP|on Tuesd'
+            'ay|PROPN|Number=Sing|Tuesday ,|PUNCT|, 4|NUM|NumType'
+            '=Card|4 October|PROPN|Number=Sing|October ,|PUNCT|, '
+            '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
+            'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
+            '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
             '\n================================\n'))
 
     def test_normal_parsed_print_all_attributes(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s en -t es -m 1 -p parsed -pa -sa all_attrs '
-            '-ta all_attrs -r v4').split())
+            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa all_attrs '
+            '-ta all_attrs').split())
         self.assertEqual(var,
-            ('\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n'
+            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
-            '\n(src)="1">Treaty|root|Number=Sing|0|1.1|treaty|SpaceAfter=No|'
-            'NOUN|NOUN\n(trg)="1">Tratado|root|Gender=Masc|Number=Sing|'
-            'VerbForm=Part|0|1.1|tratado|SpaceAfter=No|VERB'
+            '\n(src)="s1.1">Statement|root|Number=Sing|0|w1.1.1|state'
+            'ment|NOUN|NOUN of|case|w1.1.4|w1.1.2|of|ADP|ADP Governme'
+            'nt|compound|Number=Sing|w1.1.4|w1.1.3|government|NOUN|NO'
+            'UN Policy|nmod|Number=Sing|w1.1.1|w1.1.4|policy|NOUN|NOU'
+            'N by|case|w1.1.8|w1.1.5|by|ADP|ADP the|det|Definite=Def|'
+            'PronType=Art|w1.1.8|w1.1.6|the|DET|DET Prime|compound|Nu'
+            'mber=Sing|w1.1.8|w1.1.7|Prime|PROPN|PROPN Minister|nmod|'
+            'Number=Sing|w1.1.1|w1.1.8|Minister|SpaceAfter=No|PROPN|P'
+            'ROPN ,|punct|w1.1.8|w1.1.9|,|PUNCT|PUNCT Mr|compound|Num'
+            'ber=Sing|w1.1.12|w1.1.10|Mr|PROPN|PROPN Ingvar|flat|Numb'
+            'er=Sing|w1.1.10|w1.1.11|Ingvar|PROPN|PROPN Carlsson|flat'
+            '|Number=Sing|w1.1.8|w1.1.12|Carlsson|SpaceAfter=No|PROPN'
+            '|PROPN ,|punct|w1.1.1|w1.1.13|,|PUNCT|PUNCT at|case|w1.1'
+            '.16|w1.1.14|at|ADP|ADP the|det|Definite=Def|PronType=Art'
+            '|w1.1.16|w1.1.15|the|DET|DET Opening|nmod|Number=Sing|w1'
+            '.1.1|w1.1.16|opening|NOUN|NOUN of|case|w1.1.20|w1.1.17|o'
+            'f|ADP|ADP the|det|Definite=Def|PronType=Art|w1.1.20|w1.1'
+            '.18|the|DET|DET Swedish|amod|Degree=Pos|w1.1.20|w1.1.19|'
+            'swedish|ADJ|ADJ Parliament|nmod|Number=Sing|w1.1.16|w1.1'
+            '.20|parliament|NOUN|NOUN on|case|w1.1.22|w1.1.21|on|ADP|'
+            'ADP Tuesday|nmod|Number=Sing|w1.1.16|w1.1.22|Tuesday|Spa'
+            'ceAfter=No|PROPN|PROPN ,|punct|w1.1.1|w1.1.23|,|PUNCT|PU'
+            'NCT 4|nummod|NumType=Card|w1.1.25|w1.1.24|4|NUM|NUM Octo'
+            'ber|appos|Number=Sing|w1.1.1|w1.1.25|October|SpaceAfter='
+            'No|PROPN|PROPN ,|punct|w1.1.25|w1.1.26|,|PUNCT|PUNCT 198'
+            '8|nummod|NumType=Card|w1.1.25|w1.1.27|1988|SpaceAfter=No'
+            '|NUM|NUM .|punct|w1.1.1|w1.1.28|.|SpaceAfter=No|PUNCT|PU'
+            'NCT\n(trg)="s1.1">REGERINGSFÖRKLARING|root|Case=Nom|Defini'
+            'te=Ind|Gender=Neut|Number=Sing|0|w1.1.1|Regeringsförklar'
+            'ing|SpaceAfter=No|NOUN|NOUN .|punct|w1.1.1|w1.1.2|.|Spac'
+            'eAfter=No|PUNCT|PUNCT'
             '\n================================\n'))
 
     def test_normal_parsed_print_all_attributes_fast(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s en -t es -m 1 -p parsed -pa -sa all_attrs '
-            '-ta all_attrs -f -r v4').split())
+            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa all_attrs '
+            '-ta all_attrs -f').split())
         self.assertEqual(var,
-            ('\n# en/12005S_TTE.xml.gz\n# es/12005S_TTE.xml.gz\n\n'
+            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
-            '\n(src)="1">Treaty|root|Number=Sing|0|1.1|treaty|SpaceAfter=No|'
-            'NOUN|NOUN\n(trg)="1">Tratado|root|Gender=Masc|Number=Sing|'
-            'VerbForm=Part|0|1.1|tratado|SpaceAfter=No|VERB'
+            '\n(src)="s1.1">Statement|root|Number=Sing|0|w1.1.1|state'
+            'ment|NOUN|NOUN of|case|w1.1.4|w1.1.2|of|ADP|ADP Governme'
+            'nt|compound|Number=Sing|w1.1.4|w1.1.3|government|NOUN|NO'
+            'UN Policy|nmod|Number=Sing|w1.1.1|w1.1.4|policy|NOUN|NOU'
+            'N by|case|w1.1.8|w1.1.5|by|ADP|ADP the|det|Definite=Def|'
+            'PronType=Art|w1.1.8|w1.1.6|the|DET|DET Prime|compound|Nu'
+            'mber=Sing|w1.1.8|w1.1.7|Prime|PROPN|PROPN Minister|nmod|'
+            'Number=Sing|w1.1.1|w1.1.8|Minister|SpaceAfter=No|PROPN|P'
+            'ROPN ,|punct|w1.1.8|w1.1.9|,|PUNCT|PUNCT Mr|compound|Num'
+            'ber=Sing|w1.1.12|w1.1.10|Mr|PROPN|PROPN Ingvar|flat|Numb'
+            'er=Sing|w1.1.10|w1.1.11|Ingvar|PROPN|PROPN Carlsson|flat'
+            '|Number=Sing|w1.1.8|w1.1.12|Carlsson|SpaceAfter=No|PROPN'
+            '|PROPN ,|punct|w1.1.1|w1.1.13|,|PUNCT|PUNCT at|case|w1.1'
+            '.16|w1.1.14|at|ADP|ADP the|det|Definite=Def|PronType=Art'
+            '|w1.1.16|w1.1.15|the|DET|DET Opening|nmod|Number=Sing|w1'
+            '.1.1|w1.1.16|opening|NOUN|NOUN of|case|w1.1.20|w1.1.17|o'
+            'f|ADP|ADP the|det|Definite=Def|PronType=Art|w1.1.20|w1.1'
+            '.18|the|DET|DET Swedish|amod|Degree=Pos|w1.1.20|w1.1.19|'
+            'swedish|ADJ|ADJ Parliament|nmod|Number=Sing|w1.1.16|w1.1'
+            '.20|parliament|NOUN|NOUN on|case|w1.1.22|w1.1.21|on|ADP|'
+            'ADP Tuesday|nmod|Number=Sing|w1.1.16|w1.1.22|Tuesday|Spa'
+            'ceAfter=No|PROPN|PROPN ,|punct|w1.1.1|w1.1.23|,|PUNCT|PU'
+            'NCT 4|nummod|NumType=Card|w1.1.25|w1.1.24|4|NUM|NUM Octo'
+            'ber|appos|Number=Sing|w1.1.1|w1.1.25|October|SpaceAfter='
+            'No|PROPN|PROPN ,|punct|w1.1.25|w1.1.26|,|PUNCT|PUNCT 198'
+            '8|nummod|NumType=Card|w1.1.25|w1.1.27|1988|SpaceAfter=No'
+            '|NUM|NUM .|punct|w1.1.1|w1.1.28|.|SpaceAfter=No|PUNCT|PU'
+            'NCT\n(trg)="s1.1">REGERINGSFÖRKLARING|root|Case=Nom|Defini'
+            'te=Ind|Gender=Neut|Number=Sing|0|w1.1.1|Regeringsförklar'
+            'ing|SpaceAfter=No|NOUN|NOUN .|punct|w1.1.1|w1.1.2|.|Spac'
+            'eAfter=No|PUNCT|PUNCT'
             '\n================================\n'))
 
     def test_tmx_xml_write(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test_result '
+            ('-d RF -s en -t sv -m 1 -w test_files/test_result '
             '-wm tmx').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-                '\n<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype='
+                '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en_GB"><seg>Charts in $[ officename ]'
-                '</seg></tuv>\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans '
-                '$[officename ]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+                'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
+                'n , at the Opening of the Swedish Parliament on Tues'
+                'day , 4 October , 1988 .'
+                '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
 
     def test_tmx_xml_write_unalphabetical(self):
-        var = pairPrinterToVariable(
-            ('-d OpenOffice -s fr -t en_GB -m 1 -w test_files/test_result '
-            '-wm tmx').split())
+        OpusRead(
+            ('-d RF -s sv -t en -m 1 -w test_files/test_result '
+            '-wm tmx').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4."'
-                '>\n<header srclang="fr"\n\tadminlang="en"\n\tsegtype="'
-                'sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans '
-                '$[officename ]</seg></tuv>\n\t\t\t<tuv xml:lang="en_GB">'
-                '<seg>Charts in $[ officename ]</seg></tuv>\n\t\t</tu>\n\t'
-                '</body>\n</tmx>'))
+                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+                '\n<header srclang="sv"\n\tadminlang="en"\n\tsegtype='
+                '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
+                '\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+                'SFÖRKLARING .</seg></tuv>\n\t\t\t<tuv xml:lang="en">'
+                '<seg>Statement of Governm'
+                'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
+                'n , at the Opening of the Swedish Parliament on Tues'
+                'day , 4 October , 1988 .'
+                '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
 
     def test_tmx_xml_write_fast(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test_result '
+            ('-d RF -s en -t sv -m 1 -w test_files/test_result '
             '-wm tmx -f').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-                '\n<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype='
+                '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en_GB"><seg>Charts in $[ officename ]'
-                '</seg></tuv>\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans '
-                '$[officename ]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+                'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
+                'n , at the Opening of the Swedish Parliament on Tues'
+                'day , 4 October , 1988 .'
+                '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
 
     def test_tmx_xml_print(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm tmx'.split())
+            ('-d RF -s en -t sv -m 1 -wm tmx').split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n'
-            '<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype="sentence"'
-            '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t'
-            '<tuv xml:lang="en_GB"><seg>Charts in $[ officename ]</seg></tuv>'
-            '\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans $[officename ]'
-            '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
+            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
+            '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+            'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
+            'n , at the Opening of the Swedish Parliament on Tues'
+            'day , 4 October , 1988 .'
+            '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
 
     def test_tmx_xml_print_unalphabetical(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s fr -t en_GB -m 1 -wm tmx'.split())
+            ('-d RF -s sv -t en -m 1 -wm tmx').split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n'
-            '<header srclang="fr"\n\tadminlang="en"\n\tsegtype="sentence"'
-            '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t'
-            '<tuv xml:lang="fr"><seg>Diagrammes dans $[officename ]'
-            '</seg></tuv>\n\t\t\t<tuv xml:lang="en_GB"><seg>Charts in '
-            '$[ officename ]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '\n<header srclang="sv"\n\tadminlang="en"\n\tsegtype='
+            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
+            '\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+            'SFÖRKLARING .</seg></tuv>\n\t\t\t<tuv xml:lang="en"><seg'
+            '>Statement of Governm'
+            'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
+            'n , at the Opening of the Swedish Parliament on Tues'
+            'day , 4 October , 1988 .'
+            '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
 
     def test_tmx_xml_print_fast(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm tmx -f'.split())
+            ('-d RF -s en -t sv -m 1 -wm tmx -f').split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n'
-            '<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype="sentence"'
-            '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t'
-            '<tuv xml:lang="en_GB"><seg>Charts in $[ officename ]</seg></tuv>'
-            '\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans $[officename ]'
-            '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
+            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
+            '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+            'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
+            'n , at the Opening of the Swedish Parliament on Tues'
+            'day , 4 October , 1988 .'
+            '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
 
     def test_tmx_raw_write(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test_result '
-            '-wm tmx -p raw').split()).printPairs()
+            ('-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx'
+            ' -p raw').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-                '\n<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype='
+                '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en_GB"><seg>Charts in $[officename]'
-                '</seg></tuv>\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans '
-                '$[officename]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+                'ent Policy by the Prime Minister, Mr Ingvar Carlsso'
+                'n, at the Opening of the Swedish Parliament on Tues'
+                'day, 4 October, 1988.'
+                '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
 
     def test_tmx_raw_write_fast(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test_result '
-            '-wm tmx -p raw -f').split()).printPairs()
+            ('-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx'
+            ' -p raw -f').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-                '\n<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype='
+                '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en_GB"><seg>Charts in $[officename]'
-                '</seg></tuv>\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans '
-                '$[officename]</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+                'ent Policy by the Prime Minister, Mr Ingvar Carlsso'
+                'n, at the Opening of the Swedish Parliament on Tues'
+                'day, 4 October, 1988.'
+                '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
 
     def test_tmx_raw_print(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm tmx -p raw'.split())
+            ('-d RF -s en -t sv -m 1 -wm tmx -p raw').split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n'
-            '<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype="sentence"'
-            '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t'
-            '<tuv xml:lang="en_GB"><seg>Charts in $[officename]</seg></tuv>'
-            '\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans $[officename]'
-            '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
+            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
+            '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+            'ent Policy by the Prime Minister, Mr Ingvar Carlsso'
+            'n, at the Opening of the Swedish Parliament on Tues'
+            'day, 4 October, 1988.'
+            '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+            'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
 
     def test_tmx_raw_print_fast(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm tmx -p raw -f'.split())
+            ('-d RF -s en -t sv -m 1 -wm tmx -p raw -f').split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">\n'
-            '<header srclang="en_GB"\n\tadminlang="en"\n\tsegtype="sentence"'
-            '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>\n\t\t\t'
-            '<tuv xml:lang="en_GB"><seg>Charts in $[officename]</seg></tuv>'
-            '\n\t\t\t<tuv xml:lang="fr"><seg>Diagrammes dans $[officename]'
-            '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
+            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
+            '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+            'ent Policy by the Prime Minister, Mr Ingvar Carlsso'
+            'n, at the Opening of the Swedish Parliament on Tues'
+            'day, 4 October, 1988.'
+            '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+            'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
 
     def test_tmx_parsed_write(self):
         OpusRead(
-            ('-d DGT -s en -t es -m 1 -w test_files/test_result -wm tmx '
-            '-p parsed -pa -sa upos feats lemma -ta upos feats lemma '
-            '-r v4').split()).printPairs()
+            ('-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx '
+            '-p parsed -pa -sa upos feats lemma -ta upos feats '
+            'lemma').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en"><seg>Treaty|NOUN|Number=Sing|'
-                'treaty</seg></tuv>\n\t\t\t<tuv xml:lang="es"><seg>Tratado|'
-                'VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado</seg>'
-                '</tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
+                'r=Sing|statement of|ADP|of Government|NOUN|Number=Si'
+                'ng|government Policy|NOUN|Number=Sing|policy by|ADP|'
+                'by the|DET|Definite=Def|PronType=Art|the Prime|PROPN'
+                '|Number=Sing|Prime Minister|PROPN|Number=Sing|Minist'
+                'er ,|PUNCT|, Mr|PROPN|Number=Sing|Mr Ingvar|PROPN|Nu'
+                'mber=Sing|Ingvar Carlsson|PROPN|Number=Sing|Carlsson '
+                ',|PUNCT|, at|ADP|at the|DET|Definite=Def|PronType=Ar'
+                't|the Opening|NOUN|Number=Sing|opening of|ADP|of the'
+                '|DET|Definite=Def|PronType=Art|the Swedish|ADJ|Degre'
+                'e=Pos|swedish Parliament|NOUN|Number=Sing|parliament '
+                'on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PUNCT|'
+                ', 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
+                'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.<'
+                '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
+                'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
+                'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
+                '\n\t\t</tu>\n\t</body>\n</tmx>'))
 
     def test_tmx_parsed_write_fast(self):
         OpusRead(
-            ('-d DGT -s en -t es -m 1 -w test_files/test_result -wm tmx '
-            '-p parsed -pa -sa upos feats lemma -ta upos feats lemma -f '
-            '-r v4').split()).printPairs()
+            ('-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx '
+            '-p parsed -pa -sa upos feats lemma -ta upos feats '
+            'lemma -f').split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
                 ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en"><seg>Treaty|NOUN|Number=Sing|'
-                'treaty</seg></tuv>\n\t\t\t<tuv xml:lang="es"><seg>Tratado|'
-                'VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado</seg>'
-                '</tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
+                'r=Sing|statement of|ADP|of Government|NOUN|Number=Si'
+                'ng|government Policy|NOUN|Number=Sing|policy by|ADP|'
+                'by the|DET|Definite=Def|PronType=Art|the Prime|PROPN'
+                '|Number=Sing|Prime Minister|PROPN|Number=Sing|Minist'
+                'er ,|PUNCT|, Mr|PROPN|Number=Sing|Mr Ingvar|PROPN|Nu'
+                'mber=Sing|Ingvar Carlsson|PROPN|Number=Sing|Carlsson '
+                ',|PUNCT|, at|ADP|at the|DET|Definite=Def|PronType=Ar'
+                't|the Opening|NOUN|Number=Sing|opening of|ADP|of the'
+                '|DET|Definite=Def|PronType=Art|the Swedish|ADJ|Degre'
+                'e=Pos|swedish Parliament|NOUN|Number=Sing|parliament '
+                'on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PUNCT|'
+                ', 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
+                'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.<'
+                '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
+                'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
+                'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
+                '\n\t\t</tu>\n\t</body>\n</tmx>'))
 
     def test_tmx_parsed_print(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s en -t es -m 1 -wm tmx -p parsed -pa '
-            '-sa upos feats lemma -ta upos feats lemma -r v4').split())
+            ('-d RF -s en -t sv -m 1 -wm tmx -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma').split())
         self.assertEqual(var,
             ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-            '\n\t\t\t<tuv xml:lang="en"><seg>Treaty|NOUN|Number=Sing|'
-            'treaty</seg></tuv>\n\t\t\t<tuv xml:lang="es"><seg>Tratado|VERB|'
-            'Gender=Masc|Number=Sing|VerbForm=Part|tratado</seg></tuv>\n\t\t'
-            '</tu>\n\t</body>\n</tmx>\n'))
+            '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
+            'r=Sing|statement of|ADP|of Government|NOUN|Number=Si'
+            'ng|government Policy|NOUN|Number=Sing|policy by|ADP|'
+            'by the|DET|Definite=Def|PronType=Art|the Prime|PROPN'
+            '|Number=Sing|Prime Minister|PROPN|Number=Sing|Minist'
+            'er ,|PUNCT|, Mr|PROPN|Number=Sing|Mr Ingvar|PROPN|Nu'
+            'mber=Sing|Ingvar Carlsson|PROPN|Number=Sing|Carlsson '
+            ',|PUNCT|, at|ADP|at the|DET|Definite=Def|PronType=Ar'
+            't|the Opening|NOUN|Number=Sing|opening of|ADP|of the'
+            '|DET|Definite=Def|PronType=Art|the Swedish|ADJ|Degre'
+            'e=Pos|swedish Parliament|NOUN|Number=Sing|parliament '
+            'on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PUNCT|'
+            ', 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
+            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.<'
+            '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
+            'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
+            'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
+            '\n\t\t</tu>\n\t</body>\n</tmx>\n'))
 
     def test_tmx_parsed_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s en -t es -m 1 -wm tmx -p parsed -pa -sa upos feats '
-            'lemma -ta upos feats lemma -f -r v4').split())
+            ('-d RF -s en -t sv -m 1 -wm tmx -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma -f').split())
         self.assertEqual(var,
             ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-            '\n\t\t\t<tuv xml:lang="en"><seg>Treaty|NOUN|Number=Sing|'
-            'treaty</seg></tuv>\n\t\t\t<tuv xml:lang="es"><seg>Tratado|'
-            'VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado</seg>'
-            '</tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
+            'r=Sing|statement of|ADP|of Government|NOUN|Number=Si'
+            'ng|government Policy|NOUN|Number=Sing|policy by|ADP|'
+            'by the|DET|Definite=Def|PronType=Art|the Prime|PROPN'
+            '|Number=Sing|Prime Minister|PROPN|Number=Sing|Minist'
+            'er ,|PUNCT|, Mr|PROPN|Number=Sing|Mr Ingvar|PROPN|Nu'
+            'mber=Sing|Ingvar Carlsson|PROPN|Number=Sing|Carlsson '
+            ',|PUNCT|, at|ADP|at the|DET|Definite=Def|PronType=Ar'
+            't|the Opening|NOUN|Number=Sing|opening of|ADP|of the'
+            '|DET|Definite=Def|PronType=Art|the Swedish|ADJ|Degre'
+            'e=Pos|swedish Parliament|NOUN|Number=Sing|parliament '
+            'on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PUNCT|'
+            ', 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
+            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.<'
+            '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
+            'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
+            'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
+            '\n\t\t</tu>\n\t</body>\n</tmx>\n'))
 
     def test_moses_xml_write(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test.src '
+            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
-            self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
+            self.assertEqual(f.read(),
+            ('Statement of Government Policy by the Prime Minister , '
+            'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+            'ament on Tuesday , 4 October , 1988 .\n'))
         with open('test_files/test.trg', 'r') as f:
-            self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
+            self.assertEqual(f.read(), 'REGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_write_unalphabetical(self):
         OpusRead(
-            ('-d OpenOffice -s fr -t en_GB -m 1 -w test_files/test.src '
+            ('-d RF -s sv -t en -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses').split()).printPairs()
-        with open('test_files/test.src', 'r') as f:
-            self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
         with open('test_files/test.trg', 'r') as f:
-            self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
+            self.assertEqual(f.read(),
+            ('Statement of Government Policy by the Prime Minister , '
+            'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+            'ament on Tuesday , 4 October , 1988 .\n'))
+        with open('test_files/test.src', 'r') as f:
+            self.assertEqual(f.read(), 'REGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_write_with_file_names(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test.src '
+            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses -pn').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n\n'
-                'Charts in $[ officename ]\n'))
+            ('\n<fromDoc>en/1988.xml.gz</fromDoc>\n\nStatement of Gover'
+            'nment Policy by the Prime Minister , '
+            'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+            'ament on Tuesday , 4 October , 1988 .\n'))
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\n'
-                'Diagrammes dans $[officename ]\n'))
+            '\n<toDoc>sv/1988.xml.gz</toDoc>\n\nREGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_write_single_file(self):
         OpusRead(
