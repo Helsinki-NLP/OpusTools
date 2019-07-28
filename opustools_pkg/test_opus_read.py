@@ -26,11 +26,10 @@ class TestOpusRead(unittest.TestCase):
     def setUpClass(self):
         os.mkdir('test_files')
 
-        os.mkdir('Books')
-        os.mkdir('Books/xml')
-        os.mkdir('Books/xml/en')
-        with open(('Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_'
-                'Baskervilles.xml'), 'w') as f:
+        os.mkdir('RF')
+        os.mkdir('RF/xml')
+        os.mkdir('RF/xml/en')
+        with open('RF/xml/en/1996.xml', 'w') as f:
             f.write(('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text>'
             '<head>\n<meta id="1"> \n <w id="w1.1">The</w> \n <w id="'
             'w1.2">Hound</w> \n <w id="w1.3">of</w> \n <w id="w1.4">the'
@@ -78,13 +77,11 @@ class TestOpusRead(unittest.TestCase):
             '3" lem="!" pos="." tree="SENT">!</w>\n</s>\n \n\n\n</p>\n '
             '</body>\n</text>\n'))
 
-        with zipfile.ZipFile('Books_v1_xml_en.zip', 'w') as zf:
-            zf.write(('Books/xml/en/Doyle_Arthur_Conan-Hound_of_the_'
-                'Baskervilles.xml'))
+        with zipfile.ZipFile('RF_v1_xml_en.zip', 'w') as zf:
+            zf.write(('RF/xml/en/1996.xml'))
 
-        os.mkdir('Books/xml/fi')
-        with open(('Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_'
-                'Baskervilles.xml'), 'w') as f:
+        os.mkdir('RF/xml/sv')
+        with open(('RF/xml/sv/1996.xml'), 'w') as f:
             f.write(('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text'
             '>\n <head>\n  <meta> The Hound of the Baskervilles \n by '
             'Sir Arthur Conan Doyle \n Aligned by: András Farkas (fully '
@@ -106,38 +103,23 @@ class TestOpusRead(unittest.TestCase):
             '<w id="w167.0.2">Erinomaista</w>\n <w id="w167.0.3">.</w>\n'
             '</s></p>\n </body>\n</text>\n'))
 
-        with zipfile.ZipFile('Books_v1_xml_fi.zip', 'w') as zf:
-            zf.write(('Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_'
-                'Baskervilles.xml'))
+        with zipfile.ZipFile('RF_v1_xml_sv.zip', 'w') as zf:
+            zf.write(('RF/xml/sv/1996.xml'))
 
-        shutil.copyfile('Books_v1_xml_en.zip', 'en.zip')
-        shutil.copyfile('Books_v1_xml_fi.zip', 'fi.zip')
+        shutil.copyfile('RF_v1_xml_en.zip', 'en.zip')
+        shutil.copyfile('RF_v1_xml_sv.zip', 'sv.zip')
 
         with open('books_alignment.xml', 'w') as f:
             f.write(('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE '
             'cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
             'version="1.0">\n<linkGrp targType="s" fromDoc="en/'
-            'Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz" '
-            'toDoc="fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz" '
+            '1996.xml.gz" '
+            'toDoc="sv/1996.xml.gz" '
             '>\n<link xtargets="s1;s1" id="SL1"/>\n<link xtargets="s4;s4" '
             'id="SL4"/>\n<link xtargets="s5.0;s5.0" id="SL5.0"/>\n<link '
             'xtargets="s8.1;s8.1" id="SL8.1"/>\n<link xtargets="s167.0'
             ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n'))
 
-        '''
-        self.opr = OpusRead('-d Books -s en -t fi'.split())
-        self.opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
-        self.fastopr = OpusRead('-d Books -s en -t fi -f'.split())
-        self.fastopr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
-        '''
         self.opr = OpusRead('-d RF -s en -t sv'.split())
         self.opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
@@ -155,12 +137,12 @@ class TestOpusRead(unittest.TestCase):
         self.fastopr.par.tPar.document.close()
         self.fastopr.par.closeFiles()
         shutil.rmtree('test_files')
-        shutil.rmtree('Books')
+        shutil.rmtree('RF')
         os.remove('books_alignment.xml')
-        os.remove('Books_v1_xml_en.zip')
-        os.remove('Books_v1_xml_fi.zip')
+        os.remove('RF_v1_xml_en.zip')
+        os.remove('RF_v1_xml_sv.zip')
         os.remove('en.zip')
-        os.remove('fi.zip')
+        os.remove('sv.zip')
 
     def tearDown(self):
         self.opr.par.args.wm='normal'
@@ -1264,227 +1246,306 @@ class TestOpusRead(unittest.TestCase):
 
     def test_moses_xml_write_single_file(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test.src '
+            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
             '-wm moses').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n')
+                ('Statement of Government Policy by the Prime Minister , '
+                'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+                'ament on Tuesday , 4 October , 1988 .\tREGERINGSFÖRK'
+                'LARING .\n'))
 
     def test_moses_xml_write_single_file_unalphabetical(self):
         OpusRead(
-            ('-d OpenOffice -s fr -t en_GB -m 1 -w test_files/test.src '
+            ('-d RF -s sv -t en -m 1 -w test_files/test.src '
             '-wm moses').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                'Diagrammes dans $[officename ]\tCharts in $[ officename ]\n')
+                ('REGERINGSFÖRKLARING .\tStatement of Government Poli'
+                'cy by the Prime Minister , Mr Ingvar Carlsson , at t'
+                'he Opening of the Swedish Parliament on Tuesday , 4 '
+                'October , 1988 .\n'))
 
     def test_moses_xml_write_single_file_with_file_names(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test.src '
+            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
             '-wm moses -pn').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n'
-                '<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\n'
-                'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n'))
+                ('\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
+                '.xml.gz</toDoc>\n\nStatement of Government Policy by'
+                ' the Prime Minister , Mr Ingvar Carlsson , at the Ope'
+                'ning of the Swedish Parliament on Tuesday , 4 Octobe'
+                'r , 1988 .\tREGERINGSFÖRKLARING .\n'))
 
     def test_moses_xml_write_single_file_with_file_names_unalphabetical(self):
         OpusRead(
-            ('-d OpenOffice -s fr -t en_GB -m 1 -w test_files/test.src '
+            ('-d RF -s sv -t en -m 1 -w test_files/test.src '
             '-wm moses -pn').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n'
-                '<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\n'
-                'Diagrammes dans $[officename ]\tCharts in $[ officename ]\n'))
+                ('\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
+                '.xml.gz</toDoc>\n\nREGERINGSFÖRKLARING .\tStatement '
+                'of Government Policy by the Prime Minister , Mr Ingv'
+                'ar Carlsson , at the Opening of the Swedish Parliame'
+                'nt on Tuesday , 4 October , 1988 .\n'))
 
     def test_moses_xml_write_fast(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test.src '
+            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses -f').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
-            self.assertEqual(f.read(), 'Charts in $[ officename ]\n')
+            self.assertEqual(f.read(),
+            ('Statement of Government Policy by the Prime Minister , '
+            'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+            'ament on Tuesday , 4 October , 1988 .\n'))
         with open('test_files/test.trg', 'r') as f:
-            self.assertEqual(f.read(), 'Diagrammes dans $[officename ]\n')
+            self.assertEqual(f.read(), 'REGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_print(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm moses'.split())
+            ('-d RF -s en -t sv -m 1 -wm moses').split())
         self.assertEqual(var,
-            'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n')
+            ('Statement of Government Policy by the Prime Minister , '
+            'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+            'ament on Tuesday , 4 October , 1988 .\t'
+            'REGERINGSFÖRKLARING .\n'))
 
     def test_moses_xml_print_unalphabetical(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s fr -t en_GB -m 1 -wm moses'.split())
+            ('-d RF -s sv -t en -m 1 -wm moses').split())
         self.assertEqual(var,
-            'Diagrammes dans $[officename ]\tCharts in $[ officename ]\n')
+            ('REGERINGSFÖRKLARING .\tStatement of Government Policy b'
+            'y the Prime Minister , Mr Ingvar Carlsson , at the Openi'
+            'ng of the Swedish Parliament on Tuesday , 4 October , 1988 .\n'))
 
     def test_moses_xml_print_with_file_names(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm moses -pn'.split())
+            '-d RF -s en -t sv -m 1 -wm moses -pn'.split())
         self.assertEqual(var,
-            ('\n<fromDoc>en_GB/text/schart/main0000.xml.gz</fromDoc>\n'
-            '<toDoc>fr/text/schart/main0000.xml.gz</toDoc>\n\nCharts in '
-            '$[ officename ]\tDiagrammes dans $[officename ]\n'))
+            ('\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
+            '.xml.gz</toDoc>\n\nStatement of Government Policy by'
+            ' the Prime Minister , Mr Ingvar Carlsson , at the Ope'
+            'ning of the Swedish Parliament on Tuesday , 4 Octobe'
+            'r , 1988 .\tREGERINGSFÖRKLARING .\n'))
 
     def test_moses_xml_print_fast(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm moses -f'.split())
+            ('-d RF -s en -t sv -m 1 -wm moses -f').split())
         self.assertEqual(var,
-            'Charts in $[ officename ]\tDiagrammes dans $[officename ]\n')
+            ('Statement of Government Policy by the Prime Minister , '
+            'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+            'ament on Tuesday , 4 October , 1988 .\t'
+            'REGERINGSFÖRKLARING .\n'))
 
     def test_moses_raw_write(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test.src '
+            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses -p raw').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
-            self.assertEqual(f.read(), 'Charts in $[officename]\n')
+            self.assertEqual(f.read(),
+            ('Statement of Government Policy by the Prime Minister, '
+            'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
+            'ament on Tuesday, 4 October, 1988.\n'))
         with open('test_files/test.trg', 'r') as f:
-            self.assertEqual(f.read(), 'Diagrammes dans $[officename]\n')
+            self.assertEqual(f.read(), 'REGERINGSFÖRKLARING.\n')
 
     def test_moses_raw_write_fast(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test.src '
+            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses -p raw -f').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
-            self.assertEqual(f.read(), 'Charts in $[officename]\n')
+            self.assertEqual(f.read(),
+            ('Statement of Government Policy by the Prime Minister, '
+            'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
+            'ament on Tuesday, 4 October, 1988.\n'))
         with open('test_files/test.trg', 'r') as f:
-            self.assertEqual(f.read(), 'Diagrammes dans $[officename]\n')
+            self.assertEqual(f.read(), 'REGERINGSFÖRKLARING.\n')
 
     def test_moses_raw_print(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm moses -p raw'.split())
+            ('-d RF -s en -t sv -m 1 -wm moses -p raw').split())
         self.assertEqual(var,
-            'Charts in $[officename]\tDiagrammes dans $[officename]\n')
+            ('Statement of Government Policy by the Prime Minister, '
+            'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
+            'ament on Tuesday, 4 October, 1988.\t'
+            'REGERINGSFÖRKLARING.\n'))
 
     def test_moses_raw_print_fast(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm moses -p raw -f'.split())
+            ('-d RF -s en -t sv -m 1 -wm moses -p raw -f').split())
         self.assertEqual(var,
-            'Charts in $[officename]\tDiagrammes dans $[officename]\n')
+            ('Statement of Government Policy by the Prime Minister, '
+            'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
+            'ament on Tuesday, 4 October, 1988.\t'
+            'REGERINGSFÖRKLARING.\n'))
 
     def test_moses_parsed_write(self):
         OpusRead(
-            ('-d DGT -s en -t es -m 1 -w test_files/test.src '
+            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses -p parsed -pa -sa upos feats '
-            'lemma -ta upos feats lemma -r v4').split()).printPairs()
+            'lemma -ta upos feats lemma').split()).printPairs()
         with open('test_files/test.src', 'r') as f:
-            self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
+            self.assertEqual(f.read(), 'Statement|NOUN|Number=Sing|st'
+            'atement of|ADP|of Government|NOUN|Number=Sing|government'
+            ' Policy|NOUN|Number=Sing|policy by|ADP|by the|DET|Definit'
+            'e=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prime Min'
+            'ister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|PROPN|Numb'
+            'er=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar Carlsson|PROP'
+            'N|Number=Sing|Carlsson ,|PUNCT|, at|ADP|at the|DET|Defin'
+            'ite=Def|PronType=Art|the Opening|NOUN|Number=Sing|openin'
+            'g of|ADP|of the|DET|Definite=Def|PronType=Art|the Swedis'
+            'h|ADJ|Degree=Pos|swedish Parliament|NOUN|Number=Sing|par'
+            'liament on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PU'
+            'NCT|, 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
+            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.\n')
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
-                'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
+            ('REGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
+            'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n'))
 
     def test_moses_parsed_write_fast(self):
         OpusRead(
-            ('-d DGT -s en -t es -m 1 -w test_files/test.src '
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses -p parsed -pa -sa upos feats '
-            'lemma -ta upos feats lemma -f -r v4').split()).printPairs()
+            'lemma -ta upos feats lemma -f'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
-            self.assertEqual(f.read(), 'Treaty|NOUN|Number=Sing|treaty\n')
+            self.assertEqual(f.read(), 'Statement|NOUN|Number=Sing|st'
+            'atement of|ADP|of Government|NOUN|Number=Sing|government'
+            ' Policy|NOUN|Number=Sing|policy by|ADP|by the|DET|Definit'
+            'e=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prime Min'
+            'ister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|PROPN|Numb'
+            'er=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar Carlsson|PROP'
+            'N|Number=Sing|Carlsson ,|PUNCT|, at|ADP|at the|DET|Defin'
+            'ite=Def|PronType=Art|the Opening|NOUN|Number=Sing|openin'
+            'g of|ADP|of the|DET|Definite=Def|PronType=Art|the Swedis'
+            'h|ADJ|Degree=Pos|swedish Parliament|NOUN|Number=Sing|par'
+            'liament on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PU'
+            'NCT|, 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
+            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.\n')
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
-                'Tratado|VERB|Gender=Masc|Number=Sing|VerbForm=Part|tratado\n')
+            'REGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
+            'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n')
 
     def test_moses_parsed_print(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s en -t es -m 1 -wm moses -p parsed -pa -sa upos '
-            'feats lemma -ta upos feats lemma -r v4').split())
+            '-d RF -s en -t sv -m 1 -wm moses -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma'.split())
         self.assertEqual(var,
-            ('Treaty|NOUN|Number=Sing|treaty\tTratado|VERB|Gender=Masc|'
-            'Number=Sing|VerbForm=Part|tratado\n'))
+            'Statement|NOUN|Number=Sing|st'
+            'atement of|ADP|of Government|NOUN|Number=Sing|government'
+            ' Policy|NOUN|Number=Sing|policy by|ADP|by the|DET|Definit'
+            'e=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prime Min'
+            'ister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|PROPN|Numb'
+            'er=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar Carlsson|PROP'
+            'N|Number=Sing|Carlsson ,|PUNCT|, at|ADP|at the|DET|Defin'
+            'ite=Def|PronType=Art|the Opening|NOUN|Number=Sing|openin'
+            'g of|ADP|of the|DET|Definite=Def|PronType=Art|the Swedis'
+            'h|ADJ|Degree=Pos|swedish Parliament|NOUN|Number=Sing|par'
+            'liament on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PU'
+            'NCT|, 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
+            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.\tREG'
+            'ERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
+            'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n')
 
     def test_moses_parsed_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d DGT -s en -t es -m 1 -wm moses -p parsed -pa -sa upos '
-            'feats lemma -ta upos feats lemma -f -r v4').split())
+            '-d RF -s en -t sv -m 1 -wm moses -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma -f'.split())
         self.assertEqual(var,
-            ('Treaty|NOUN|Number=Sing|treaty\tTratado|VERB|Gender=Masc|'
-            'Number=Sing|VerbForm=Part|tratado\n'))
+            'Statement|NOUN|Number=Sing|st'
+            'atement of|ADP|of Government|NOUN|Number=Sing|government'
+            ' Policy|NOUN|Number=Sing|policy by|ADP|by the|DET|Definit'
+            'e=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prime Min'
+            'ister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|PROPN|Numb'
+            'er=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar Carlsson|PROP'
+            'N|Number=Sing|Carlsson ,|PUNCT|, at|ADP|at the|DET|Defin'
+            'ite=Def|PronType=Art|the Opening|NOUN|Number=Sing|openin'
+            'g of|ADP|of the|DET|Definite=Def|PronType=Art|the Swedis'
+            'h|ADJ|Degree=Pos|swedish Parliament|NOUN|Number=Sing|par'
+            'liament on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PU'
+            'NCT|, 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
+            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.\tREG'
+            'ERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
+            'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n')
 
     def test_links_write(self):
         OpusRead(
-            ('-d OpenOffice -s en_GB -t fr -m 1 -w test_files/test_result '
-            '-wm links').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test_result '
+            '-wm links'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n'
+                '<?xml version="1.0" encoding="utf-8"?>\n'
                 '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
                 ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
-                '<linkGrp targType="s" toDoc="fr/text/schart/main0000.xml.gz"'
-                ' fromDoc="en_GB/text/schart/main0000.xml.gz">\n'
-                '<link certainty="3.118182" xtargets="stit.1;stit.1" id="SL1"'
-                ' />\n </linkGrp>\n</cesAlign>'))
+                '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
+                ' fromDoc="en/1988.xml.gz">\n'
+                '<link certainty="-0.0636364" xtargets="s1.1;s1.1" id="SL1"'
+                ' />\n </linkGrp>\n</cesAlign>')
 
     def test_links_write_unalphabetical(self):
         OpusRead(
-            ('-d OpenOffice -s fr -t en_GB -m 1 -w test_files/test_result '
-            '-wm links -S 1 -T 2').split()).printPairs()
+            '-d RF -s sv -t en -m 1 -w test_files/test_result '
+            '-wm links -S 1 -T 2'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>'
-                '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
-                '\n<cesAlign version="1.0">\n <linkGrp targType="s" '
-                'toDoc="fr/text/schart/main0000.xml.gz" '
-                'fromDoc="en_GB/text/schart/main0000.xml.gz">'
-                '\n <linkGrp targType="s" toDoc="fr/text/schart/main0202.xml.gz"'
-                ' fromDoc="en_GB/text/schart/main0202.xml.gz">'
-                '\n<link certainty="0.1794861" xtargets="s7.2 s7.3;s7.2" '
-                'id="SL20" />\n </linkGrp>\n</cesAlign>'))
+                '<?xml version="1.0" encoding="utf-8"?>\n'
+                '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
+                ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
+                '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
+                ' fromDoc="en/1988.xml.gz">\n'
+                '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10"'
+                ' />\n </linkGrp>\n</cesAlign>')
 
     def test_links_print(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s en_GB -t fr -m 1 -wm links'.split())
+            '-d RF -s en -t sv -m 1 -wm links'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
-            'PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
-            'version="1.0">\n <linkGrp targType="s" '
-            'toDoc="fr/text/schart/main0000.xml.gz"'
-            ' fromDoc="en_GB/text/schart/main0000.xml.gz">\n'
-            '<link certainty="3.118182" xtargets="stit.1;stit.1" id="SL1" />'
-            '\n </linkGrp>\n</cesAlign>\n'))
+            '<?xml version="1.0" encoding="utf-8"?>\n'
+            '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
+            ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
+            '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
+            ' fromDoc="en/1988.xml.gz">\n'
+            '<link certainty="-0.0636364" xtargets="s1.1;s1.1" id="SL1"'
+            ' />\n </linkGrp>\n</cesAlign>\n')
 
     def test_links_print_unalphabetical(self):
         var = pairPrinterToVariable(
-            '-d OpenOffice -s fr -t en_GB -m 1 -wm links -S 1 -T 2'.split())
+            '-d RF -s sv -t en -m 1 -wm links -S 1 -T 2'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>'
-            '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
-            '\n<cesAlign version="1.0">\n <linkGrp targType="s" '
-            'toDoc="fr/text/schart/main0000.xml.gz" '
-            'fromDoc="en_GB/text/schart/main0000.xml.gz">'
-            '\n <linkGrp targType="s" toDoc="fr/text/schart/main0202.xml.gz"'
-            ' fromDoc="en_GB/text/schart/main0202.xml.gz">'
-            '\n<link certainty="0.1794861" xtargets="s7.2 s7.3;s7.2" '
-            'id="SL20" />\n </linkGrp>\n</cesAlign>\n'))
+            '<?xml version="1.0" encoding="utf-8"?>\n'
+            '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
+            ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
+            '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
+            ' fromDoc="en/1988.xml.gz">\n'
+            '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10"'
+            ' />\n </linkGrp>\n</cesAlign>\n')
 
     def test_iteration_stops_at_the_end_of_the_document_even_if_max_is_not_filled(self):
         var = pairPrinterToVariable(
-            '-d Books -s en -t fi -S 5 -T 2 -m 5'.split())
+            '-d RF -s en -t sv -S 2 -T 1 -m 5'.split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_'
-            'Baskervilles.xml.gz\n\n================================\n'
-            '(src)="s942.0">" So I think .\n(src)="s9'
-            '42.1">But if we can only trace L. L. it should clear up the '
-            'whole business .\n(src)="s942.2">We have gained that much .\n'
-            '(src)="s942.3">We know that there is someone who has the facts'
-            ' if we can only find her .\n(src)="s942.4">What do you think we '
-            'should do ? "\n(trg)="s942.0">" Niin minäkin'
-            ' ajattelen , mutta jos voisitte saada tuon L. L : n käsiinne , '
-            'niin olisi paljon voitettu , ja onhan edullista jo tietääkin , '
-            'että on olemassa joku nainen , joka tuntee asian oikean laidan ,'
-            ' jos vaan voimme saada hänet ilmi .\n(trg)="s942.1">Mitä '
-            'arvelette nyt olevan tekeminen ? "\n'
-            '================================\n'))
+            """\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n=============="""
+            """==================\n(src)="s4.4">The army will be reor"""
+            """ganized with the aim of making it more effective .\n("""
+            """src)="s4.5">It is the Government 's intention to seek """
+            """broad solutions in issues that are of importance for o"""
+            """ur national security .\n(trg)="s4.4">Det är regeringe"""
+            """ns föresats att söka breda lösningar i frågor som är a"""
+            """v betydelse för vår nationella säkerhet .\n=========="""
+            """======================\n\n# en/1996.xml.gz\n# sv/1996."""
+            """xml.gz\n\n================================\n""")
+
 
     def test_use_given_sentence_alignment_file(self):
         OpusRead(
-            ('-d Books -s en -t fi -S 5 -T 2 -wm links -w '
-            'test_files/testlinks').split()).printPairs()
+            '-d Books -s en -t fi -S 5 -T 2 -wm links -w '
+            'test_files/testlinks'.split()).printPairs()
         var = pairPrinterToVariable(
             '-d Books -s en -t fi -af test_files/testlinks'.split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
             '# fi/Doyle_Arthur_Conan-Hound_of_the_'
             'Baskervilles.xml.gz\n\n================================\n'
             '(src)="s942.0">" So I think .\n(src)="s9'
@@ -1498,7 +1559,25 @@ class TestOpusRead(unittest.TestCase):
             'voitettu , ja onhan edullista jo tietääkin , että on olemassa '
             'joku nainen , joka tuntee asian oikean laidan , jos vaan '
             'voimme saada hänet ilmi .\n(trg)="s942.1">Mitä arvelette nyt '
-            'olevan tekeminen ? "\n================================\n'))
+            'olevan tekeminen ? "\n================================\n')
+
+    def test_use_given_sentence_alignment_file_with_lingGrp_end_tag_on_the_same_line_as_link_tag(self):
+        OpusRead(
+            '-d RF -s en -t sv -S 2 -T 1 -wm links -w '
+            'test_files/testlinks'.split()).printPairs()
+        var = pairPrinterToVariable(
+            '-d RF -s en -t sv -af test_files/testlinks'.split())
+        self.assertEqual(var,
+            """\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n=============="""
+            """==================\n(src)="s4.4">The army will be reor"""
+            """ganized with the aim of making it more effective .\n("""
+            """src)="s4.5">It is the Government 's intention to seek """
+            """broad solutions in issues that are of importance for o"""
+            """ur national security .\n(trg)="s4.4">Det är regeringe"""
+            """ns föresats att söka breda lösningar i frågor som är a"""
+            """v betydelse för vår nationella säkerhet .\n=========="""
+            """======================\n\n# en/1996.xml.gz\n# sv/1996."""
+            """xml.gz\n\n================================\n""")
 
     def test_checks_first_whether_documents_are_in_path(self):
         with open('test_files/testlinks', 'w') as f:
@@ -1560,86 +1639,86 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_src_cld2(self):
         var = pairPrinterToVariable(
-                ('-d Books -s en -t fi -r v1 -m 1 --src_cld2 en 0.98'
-                ' -af books_alignment.xml').split())
+            '-d RF -s en -t sv -r v1 -m 1 --src_cld2 en 0.98'
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s5.0">Mr. Sherlock Holmes'
             '\n(trg)="s5.0">Herra Sherlock Holmes'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_trg_cld2(self):
         var = pairPrinterToVariable(
-                ('-d Books -s en -t fi -r v1 -m 1 --trg_cld2 ia 0'
-                ' -af books_alignment.xml').split())
+            '-d RF -s en -t sv -r v1 -m 1 --trg_cld2 ia 0'
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s4">Chapter 1 Mr. Sherlock Holmes'
             '\n(trg)="s4">Herra Sherlock Holmes .'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_src_langid(self):
         var = pairPrinterToVariable(
-                ('-d Books -s en -t fi -r v1 -m 1 --src_langid de 0'
-                ' -af books_alignment.xml').split())
+            '-d RF -s en -t sv -r v1 -m 1 --src_langid de 0'
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s167.0">" Excellent !'
             '\n(trg)="s167.0">" Erinomaista .'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_trg_langid(self):
         var = pairPrinterToVariable(
-                ('-d Books -s en -t fi -r v1 -m 1 --trg_langid et 0'
-                ' -af books_alignment.xml').split())
+            '-d RF -s en -t sv -r v1 -m 1 --trg_langid et 0'
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s4">Chapter 1 Mr. Sherlock Holmes'
             '\n(trg)="s4">Herra Sherlock Holmes .'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_lang_labels(self):
         var = pairPrinterToVariable(
-            ('-d Books -s en -t fi -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
+            '-d RF -s en -t sv -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
             'fi 0.97 --src_langid en 0.17 --trg_langid fi 1'
-            ' -af books_alignment.xml').split())
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s8.1">I believe'
             '\n(trg)="s8.1">Luulenpa että sinulla'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_lang_labels_fast(self):
         var = pairPrinterToVariable(
-            ('-d Books -s en -t fi -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
+            '-d RF -s en -t sv -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
             'fi 0.97 --src_langid en 0.17 --trg_langid fi 1 -f'
-            ' -af books_alignment.xml').split())
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s8.1">I believe'
             '\n(trg)="s8.1">Luulenpa että sinulla'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_lang_labels_nonalphabetical_lang_order(self):
         var = pairPrinterToVariable(
-            ('-d Books -s fi -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
+            ('-d RF -s sv -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
             'fi 0.97 --trg_langid en 0.17 --src_langid fi 1'
             ' -af books_alignment.xml').split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            ('\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s8.1">Luulenpa että sinulla'
             '\n(trg)="s8.1">I believe'
@@ -1647,12 +1726,12 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_nonalphabetical_lang_order_fast(self):
         var = pairPrinterToVariable(
-            ('-d Books -s fi -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
+            ('-d RF -s sv -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
             'fi 0.97 --trg_langid en 0.17 --src_langid fi 1 -f'
             ' -af books_alignment.xml').split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            ('\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s8.1">Luulenpa että sinulla'
             '\n(trg)="s8.1">I believe'
@@ -1660,28 +1739,29 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_no_matches_found(self):
         var = pairPrinterToVariable(
-            ('-d Books -s en -t fi -r v1 -m 1 --src_cld2 fi 2'
+            ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 fi 2'
             ' -af books_alignment.xml').split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            ('\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================\n'))
 
     def test_filtering_by_lang_labels_no_matches_found_fast(self):
         var = pairPrinterToVariable(
-            ('-d Books -s en -t fi -r v1 -m 1 --src_cld2 fi 2'
+            ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 fi 2'
             ' -af books_alignment.xml -f').split())
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
-            '# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz\n'
+            ('\n# en/1996.xml.gz\n'
+            '# sv/1996.xml.gz\n'
             '\n================================\n'))
 
     def test_use_given_zip_files(self):
         var = pairPrinterToVariable(
-            ('-d Books -s en -t fi -m1 -sz en.zip -tz fi.zip'.split()))
+            ('-d RF -s en -t sv -m1 -sz en.zip -tz sv.zip'
+            ' -af books_alignment.xml'.split()))
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
-            '\n# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
+            ('\n# en/1996.xml.gz'
+            '\n# sv/1996.xml.gz'
             '\n\n================================'
             '\n(src)="s1">Source : manybooks.netAudiobook available here'
             '\n(trg)="s1">Source : Project Gutenberg'
@@ -1689,134 +1769,108 @@ class TestOpusRead(unittest.TestCase):
 
     def test_use_given_zip_files_unalphabetical(self):
         var = pairPrinterToVariable(
-            ('-d Books -s fi -t en -m1 -sz fi.zip -tz en.zip'.split()))
+            ('-d RF -s sv -t en -m1 -sz sv.zip -tz en.zip'
+            ' -af books_alignment.xml'.split()))
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
-            '\n# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
+            ('\n# en/1996.xml.gz'
+            '\n# sv/1996.xml.gz'
             '\n\n================================'
             '\n(src)="s1">Source : Project Gutenberg'
             '\n(trg)="s1">Source : manybooks.netAudiobook available here'
             '\n================================\n'))
 
     def test_source_zip_given_and_target_automatic(self):
-        opr = OpusRead('-d Books -s en -t fi -sz en.zip'.split())
+        opr = OpusRead('-d RF -s en -t sv -sz en.zip'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
             'en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            '/proj/nlpl/data/OPUS/Books/latest/xml/fi.zip')
+            '/proj/nlpl/data/OPUS/RF/latest/xml/sv.zip')
 
     def test_source_zip_given_and_target_automatic_unalphabetical(self):
-        opr = OpusRead('-d Books -s fi -t en -sz fi.zip'.split())
+        opr = OpusRead('-d RF -s sv -t en -sz sv.zip'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
-            '/proj/nlpl/data/OPUS/Books/latest/xml/en.zip')
+            '/proj/nlpl/data/OPUS/RF/latest/xml/en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'fi.zip')
+            'sv.zip')
 
     def test_target_zip_given_and_source_automatic(self):
-        opr = OpusRead('-d Books -s en -t fi -tz fi.zip'.split())
+        opr = OpusRead('-d RF -s en -t sv -tz sv.zip'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
-            '/proj/nlpl/data/OPUS/Books/latest/xml/en.zip')
+            '/proj/nlpl/data/OPUS/RF/latest/xml/en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'fi.zip')
+            'sv.zip')
 
     def test_target_zip_given_and_source_local(self):
-        opr = OpusRead('-d Books -s en -t fi -r v1 -tz fi.zip'.split())
+        opr = OpusRead('-d RF -s en -t sv -r v1 -tz sv.zip'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
-            'Books_v1_xml_en.zip')
+            'RF_v1_xml_en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'fi.zip')
+            'sv.zip')
 
     def test_target_zip_given_and_source_local_unalphabetical(self):
-        opr = OpusRead('-d Books -s fi -t en -r v1 -tz en.zip'.split())
+        opr = OpusRead('-d RF -s sv -t en -r v1 -tz en.zip'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
             'en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'Books_v1_xml_fi.zip')
+            'RF_v1_xml_sv.zip')
 
     def test_source_zip_given_and_target_local(self):
-        opr = OpusRead('-d Books -s en -t fi -r v1 -sz en.zip'.split())
+        opr = OpusRead('-d RF -s en -t sv -r v1 -sz en.zip'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
             'en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'Books_v1_xml_fi.zip')
+            'RF_v1_xml_sv.zip')
 
     def test_source_zip_local_and_target_automatic(self):
-        opr = OpusRead('-d Books -s en -t es -r v1'.split())
+        opr = OpusRead('-d RF -s en -t es -r v1'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'es/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
-            'Books_v1_xml_en.zip')
+            'RF_v1_xml_en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            '/proj/nlpl/data/OPUS/Books/v1/xml/es.zip')
+            '/proj/nlpl/data/OPUS/RF/v1/xml/es.zip')
 
     def test_source_zip_local_and_target_automatic_unalphabetical(self):
-        opr = OpusRead('-d Books -s fi -t es -r v1'.split())
+        opr = OpusRead('-d RF -s sv -t es -r v1'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'es/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
-            '/proj/nlpl/data/OPUS/Books/v1/xml/es.zip')
+            '/proj/nlpl/data/OPUS/RF/v1/xml/es.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'Books_v1_xml_fi.zip')
+            'RF_v1_xml_sv.zip')
 
     def test_target_zip_local_and_source_automatic(self):
-        opr = OpusRead('-d Books -s es -t fi -r v1'.split())
+        opr = OpusRead('-d RF -s es -t sv -r v1'.split())
         opr.par.initializeSentenceParsers(
-            {'fromDoc':
-                'es/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz',
-             'toDoc':
-                'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'})
+            {'fromDoc': 'es/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
-            '/proj/nlpl/data/OPUS/Books/v1/xml/es.zip')
+            '/proj/nlpl/data/OPUS/RF/v1/xml/es.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'Books_v1_xml_fi.zip')
+            'RF_v1_xml_sv.zip')
 
     def test_empty_argument_list(self):
         temp_args = sys.argv.copy()
-        sys.argv = [temp_args[0]] + '-d Books -s en -t fi -m 1 -f'.split()
+        sys.argv = [temp_args[0]] + '-d RF -s en -t sv -m 1 -f'.split()
         var = pairPrinterToVariable([])
         self.assertEqual(var,
-            ('\n# en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
-            '\n# fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz'
-            '\n\n================================'
-            '\n(src)="s1">Source : manybooks.netAudiobook available here'
-            '\n(trg)="s1">Source : Project Gutenberg'
-            '\n================================\n'))
+            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n================'
+            '================\n(src)="s1.1">Statement of Government P'
+            'olicy by the Prime Minister , Mr Ingvar Carlsson , at th'
+            'e Opening of the Swedish Parliament on Tuesday , 4 Octob'
+            'er , 1988 .\n(trg)="s1.1">REGERINGSFÖRKLARING .\n======='
+            '=========================\n')
         sys.argv = temp_args.copy()
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)
@@ -1849,11 +1903,11 @@ class TestOpusRead(unittest.TestCase):
         os.remove('RF_latest_xml_sv.zip')
         
         self.assertEqual(printout.getvalue()[-230:],
-            ('(src)="s1.1">S'
+            '(src)="s1.1">S'
             'tatement of Government Policy by the Prime Minister , Mr'
             ' Ingvar Carlsson , at the Opening of the Swedish Parliame'
             'nt on Tuesday , 4 October , 1988 .\n(trg)="s1.1">REGERIN'
-            'GSFÖRKLARING .\n================================\n'))
+            'GSFÖRKLARING .\n================================\n')
 
     def test_testConfidence_with_empty_attrsList(self):
         self.assertFalse(self.opr.par.testConfidence('', [], ''))
@@ -1874,58 +1928,60 @@ class TestOpusCat(unittest.TestCase):
         return printout.getvalue()
 
     def test_printing_sentences(self):
-        var  = self.printSentencesToVariable('-d Books -l fi -p'.split())
-        self.assertEqual(var[-145:],
-            ('("s1493.9")>Saanko sitten pyytää sinua laittautumaan valmiiksi '
-            'puolessa tunnissa , niin menemme samalla tiellä Marciniin '
-            'syömään päivällistä ? "\n'))
+        var  = self.printSentencesToVariable('-d RF -l en -p'.split())
+        self.assertEqual(var[-183:],
+            """("s72.1")>It is the Government 's resposibility and ai"""
+            """m to put to use all good initiatives , to work for bro"""
+            """ad solutions and to pursue a policy in the interests o"""
+            """f the whole nation .\n""")
 
     def test_printing_sentences_with_limit(self):
-        var = self.printSentencesToVariable('-d Books -l fi -m 1 -p'.split())
+        var = self.printSentencesToVariable('-d RF -l en -m 1 -p'.split())
         self.assertEqual(var,
-            ('\n# Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles'
-            '.xml\n\n("s1")>Source : Project Gutenberg\n'))
+            '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN'
+            ' AFFAIRS Press Section Check against delivery\n')
 
     def test_printing_sentences_without_ids(self):
         var = self.printSentencesToVariable(
-            '-d Books -l fi -m 1 -i -p'.split())
+            '-d RF -l en -m 1 -i -p'.split())
         self.assertEqual(var,
-            ('\n# Books/xml/fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles'
-            '.xml\n\nSource : Project Gutenberg\n'))
+            '\n# RF/xml/en/1996.xml\n\nMINISTRY FOR FOREIGN'
+            ' AFFAIRS Press Section Check against delivery\n')
 
     def test_print_annotations(self):
         var = self.printSentencesToVariable(
-            '-d Books -l en -m 1 -i -p -pa'.split())
+            '-d RF -l en -m 1 -i -p -pa'.split())
         self.assertEqual(var,
-            ('\n# Books/xml/en/Hugo_Victor-Notre_Dame_de_Paris.'
-            'xml\n\nSource|NN|source :|:|: Project|NNP|Project '
-            'GutenbergTranslation|NNP :|:|: Isabel|NNP|Isabel F.|NNP|F. '
-            'HapgoodAudiobook|NNP available|NN|available here|RB|here\n'))
+            '\n# RF/xml/en/1996.xml\n\nMINISTRY|NNP|ministry FOR|NNP'
+            '|for FOREIGN|NNP|FOREIGN AFFAIRS|NNP Press|NNP|Press Sec'
+            'tion|NNP|Section Check|NNP|Check against|IN|against deli'
+            'very|NN|delivery\n')
 
     def test_print_annotations_all_attributes(self):
         var = self.printSentencesToVariable(
-            '-d Books -l en -m 1 -i -p -pa -sa all_attrs'.split())
+            '-d RF -l en -m 1 -i -p -pa -sa all_attrs'.split())
         self.assertEqual(var,
-            ('\n# Books/xml/en/Hugo_Victor-Notre_Dame_de_Paris.'
-            'xml\n\nSource|NN|w1.1|source|NN|NN :|:|w1.2|:|:|: '
-            'Project|NNP|w1.3|Project|NNP|NP GutenbergTranslation|NNP|'
-            'w1.4|NNP|NP :|:|w1.5|:|:|: Isabel|NNP|w1.6|Isabel|NNP|NP F'
-            '.|NNP|w1.7|F.|NNP|NP HapgoodAudiobook|NNP|w1.8|NNP|NP '
-            'available|JJ|w1.9|available|NN|JJ here|RB|w1.10|here|RB|RB\n'))
+            '\n# RF/xml/en/1996.xml\n\nMINISTRY|null|0|NN|w1.1.1|mini'
+            'stry|NNP|NN FOR|prep|1|IN|w1.1.2|for|NNP|IN FOREIGN|nn|7'
+            '|NNP|w1.1.3|FOREIGN|NNP|NP AFFAIRS|nn|7|NNP|w1.1.4|NNP|N'
+            'P Press|nn|7|NNP|w1.1.5|Press|NNP|NP Section|nn|7|NNP|w1'
+            '.1.6|Section|NNP|NP Check|pobj|2|NNP|w1.1.7|Check|NNP|NP'
+            ' against|prep|1|IN|w1.1.8|against|IN|IN delivery|pobj|8|N'
+            'N|w1.1.9|delivery|NN|NN\n')
 
     def test_print_xml(self):
-        var = self.printSentencesToVariable('-d Books -l eo -m 1'.split())
-        self.assertEqual(var[-53:],
-            '\n <w id="w1.8">,</w> \n <w id="w1.9">M.A.</w>\n</s>\n  \n')
+        var = self.printSentencesToVariable('-d RF -l en -m 1'.split())
+        self.assertEqual(var[-38:],
+            '<w id="w2.10">1996</w>\n</p><p id="3">\n')
 
     def test_printing_specific_file(self):
         var = self.printSentencesToVariable(
-            ('-d Books -l eo -m 1 -i -p -f '
-            'Books/xml/eo/Carroll_Lewis-Alice_in_wonderland.xml').split())
+            '-d RF -l en -m 1 -i -p -f RF/xml/en/1988.xml'.split())
         self.assertEqual(var,
-            ('\n# Books/xml/eo/Carroll_Lewis-Alice_in_wonderland.'
-            'xml\n\nSource : Project GutenbergTranslation : E.L. '
-            'KEARNEY , M.A.\n'))
+            '\n# RF/xml/en/1988.xml\n\nStatement of Government Policy'
+            ' by the Prime Minister , Mr Ingvar Carlsson , at the Open'
+            'ing of the Swedish Parliament on Tuesday , 4 October , 1'
+            '988 .\n')
 
     def test_empty_argument_list(self):
         temp_args = sys.argv.copy()
