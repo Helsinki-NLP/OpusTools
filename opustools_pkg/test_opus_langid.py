@@ -1,6 +1,7 @@
 import os
 import unittest
 import zipfile
+import shutil
 
 from opustools_pkg.opus_langid import OpusLangid
 
@@ -8,10 +9,7 @@ class TestOpusLangid(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        try:
-            os.mkdir('test_files')
-        except FileExistsError:
-            pass
+        os.mkdir('test_files')
         
         with open('test_files/xml_fi.xml', 'w') as f:
             f.write('<?xml version="1.0" encoding="utf-8"?>\n<text>\n '
@@ -94,6 +92,10 @@ class TestOpusLangid(unittest.TestCase):
 
         with zipfile.ZipFile('test_files/osrawfi.zip', 'w') as xmlzip:
             xmlzip.write('test_files/osrawfi.xml') 
+
+    @classmethod
+    def tearDownClass(self):
+        shutil.rmtree('test_files')
 
     def run_opuslangid_and_assertEqual(self, source, target, lines, iszip,
             correct_line):
