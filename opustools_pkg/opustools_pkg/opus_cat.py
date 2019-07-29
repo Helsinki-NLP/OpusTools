@@ -79,9 +79,9 @@ class OpusCat:
         parser.add_argument('-pa', help='Print annotations, if they exist', 
             action='store_true')
         parser.add_argument('-sa', 
-            help=('Set sentence annotation attributes to be printed'
+            help='Set sentence annotation attributes to be printed'
                 ', e.g. -sa pos lem. To print all available attributes '
-                'use -sa all_attrs (default=pos,lem)'), 
+                'use -sa all_attrs (default=pos,lem)', 
             nargs='+',
             default=['pos', 'lem'])
         parser.add_argument('-ca', 
@@ -95,8 +95,8 @@ class OpusCat:
             
         self.openFiles(
             self.args.d+'_'+self.args.r+'_xml_'+self.args.l+'.zip',
-            ('/proj/nlpl/data/OPUS/'+self.args.d+'/latest/xml/'+self.args.l
-            +'.zip'))
+            '/proj/nlpl/data/OPUS/'+self.args.d+'/latest/xml/'+self.args.l
+            +'.zip')
 
         if self.args.m == 'all':
             self.maximum = -2
@@ -110,8 +110,8 @@ class OpusCat:
             except FileNotFoundError:
                 self.lzip = zipfile.ZipFile(defaultpath)
         except FileNotFoundError:
-            print(('\nRequested file not found. The following files are '
-                'availble for downloading:\n'))
+            print('\nRequested file not found. The following files are '
+                'availble for downloading:\n')
             arguments = ['-d', self.args.d, '-s', self.args.l, '-t', ' ', 
                 '-p', 'xml', '-l', '-r', self.args.r]
             og = OpusGet(arguments)

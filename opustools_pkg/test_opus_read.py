@@ -30,7 +30,7 @@ class TestOpusRead(unittest.TestCase):
         os.mkdir('RF/xml')
         os.mkdir('RF/xml/en')
         with open('RF/xml/en/1996.xml', 'w') as f:
-            f.write(('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text>'
+            f.write('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text>'
             '<head>\n<meta id="1"> \n <w id="w1.1">The</w> \n <w id="'
             'w1.2">Hound</w> \n <w id="w1.3">of</w> \n <w id="w1.4">the'
             '</w> \n <w id="w1.5">Baskervilles</w>   \n <w id="w1.6">by'
@@ -75,14 +75,14 @@ class TestOpusRead(unittest.TestCase):
             'w>\n  <w hun="NN" id="w167.0.2" lem="excellent" pos="NNP" '
             'tree="JJ">Excellent</w>\n </chunk>\n <w hun="." id="w167.0.'
             '3" lem="!" pos="." tree="SENT">!</w>\n</s>\n \n\n\n</p>\n '
-            '</body>\n</text>\n'))
+            '</body>\n</text>\n')
 
         with zipfile.ZipFile('RF_v1_xml_en.zip', 'w') as zf:
-            zf.write(('RF/xml/en/1996.xml'))
+            zf.write('RF/xml/en/1996.xml')
 
         os.mkdir('RF/xml/sv')
-        with open(('RF/xml/sv/1996.xml'), 'w') as f:
-            f.write(('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text'
+        with open('RF/xml/sv/1996.xml', 'w') as f:
+            f.write('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text'
             '>\n <head>\n  <meta> The Hound of the Baskervilles \n by '
             'Sir Arthur Conan Doyle \n Aligned by: András Farkas (fully '
             'reviewed) \n </meta>\n </head>\n <body>\n<s cld2="en" '
@@ -101,16 +101,16 @@ class TestOpusRead(unittest.TestCase):
             '<p id="p167">\n<s cld2="un" cld2conf="0.0" id="s167.0" '
             'langid="fi" langidconf="0.38">\n <w id="w167.0.1">"</w>\n '
             '<w id="w167.0.2">Erinomaista</w>\n <w id="w167.0.3">.</w>\n'
-            '</s></p>\n </body>\n</text>\n'))
+            '</s></p>\n </body>\n</text>\n')
 
         with zipfile.ZipFile('RF_v1_xml_sv.zip', 'w') as zf:
-            zf.write(('RF/xml/sv/1996.xml'))
+            zf.write('RF/xml/sv/1996.xml')
 
         shutil.copyfile('RF_v1_xml_en.zip', 'en.zip')
         shutil.copyfile('RF_v1_xml_sv.zip', 'sv.zip')
 
         with open('books_alignment.xml', 'w') as f:
-            f.write(('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE '
+            f.write('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE '
             'cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
             'version="1.0">\n<linkGrp targType="s" fromDoc="en/'
             '1996.xml.gz" '
@@ -118,7 +118,7 @@ class TestOpusRead(unittest.TestCase):
             '>\n<link xtargets="s1;s1" id="SL1"/>\n<link xtargets="s4;s4" '
             'id="SL4"/>\n<link xtargets="s5.0;s5.0" id="SL5.0"/>\n<link '
             'xtargets="s8.1;s8.1" id="SL8.1"/>\n<link xtargets="s167.0'
-            ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n'))
+            ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n')
 
         self.opr = OpusRead('-d RF -s en -t sv'.split())
         self.opr.par.initializeSentenceParsers(
@@ -194,11 +194,11 @@ class TestOpusRead(unittest.TestCase):
             'Goda statsfinanser är grunden för alla politiska ambitioner .')
 
         self.assertEqual(self.opr.par.sPar.getSentence('s10.1')[0],
-            ('Sound public finances are the basis for all political a'
-            'mbitions .'))
+            'Sound public finances are the basis for all political a'
+            'mbitions .')
         self.assertEqual(self.opr.par.tPar.getSentence('s10.1')[0],
-            ('Den andra hörnstenen är goda villkor för företag och fö'
-            'retagande .'))
+            'Den andra hörnstenen är goda villkor för företag och fö'
+            'retagande .')
 
     def test_ExhaustiveSentenceParser_readSentence_format(self):
         self.assertEqual(self.opr.par.sPar.readSentence(['s3.1'])[0],
@@ -206,9 +206,9 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(self.opr.par.tPar.readSentence(['s3.1'])[0],
             '(trg)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
         self.assertEqual(self.opr.par.sPar.readSentence(['s3.1', 's10.1'])[0],
-            ('(src)="s3.1">( Unofficial translation )\n'
+            '(src)="s3.1">( Unofficial translation )\n'
             '(src)="s10.1">Sound public finances are the basis for all'
-            ' political ambitions .'))
+            ' political ambitions .')
 
     def test_ExhaustiveSentenceParser_readSentence_moses(self):
         self.opr.par.sPar.wmode = 'moses'
@@ -218,14 +218,14 @@ class TestOpusRead(unittest.TestCase):
     def test_ExhaustiveSentenceParser_readSentence_tmx(self):
         self.opr.par.sPar.wmode = 'tmx'
         self.assertEqual(self.opr.par.sPar.readSentence(['s3.1'])[0],
-            ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>( Unofficial tr'
-            'anslation )</seg></tuv>'))
+            '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>( Unofficial tr'
+            'anslation )</seg></tuv>')
         self.opr.par.tPar.wmode = 'tmx'
         self.assertEqual(self.opr.par.tPar.readSentence(['s5.1', 's5.2'])[0],
-            ('\t\t\t<tuv xml:lang="sv"><seg>Fundamenten för ett gott '
+            '\t\t\t<tuv xml:lang="sv"><seg>Fundamenten för ett gott '
             'samhälle undergrävs av dagens höga arbetslöshet . Såväl '
             'samhällsekonomi som moral och vilja försvagas .</seg></t'
-            'uv>\n\t\t</tu>'))
+            'uv>\n\t\t</tu>')
 
     def test_ExhaustiveSentenceParser_readSentence_empty(self):
         self.assertEqual(self.opr.par.sPar.readSentence([''])[0], '')
@@ -237,10 +237,10 @@ class TestOpusRead(unittest.TestCase):
             '(trg)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
         self.assertEqual(self.fastopr.par.sPar.readSentence(
             ['s8.1', 's10.1'])[0],
-            ("""(src)="s8.1">The Government 's policy to combat unemp"""
+            """(src)="s8.1">The Government 's policy to combat unemp"""
             """loyment will rest on four corner- stones :\n(src)="s10"""
             """.1">Sound public finances are the basis for all politi"""
-            """cal ambitions ."""))
+            """cal ambitions .""")
 
     def test_SentenceParser_readSentence_moses(self):
         self.fastopr.par.sPar.wmode = 'moses'
@@ -250,16 +250,16 @@ class TestOpusRead(unittest.TestCase):
     def test_SentenceParser_readSentence_tmx(self):
         self.fastopr.par.sPar.wmode = 'tmx'
         self.assertEqual(self.fastopr.par.sPar.readSentence(['s15.1'])[0],
-            ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>The local and r'
+            '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>The local and r'
             'egional role of economic policy will be emphasized .</se'
-            'g></tuv>'))
+            'g></tuv>')
         self.fastopr.par.tPar.wmode = 'tmx'
         self.assertEqual(self.fastopr.par.tPar.readSentence(
             ['s11.1', 's11.2'])[0],
-            ('\t\t\t<tuv xml:lang="sv"><seg>Sverige är ett bra land f'
+            '\t\t\t<tuv xml:lang="sv"><seg>Sverige är ett bra land f'
             'ör företagsamhet . Här finns en flexibel ekonomi , ett k'
             'onstruktivt samarbetsklimat och en kunnig och välutbilda'
-            'd arbetskraft .</seg></tuv>\n\t\t</tu>'))
+            'd arbetskraft .</seg></tuv>\n\t\t</tu>')
 
     def test_SentenceParser_readSentence_empty(self):
         self.assertEqual(self.fastopr.par.sPar.readSentence([''])[0], '')
@@ -346,18 +346,18 @@ class TestOpusRead(unittest.TestCase):
         sPair = ('(src)="s4">Chapter 1 Mr. Sherlock Holmes',
                 '(trg)="s4">Herra Sherlock Holmes .')
         self.assertEqual(self.opr.printPair(sPair),
-            ('(src)="s4">Chapter 1 Mr. Sherlock Holmes\n(trg)="s4">Herra '
-            'Sherlock Holmes .\n================================'))
+            '(src)="s4">Chapter 1 Mr. Sherlock Holmes\n(trg)="s4">Herra '
+            'Sherlock Holmes .\n================================')
 
     def test_PairPrinter_printPair_tmx(self):
         self.opr.par.args.wm = 'tmx'
-        sPair = (('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
+        sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
                 'Sherlock Holmes</seg></tuv>', '\t\t\t<tuv xml:lang="fi">'
-                '<seg>Herra Sherlock Holmes .</seg></tuv>\n\t\t</tu>'))
+                '<seg>Herra Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
         self.assertEqual(self.opr.printPair(sPair),
-            ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock'
+            '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock'
             ' Holmes</seg></tuv>\n\t\t\t<tuv xml:lang="fi"><seg>Herra '
-            'Sherlock Holmes .</seg></tuv>\n\t\t</tu>'))
+            'Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
 
     def test_PairPrinter_printPair_moses(self):
         self.opr.par.args.wm = 'moses'
@@ -381,26 +381,26 @@ class TestOpusRead(unittest.TestCase):
     def test_PairPrinter_printPair_empty(self):
         sPair = ('(src)="3">Director PARK Jae-sik', '')
         self.assertEqual(self.opr.printPair(sPair),
-            ('(src)="3">Director PARK Jae-sik\n\n'
-            '================================'))
+            '(src)="3">Director PARK Jae-sik\n\n'
+            '================================')
 
     def test_PairPrinter_writePair_normal(self):
         sPair = ('(src)="s4">Chapter 1 Mr. Sherlock Holmes',
                 '(trg)="s4">Herra Sherlock Holmes .')
         self.assertEqual(self.opr.writePair(sPair),
-            (('(src)="s4">Chapter 1 Mr. Sherlock Holmes\n(trg)="s4">Herra '
-            'Sherlock Holmes .\n================================\n'), ''))
+            ('(src)="s4">Chapter 1 Mr. Sherlock Holmes\n(trg)="s4">Herra '
+            'Sherlock Holmes .\n================================\n', ''))
 
     def test_PairPrinter_writePair_tmx(self):
         self.opr.par.args.wm = 'tmx'
-        sPair = (('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
-                'Sherlock Holmes</seg></tuv>'),
-                ('\t\t\t<tuv xml:lang="fi"><seg>Herra Sherlock Holmes .'
-                '</seg></tuv>\n\t\t</tu>'))
+        sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
+                'Sherlock Holmes</seg></tuv>',
+                '\t\t\t<tuv xml:lang="fi"><seg>Herra Sherlock Holmes .'
+                '</seg></tuv>\n\t\t</tu>')
         self.assertEqual(self.opr.writePair(sPair),
-            (('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock'
+            ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock'
             ' Holmes</seg></tuv>\n\t\t\t<tuv xml:lang="fi"><seg>Herra '
-            'Sherlock Holmes .</seg></tuv>\n\t\t</tu>\n'), ''))
+            'Sherlock Holmes .</seg></tuv>\n\t\t</tu>\n', ''))
 
     def test_PairPrinter_writePair_moses(self):
         self.opr.par.args.wm = 'moses'
@@ -418,8 +418,8 @@ class TestOpusRead(unittest.TestCase):
     def test_PairPrinter_writePair_empty(self):
         sPair = ('(src)="3">Director PARK Jae-sik', '')
         self.assertEqual(self.opr.writePair(sPair),
-            (('(src)="3">Director PARK Jae-sik\n\n'
-            '================================\n'), ''))
+            ('(src)="3">Director PARK Jae-sik\n\n'
+            '================================\n', ''))
 
 
     def test_switch_labels_when_languages_are_in_unalphabetical_order(self):
@@ -446,15 +446,15 @@ class TestOpusRead(unittest.TestCase):
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            ('(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
-            'n|NN|translation )|)|)'))
+            '(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
+            'n|NN|translation )|)|)')
         opr.par.closeFiles()
         opr = OpusRead('-d RF -s en -t sv -pa -ca @'.split())
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            ('(src)="s3.1">(@(@( Unofficial@NNP@unofficial translatio'
-            'n@NN@translation )@)@)'))
+            '(src)="s3.1">(@(@( Unofficial@NNP@unofficial translatio'
+            'n@NN@translation )@)@)')
         opr.par.closeFiles()
 
     def test_ExhaustiveSentenceParser_readSentence_raw(self):
@@ -462,7 +462,7 @@ class TestOpusRead(unittest.TestCase):
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            ('(src)="s3.1">(Unofficial translation)'))
+            '(src)="s3.1">(Unofficial translation)')
         opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_annotations(self):
@@ -470,8 +470,8 @@ class TestOpusRead(unittest.TestCase):
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            ('(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
-            'n|NN|translation )|)|)'))
+            '(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
+            'n|NN|translation )|)|)')
         opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_annotations_change_delimiter(self):
@@ -479,8 +479,8 @@ class TestOpusRead(unittest.TestCase):
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            ('(src)="s3.1">(@(@( Unofficial@NNP@unofficial translatio'
-            'n@NN@translation )@)@)'))
+            '(src)="s3.1">(@(@( Unofficial@NNP@unofficial translatio'
+            'n@NN@translation )@)@)')
         opr.par.closeFiles()
 
     def test_SentenceParser_readSentence_raw(self):
@@ -488,7 +488,7 @@ class TestOpusRead(unittest.TestCase):
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            ('(src)="s3.1">(Unofficial translation)'))
+            '(src)="s3.1">(Unofficial translation)')
         opr.par.closeFiles()
 
     def test_AlignmentParser_readPair_sentence_limits(self):
@@ -605,142 +605,142 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(True, True)
 
     def test_normal_xml_write(self):
-        OpusRead(('-d RF -s en -t sv -m 1 -w '
-            'test_files/test_result').split()).printPairs()
+        OpusRead('-d RF -s en -t sv -m 1 -w '
+            'test_files/test_result'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en/1988.xml.gz\n'
+                '\n# en/1988.xml.gz\n'
                 '# sv/1988.xml.gz\n\n'
                 '================================\n(src)="s1.1">State'
                 'ment of Government Policy by the Prime Minister , Mr'
                 ' Ingvar Carlsson , at the Opening of the Swedish Parl'
                 'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
                 '>REGERINGSFÖRKLARING .\n============================'
-                '====\n'))
+                '====\n')
 
     def test_normal_xml_write_fast(self):
-        OpusRead(('-d RF -s en -t sv -m 1 -w '
-            'test_files/test_result -f').split()).printPairs()
+        OpusRead('-d RF -s en -t sv -m 1 -w '
+            'test_files/test_result -f'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en/1988.xml.gz\n'
+                '\n# en/1988.xml.gz\n'
                 '# sv/1988.xml.gz\n\n'
                 '================================\n(src)="s1.1">State'
                 'ment of Government Policy by the Prime Minister , Mr'
                 ' Ingvar Carlsson , at the Opening of the Swedish Parl'
                 'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
                 '>REGERINGSFÖRKLARING .\n============================'
-                '====\n'))
+                '====\n')
 
     def test_normal_xml_print(self):
         var = pairPrinterToVariable(
             '-d RF -s en -t sv -m 1'.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n'
+            '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
             '================================\n(src)="s1.1">State'
             'ment of Government Policy by the Prime Minister , Mr'
             ' Ingvar Carlsson , at the Opening of the Swedish Parl'
             'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
             '>REGERINGSFÖRKLARING .\n============================'
-            '====\n'))
+            '====\n')
 
     def test_normal_xml_print_fast(self):
         var = pairPrinterToVariable(
             '-d RF -s en -t sv -m 1 -f'.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n'
+            '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
             '================================\n(src)="s1.1">State'
             'ment of Government Policy by the Prime Minister , Mr'
             ' Ingvar Carlsson , at the Opening of the Swedish Parl'
             'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
             '>REGERINGSFÖRKLARING .\n============================'
-            '====\n'))
+            '====\n')
 
     def test_normal_raw_write(self):
-        OpusRead(('-d RF -s en -t sv -m 1 -w '
-            'test_files/test_result -p raw').split()).printPairs()
+        OpusRead('-d RF -s en -t sv -m 1 -w '
+            'test_files/test_result -p raw'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en/1988.xml.gz\n'
+                '\n# en/1988.xml.gz\n'
                 '# sv/1988.xml.gz\n\n'
                 '================================\n(src)="s1.1">State'
                 'ment of Government Policy by the Prime Minister, Mr'
                 ' Ingvar Carlsson, at the Opening of the Swedish Parl'
                 'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
                 '>REGERINGSFÖRKLARING.\n============================'
-                '====\n'))
+                '====\n')
 
     def test_normal_raw_write_fast(self):
-        OpusRead(('-d RF -s en -t sv -m 1 -w '
-            'test_files/test_result -p raw -f').split()).printPairs()
+        OpusRead('-d RF -s en -t sv -m 1 -w '
+            'test_files/test_result -p raw -f'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en/1988.xml.gz\n'
+                '\n# en/1988.xml.gz\n'
                 '# sv/1988.xml.gz\n\n'
                 '================================\n(src)="s1.1">State'
                 'ment of Government Policy by the Prime Minister, Mr'
                 ' Ingvar Carlsson, at the Opening of the Swedish Parl'
                 'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
                 '>REGERINGSFÖRKLARING.\n============================'
-                '====\n'))
+                '====\n')
 
     def test_normal_raw_print(self):
         var = pairPrinterToVariable(
             '-d RF -s en -t sv -m 1 -p raw'.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n'
+            '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
             '================================\n(src)="s1.1">State'
             'ment of Government Policy by the Prime Minister, Mr'
             ' Ingvar Carlsson, at the Opening of the Swedish Parl'
             'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
             '>REGERINGSFÖRKLARING.\n============================'
-            '====\n'))
+            '====\n')
 
     def test_normal_raw_print_fast(self):
         var = pairPrinterToVariable(
             '-d RF -s en -t sv -m 1 -p raw -f'.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n'
+            '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
             '================================\n(src)="s1.1">State'
             'ment of Government Policy by the Prime Minister, Mr'
             ' Ingvar Carlsson, at the Opening of the Swedish Parl'
             'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
             '>REGERINGSFÖRKLARING.\n============================'
-            '====\n'))
+            '====\n')
 
     def test_normal_raw_print_OpenSubtitles(self):
         var = pairPrinterToVariable(
             '-d OpenSubtitles -s eo -t kk -m 1 -p raw'.split())
         self.assertEqual(var,
-            ('\n# eo/2001/245429/5818397.xml.gz\n'
+            '\n# eo/2001/245429/5818397.xml.gz\n'
             '# kk/2001/245429/6899218.xml.gz\n\n'
              '================================\n(src)="1">Filmo de '
              '"Studio Ghibli"\n(trg)="1">ГИБЛИ" '
-             'студиясы\n================================\n'))
+             'студиясы\n================================\n')
 
     def test_normal_raw_print_OpenSubtitles_fast(self):
         var = pairPrinterToVariable(
             '-d OpenSubtitles -s eo -t kk -m 1 -p raw -f'.split())
         self.assertEqual(var,
-            ('\n# eo/2001/245429/5818397.xml.gz\n'
+            '\n# eo/2001/245429/5818397.xml.gz\n'
             '# kk/2001/245429/6899218.xml.gz\n\n'
              '================================\n(src)="1">Filmo de '
              '"Studio Ghibli"\n(trg)="1">ГИБЛИ" '
-             'студиясы\n================================\n'))
+             'студиясы\n================================\n')
 
 
     def test_normal_parsed_write(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
+            '-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
             'feats lemma -ta upos feats lemma '
-            '-w test_files/test_result ').split()).printPairs()
+            '-w test_files/test_result '.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+                '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
                 '================================'
                 '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
                 'of|ADP|of Government|NOUN|Number=Sing|government Pol'
@@ -758,16 +758,16 @@ class TestOpusRead(unittest.TestCase):
                 '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
                 'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
                 '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
-                '\n================================\n'))
+                '\n================================\n')
 
     def test_normal_parsed_write_fast(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
+            '-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
             'feats lemma -ta upos feats lemma '
-            '-w test_files/test_result -f').split()).printPairs()
+            '-w test_files/test_result -f'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+                '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
                 '================================'
                 '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
                 'of|ADP|of Government|NOUN|Number=Sing|government Pol'
@@ -785,14 +785,14 @@ class TestOpusRead(unittest.TestCase):
                 '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
                 'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
                 '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
-                '\n================================\n'))
+                '\n================================\n')
 
     def test_normal_parsed_print(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
-            'feats lemma -ta upos feats lemma ').split())
+            '-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma '.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
             '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
             'of|ADP|of Government|NOUN|Number=Sing|government Pol'
@@ -810,14 +810,14 @@ class TestOpusRead(unittest.TestCase):
             '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
             'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
             '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_normal_parsed_print_unalphabetical(self):
         var = pairPrinterToVariable(
-            ('-d RF -s sv -t en -m 1 -p parsed -pa -sa upos '
-            'feats lemma -ta upos feats lemma ').split())
+            '-d RF -s sv -t en -m 1 -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma '.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
             '\n(src)="s1.1">REGERINGSFÖRKLARING|NOUN|Case=Nom|Definit'
             'e=Ind|Gender=Neut|Number=Sing|Regeringsförklaring .|PUNC'
@@ -835,14 +835,14 @@ class TestOpusRead(unittest.TestCase):
             'ay|PROPN|Number=Sing|Tuesday ,|PUNCT|, 4|NUM|NumType'
             '=Card|4 October|PROPN|Number=Sing|October ,|PUNCT|, '
             '1988|NUM|NumType=Card|1988 .|PUNCT|.'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_normal_parsed_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
-            'feats lemma -ta upos feats lemma -f').split())
+            '-d RF -s en -t sv -m 1 -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma -f'.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
             '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
             'of|ADP|of Government|NOUN|Number=Sing|government Pol'
@@ -860,14 +860,14 @@ class TestOpusRead(unittest.TestCase):
             '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
             'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
             '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_normal_parsed_print_all_attributes(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa all_attrs '
-            '-ta all_attrs').split())
+            '-d RF -s en -t sv -m 1 -p parsed -pa -sa all_attrs '
+            '-ta all_attrs'.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
             '\n(src)="s1.1">Statement|root|Number=Sing|0|w1.1.1|state'
             'ment|NOUN|NOUN of|case|w1.1.4|w1.1.2|of|ADP|ADP Governme'
@@ -900,14 +900,14 @@ class TestOpusRead(unittest.TestCase):
             'te=Ind|Gender=Neut|Number=Sing|0|w1.1.1|Regeringsförklar'
             'ing|SpaceAfter=No|NOUN|NOUN .|punct|w1.1.1|w1.1.2|.|Spac'
             'eAfter=No|PUNCT|PUNCT'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_normal_parsed_print_all_attributes_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -p parsed -pa -sa all_attrs '
-            '-ta all_attrs -f').split())
+            '-d RF -s en -t sv -m 1 -p parsed -pa -sa all_attrs '
+            '-ta all_attrs -f'.split())
         self.assertEqual(var,
-            ('\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
             '\n(src)="s1.1">Statement|root|Number=Sing|0|w1.1.1|state'
             'ment|NOUN|NOUN of|case|w1.1.4|w1.1.2|of|ADP|ADP Governme'
@@ -940,15 +940,15 @@ class TestOpusRead(unittest.TestCase):
             'te=Ind|Gender=Neut|Number=Sing|0|w1.1.1|Regeringsförklar'
             'ing|SpaceAfter=No|NOUN|NOUN .|punct|w1.1.1|w1.1.2|.|Spac'
             'eAfter=No|PUNCT|PUNCT'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_tmx_xml_write(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test_result '
-            '-wm tmx').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test_result '
+            '-wm tmx'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
                 '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
@@ -956,15 +956,15 @@ class TestOpusRead(unittest.TestCase):
                 'n , at the Opening of the Swedish Parliament on Tues'
                 'day , 4 October , 1988 .'
                 '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_xml_write_unalphabetical(self):
         OpusRead(
-            ('-d RF -s sv -t en -m 1 -w test_files/test_result '
-            '-wm tmx').split()).printPairs()
+            '-d RF -s sv -t en -m 1 -w test_files/test_result '
+            '-wm tmx'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="sv"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
                 '\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
@@ -973,15 +973,15 @@ class TestOpusRead(unittest.TestCase):
                 'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
                 'n , at the Opening of the Swedish Parliament on Tues'
                 'day , 4 October , 1988 .'
-                '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_xml_write_fast(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test_result '
-            '-wm tmx -f').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test_result '
+            '-wm tmx -f'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
                 '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
@@ -989,13 +989,13 @@ class TestOpusRead(unittest.TestCase):
                 'n , at the Opening of the Swedish Parliament on Tues'
                 'day , 4 October , 1988 .'
                 '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_xml_print(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm tmx').split())
+            '-d RF -s en -t sv -m 1 -wm tmx'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
             '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
@@ -1003,13 +1003,13 @@ class TestOpusRead(unittest.TestCase):
             'n , at the Opening of the Swedish Parliament on Tues'
             'day , 4 October , 1988 .'
             '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_xml_print_unalphabetical(self):
         var = pairPrinterToVariable(
-            ('-d RF -s sv -t en -m 1 -wm tmx').split())
+            '-d RF -s sv -t en -m 1 -wm tmx'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="sv"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
             '\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
@@ -1018,13 +1018,13 @@ class TestOpusRead(unittest.TestCase):
             'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
             'n , at the Opening of the Swedish Parliament on Tues'
             'day , 4 October , 1988 .'
-            '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_xml_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm tmx -f').split())
+            '-d RF -s en -t sv -m 1 -wm tmx -f'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
             '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
@@ -1032,15 +1032,15 @@ class TestOpusRead(unittest.TestCase):
             'n , at the Opening of the Swedish Parliament on Tues'
             'day , 4 October , 1988 .'
             '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_raw_write(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx'
-            ' -p raw').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx'
+            ' -p raw'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
                 '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
@@ -1048,15 +1048,15 @@ class TestOpusRead(unittest.TestCase):
                 'n, at the Opening of the Swedish Parliament on Tues'
                 'day, 4 October, 1988.'
                 '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_raw_write_fast(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx'
-            ' -p raw -f').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx'
+            ' -p raw -f'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
                 '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
@@ -1064,13 +1064,13 @@ class TestOpusRead(unittest.TestCase):
                 'n, at the Opening of the Swedish Parliament on Tues'
                 'day, 4 October, 1988.'
                 '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>'))
+                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_raw_print(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm tmx -p raw').split())
+            '-d RF -s en -t sv -m 1 -wm tmx -p raw'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
             '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
@@ -1078,13 +1078,13 @@ class TestOpusRead(unittest.TestCase):
             'n, at the Opening of the Swedish Parliament on Tues'
             'day, 4 October, 1988.'
             '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-            'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_raw_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm tmx -p raw -f').split())
+            '-d RF -s en -t sv -m 1 -wm tmx -p raw -f'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
             '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
@@ -1092,16 +1092,16 @@ class TestOpusRead(unittest.TestCase):
             'n, at the Opening of the Swedish Parliament on Tues'
             'day, 4 October, 1988.'
             '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-            'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_parsed_write(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx '
+            '-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx '
             '-p parsed -pa -sa upos feats lemma -ta upos feats '
-            'lemma').split()).printPairs()
+            'lemma'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
                 '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
@@ -1121,16 +1121,16 @@ class TestOpusRead(unittest.TestCase):
                 '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
                 'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
                 'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
-                '\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_parsed_write_fast(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx '
+            '-d RF -s en -t sv -m 1 -w test_files/test_result -wm tmx '
             '-p parsed -pa -sa upos feats lemma -ta upos feats '
-            'lemma -f').split()).printPairs()
+            'lemma -f'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
-                ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
                 '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
                 '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
                 '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
@@ -1150,14 +1150,14 @@ class TestOpusRead(unittest.TestCase):
                 '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
                 'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
                 'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
-                '\n\t\t</tu>\n\t</body>\n</tmx>'))
+                '\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_parsed_print(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm tmx -p parsed -pa -sa upos '
-            'feats lemma -ta upos feats lemma').split())
+            '-d RF -s en -t sv -m 1 -wm tmx -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
             '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
@@ -1177,14 +1177,14 @@ class TestOpusRead(unittest.TestCase):
             '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
             'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
             'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
-            '\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            '\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_parsed_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm tmx -p parsed -pa -sa upos '
-            'feats lemma -ta upos feats lemma -f').split())
+            '-d RF -s en -t sv -m 1 -wm tmx -p parsed -pa -sa upos '
+            'feats lemma -ta upos feats lemma -f'.split())
         self.assertEqual(var,
-            ('<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
             '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
             '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
@@ -1204,187 +1204,185 @@ class TestOpusRead(unittest.TestCase):
             '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
             'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
             'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
-            '\n\t\t</tu>\n\t</body>\n</tmx>\n'))
+            '\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_moses_xml_write(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
-            'test_files/test.trg -wm moses').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
+            'test_files/test.trg -wm moses'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-            ('Statement of Government Policy by the Prime Minister , '
+            'Statement of Government Policy by the Prime Minister , '
             'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
-            'ament on Tuesday , 4 October , 1988 .\n'))
+            'ament on Tuesday , 4 October , 1988 .\n')
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'REGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_write_unalphabetical(self):
         OpusRead(
-            ('-d RF -s sv -t en -m 1 -w test_files/test.src '
-            'test_files/test.trg -wm moses').split()).printPairs()
+            '-d RF -s sv -t en -m 1 -w test_files/test.src '
+            'test_files/test.trg -wm moses'.split()).printPairs()
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
-            ('Statement of Government Policy by the Prime Minister , '
+            'Statement of Government Policy by the Prime Minister , '
             'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
-            'ament on Tuesday , 4 October , 1988 .\n'))
+            'ament on Tuesday , 4 October , 1988 .\n')
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'REGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_write_with_file_names(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
-            'test_files/test.trg -wm moses -pn').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
+            'test_files/test.trg -wm moses -pn'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-            ('\n<fromDoc>en/1988.xml.gz</fromDoc>\n\nStatement of Gover'
+            '\n<fromDoc>en/1988.xml.gz</fromDoc>\n\nStatement of Gover'
             'nment Policy by the Prime Minister , '
             'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
-            'ament on Tuesday , 4 October , 1988 .\n'))
+            'ament on Tuesday , 4 October , 1988 .\n')
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
             '\n<toDoc>sv/1988.xml.gz</toDoc>\n\nREGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_write_single_file(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
-            '-wm moses').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
+            '-wm moses'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                ('Statement of Government Policy by the Prime Minister , '
+                'Statement of Government Policy by the Prime Minister , '
                 'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
                 'ament on Tuesday , 4 October , 1988 .\tREGERINGSFÖRK'
-                'LARING .\n'))
+                'LARING .\n')
 
     def test_moses_xml_write_single_file_unalphabetical(self):
         OpusRead(
-            ('-d RF -s sv -t en -m 1 -w test_files/test.src '
-            '-wm moses').split()).printPairs()
+            '-d RF -s sv -t en -m 1 -w test_files/test.src '
+            '-wm moses'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                ('REGERINGSFÖRKLARING .\tStatement of Government Poli'
+                'REGERINGSFÖRKLARING .\tStatement of Government Poli'
                 'cy by the Prime Minister , Mr Ingvar Carlsson , at t'
                 'he Opening of the Swedish Parliament on Tuesday , 4 '
-                'October , 1988 .\n'))
+                'October , 1988 .\n')
 
     def test_moses_xml_write_single_file_with_file_names(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
-            '-wm moses -pn').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
+            '-wm moses -pn'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
+                '\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
                 '.xml.gz</toDoc>\n\nStatement of Government Policy by'
                 ' the Prime Minister , Mr Ingvar Carlsson , at the Ope'
                 'ning of the Swedish Parliament on Tuesday , 4 Octobe'
-                'r , 1988 .\tREGERINGSFÖRKLARING .\n'))
+                'r , 1988 .\tREGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_write_single_file_with_file_names_unalphabetical(self):
         OpusRead(
-            ('-d RF -s sv -t en -m 1 -w test_files/test.src '
-            '-wm moses -pn').split()).printPairs()
+            '-d RF -s sv -t en -m 1 -w test_files/test.src '
+            '-wm moses -pn'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-                ('\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
+                '\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
                 '.xml.gz</toDoc>\n\nREGERINGSFÖRKLARING .\tStatement '
                 'of Government Policy by the Prime Minister , Mr Ingv'
                 'ar Carlsson , at the Opening of the Swedish Parliame'
-                'nt on Tuesday , 4 October , 1988 .\n'))
+                'nt on Tuesday , 4 October , 1988 .\n')
 
     def test_moses_xml_write_fast(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
-            'test_files/test.trg -wm moses -f').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
+            'test_files/test.trg -wm moses -f'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-            ('Statement of Government Policy by the Prime Minister , '
+            'Statement of Government Policy by the Prime Minister , '
             'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
-            'ament on Tuesday , 4 October , 1988 .\n'))
+            'ament on Tuesday , 4 October , 1988 .\n')
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'REGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_print(self):
-        var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm moses').split())
+        var = pairPrinterToVariable('-d RF -s en -t sv -m 1 -wm moses'.split())
         self.assertEqual(var,
-            ('Statement of Government Policy by the Prime Minister , '
+            'Statement of Government Policy by the Prime Minister , '
             'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
             'ament on Tuesday , 4 October , 1988 .\t'
-            'REGERINGSFÖRKLARING .\n'))
+            'REGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_print_unalphabetical(self):
-        var = pairPrinterToVariable(
-            ('-d RF -s sv -t en -m 1 -wm moses').split())
+        var = pairPrinterToVariable('-d RF -s sv -t en -m 1 -wm moses'.split())
         self.assertEqual(var,
-            ('REGERINGSFÖRKLARING .\tStatement of Government Policy b'
+            'REGERINGSFÖRKLARING .\tStatement of Government Policy b'
             'y the Prime Minister , Mr Ingvar Carlsson , at the Openi'
-            'ng of the Swedish Parliament on Tuesday , 4 October , 1988 .\n'))
+            'ng of the Swedish Parliament on Tuesday , 4 October , 1988 .\n')
 
     def test_moses_xml_print_with_file_names(self):
         var = pairPrinterToVariable(
             '-d RF -s en -t sv -m 1 -wm moses -pn'.split())
         self.assertEqual(var,
-            ('\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
+            '\n<fromDoc>en/1988.xml.gz</fromDoc>\n<toDoc>sv/1988'
             '.xml.gz</toDoc>\n\nStatement of Government Policy by'
             ' the Prime Minister , Mr Ingvar Carlsson , at the Ope'
             'ning of the Swedish Parliament on Tuesday , 4 Octobe'
-            'r , 1988 .\tREGERINGSFÖRKLARING .\n'))
+            'r , 1988 .\tREGERINGSFÖRKLARING .\n')
 
     def test_moses_xml_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm moses -f').split())
+            '-d RF -s en -t sv -m 1 -wm moses -f'.split())
         self.assertEqual(var,
-            ('Statement of Government Policy by the Prime Minister , '
+            'Statement of Government Policy by the Prime Minister , '
             'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
             'ament on Tuesday , 4 October , 1988 .\t'
-            'REGERINGSFÖRKLARING .\n'))
+            'REGERINGSFÖRKLARING .\n')
 
     def test_moses_raw_write(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
-            'test_files/test.trg -wm moses -p raw').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
+            'test_files/test.trg -wm moses -p raw'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-            ('Statement of Government Policy by the Prime Minister, '
+            'Statement of Government Policy by the Prime Minister, '
             'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
-            'ament on Tuesday, 4 October, 1988.\n'))
+            'ament on Tuesday, 4 October, 1988.\n')
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'REGERINGSFÖRKLARING.\n')
 
     def test_moses_raw_write_fast(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
-            'test_files/test.trg -wm moses -p raw -f').split()).printPairs()
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
+            'test_files/test.trg -wm moses -p raw -f'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(),
-            ('Statement of Government Policy by the Prime Minister, '
+            'Statement of Government Policy by the Prime Minister, '
             'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
-            'ament on Tuesday, 4 October, 1988.\n'))
+            'ament on Tuesday, 4 October, 1988.\n')
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(), 'REGERINGSFÖRKLARING.\n')
 
     def test_moses_raw_print(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm moses -p raw').split())
+            '-d RF -s en -t sv -m 1 -wm moses -p raw'.split())
         self.assertEqual(var,
-            ('Statement of Government Policy by the Prime Minister, '
+            'Statement of Government Policy by the Prime Minister, '
             'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
             'ament on Tuesday, 4 October, 1988.\t'
-            'REGERINGSFÖRKLARING.\n'))
+            'REGERINGSFÖRKLARING.\n')
 
     def test_moses_raw_print_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m 1 -wm moses -p raw -f').split())
+            '-d RF -s en -t sv -m 1 -wm moses -p raw -f'.split())
         self.assertEqual(var,
-            ('Statement of Government Policy by the Prime Minister, '
+            'Statement of Government Policy by the Prime Minister, '
             'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
             'ament on Tuesday, 4 October, 1988.\t'
-            'REGERINGSFÖRKLARING.\n'))
+            'REGERINGSFÖRKLARING.\n')
 
     def test_moses_parsed_write(self):
         OpusRead(
-            ('-d RF -s en -t sv -m 1 -w test_files/test.src '
+            '-d RF -s en -t sv -m 1 -w test_files/test.src '
             'test_files/test.trg -wm moses -p parsed -pa -sa upos feats '
-            'lemma -ta upos feats lemma').split()).printPairs()
+            'lemma -ta upos feats lemma'.split()).printPairs()
         with open('test_files/test.src', 'r') as f:
             self.assertEqual(f.read(), 'Statement|NOUN|Number=Sing|st'
             'atement of|ADP|of Government|NOUN|Number=Sing|government'
@@ -1401,8 +1399,8 @@ class TestOpusRead(unittest.TestCase):
             'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.\n')
         with open('test_files/test.trg', 'r') as f:
             self.assertEqual(f.read(),
-            ('REGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
-            'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n'))
+            'REGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
+            'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n')
 
     def test_moses_parsed_write_fast(self):
         OpusRead(
@@ -1582,47 +1580,47 @@ class TestOpusRead(unittest.TestCase):
     def test_checks_first_whether_documents_are_in_path(self):
         with open('test_files/testlinks', 'w') as f:
             f.write(
-                ('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
                 'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
                 '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'
                 'test_en" toDoc="test_files/test_fi" >\n<link xtargets='
-                '"s1;s1"/>\n </linkGrp>+\n</cesAlign>'))
+                '"s1;s1"/>\n </linkGrp>+\n</cesAlign>')
         with open('test_files/test_en', 'w') as f:
             f.write(
-                ('<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
                 '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
-                '</w>\n</s>\n </body>\n</text>'))
+                '</w>\n</s>\n </body>\n</text>')
         with open('test_files/test_fi', 'w') as f:
             f.write(
-                ('<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
                 '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2'
-                '</w>\n</s>\n </body>\n</text>'))
+                '</w>\n</s>\n </body>\n</text>')
         var = pairPrinterToVariable(
             '-d Books -s en -t fi -af test_files/testlinks'.split())
         self.assertEqual(var,
-            ('\n# test_files/test_en\n# test_files/test_fi\n\n'
+            '\n# test_files/test_en\n# test_files/test_fi\n\n'
             '================================\n(src)="s1">test_en1 test_en2\n'
             '(trg)="s1">test_fi1 test_fi2'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_checks_first_whether_documents_are_in_path_gz(self):
         with open('test_files/testlinks', 'w') as f:
             f.write(
-                ('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
                 'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
                 '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'
                 'test_en.gz" toDoc="test_files/test_fi.gz" >\n<link '
-                'xtargets="s1;s1"/>\n </linkGrp>+\n</cesAlign>'))
+                'xtargets="s1;s1"/>\n </linkGrp>+\n</cesAlign>')
         with open('test_files/test_en', 'w') as f:
             f.write(
-                ('<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
                 '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
-                '</w>\n</s>\n </body>\n</text>'))
+                '</w>\n</s>\n </body>\n</text>')
         with open('test_files/test_fi', 'w') as f:
             f.write(
-                ('<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
                 '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2'
-                '</w>\n</s>\n </body>\n</text>'))
+                '</w>\n</s>\n </body>\n</text>')
         with open('test_files/test_en', 'rb') as f:
             with gzip.open('test_files/test_en.gz', 'wb') as gf:
                 shutil.copyfileobj(f, gf)
@@ -1632,10 +1630,10 @@ class TestOpusRead(unittest.TestCase):
         var = pairPrinterToVariable(
             '-d Books -s en -t fi -af test_files/testlinks'.split())
         self.assertEqual(var,
-            ('\n# test_files/test_en.gz\n# test_files/test_fi.gz\n\n'
+            '\n# test_files/test_en.gz\n# test_files/test_fi.gz\n\n'
             '================================\n(src)="s1">test_en1 test_en2\n'
             '(trg)="s1">test_fi1 test_fi2'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_src_cld2(self):
         var = pairPrinterToVariable(
@@ -1713,71 +1711,71 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_nonalphabetical_lang_order(self):
         var = pairPrinterToVariable(
-            ('-d RF -s sv -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
+            '-d RF -s sv -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
             'fi 0.97 --trg_langid en 0.17 --src_langid fi 1'
-            ' -af books_alignment.xml').split())
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/1996.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
             '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s8.1">Luulenpa että sinulla'
             '\n(trg)="s8.1">I believe'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_lang_labels_nonalphabetical_lang_order_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s sv -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
+            '-d RF -s sv -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
             'fi 0.97 --trg_langid en 0.17 --src_langid fi 1 -f'
-            ' -af books_alignment.xml').split())
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/1996.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
             '# sv/1996.xml.gz\n'
             '\n================================'
             '\n(src)="s8.1">Luulenpa että sinulla'
             '\n(trg)="s8.1">I believe'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_lang_labels_no_matches_found(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 fi 2'
-            ' -af books_alignment.xml').split())
+            '-d RF -s en -t sv -r v1 -m 1 --src_cld2 fi 2'
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/1996.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
             '# sv/1996.xml.gz\n'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_filtering_by_lang_labels_no_matches_found_fast(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 fi 2'
-            ' -af books_alignment.xml -f').split())
+            '-d RF -s en -t sv -r v1 -m 1 --src_cld2 fi 2'
+            ' -af books_alignment.xml -f'.split())
         self.assertEqual(var,
-            ('\n# en/1996.xml.gz\n'
+            '\n# en/1996.xml.gz\n'
             '# sv/1996.xml.gz\n'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_use_given_zip_files(self):
         var = pairPrinterToVariable(
-            ('-d RF -s en -t sv -m1 -sz en.zip -tz sv.zip'
-            ' -af books_alignment.xml'.split()))
+            '-d RF -s en -t sv -m1 -sz en.zip -tz sv.zip'
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/1996.xml.gz'
+            '\n# en/1996.xml.gz'
             '\n# sv/1996.xml.gz'
             '\n\n================================'
             '\n(src)="s1">Source : manybooks.netAudiobook available here'
             '\n(trg)="s1">Source : Project Gutenberg'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_use_given_zip_files_unalphabetical(self):
         var = pairPrinterToVariable(
-            ('-d RF -s sv -t en -m1 -sz sv.zip -tz en.zip'
-            ' -af books_alignment.xml'.split()))
+            '-d RF -s sv -t en -m1 -sz sv.zip -tz en.zip'
+            ' -af books_alignment.xml'.split())
         self.assertEqual(var,
-            ('\n# en/1996.xml.gz'
+            '\n# en/1996.xml.gz'
             '\n# sv/1996.xml.gz'
             '\n\n================================'
             '\n(src)="s1">Source : Project Gutenberg'
             '\n(trg)="s1">Source : manybooks.netAudiobook available here'
-            '\n================================\n'))
+            '\n================================\n')
 
     def test_source_zip_given_and_target_automatic(self):
         opr = OpusRead('-d RF -s en -t sv -sz en.zip'.split())
@@ -1988,8 +1986,8 @@ class TestOpusCat(unittest.TestCase):
         sys.argv = [temp_args[0]] + '-d RF -l en -m 1 -p'.split()
         var = self.printSentencesToVariable([])
         self.assertEqual(var,
-            ('\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN '
-            'AFFAIRS Press Section Check against delivery\n'))
+            '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN '
+            'AFFAIRS Press Section Check against delivery\n')
         sys.argv = temp_args.copy()
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)

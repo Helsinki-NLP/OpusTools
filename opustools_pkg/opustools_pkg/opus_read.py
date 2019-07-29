@@ -22,12 +22,12 @@ class OpusRead:
         parser.add_argument('-m', help='Maximum number of alignments',
             default='all')
         parser.add_argument('-S',
-            help=('Number of source sentences in alignments (range is '
-                'allowed, eg. -S 1-2)'),
+            help='Number of source sentences in alignments (range is '
+                'allowed, eg. -S 1-2)',
             default='all')
         parser.add_argument('-T',
-            help=('Number of target sentences in alignments (range is '
-                'allowed, eg. -T 1-2)'),
+            help='Number of target sentences in alignments (range is '
+                'allowed, eg. -T 1-2)',
             default='all')
         parser.add_argument('-a', help='Set attribute for filttering',
             default='any')
@@ -36,8 +36,8 @@ class OpusRead:
         parser.add_argument('-ln', help='Leave non-alignments out',
             action='store_true')
         parser.add_argument('-w',
-            help=('Write to file. To print moses format in separate files, '
-                'enter two file names. Otherwise enter one file name.'),
+            help='Write to file. To print moses format in separate files, '
+                'enter two file names. Otherwise enter one file name.',
             nargs='+')
         parser.add_argument('-wm',
             help='Set writing mode (normal, moses, tmx, links)',
@@ -46,9 +46,9 @@ class OpusRead:
             help='Print file names when using moses format',
             action='store_true')
         parser.add_argument('-f',
-            help=('Fast parsing. Faster than normal parsing, if you print '
+            help='Fast parsing. Faster than normal parsing, if you print '
                 'a small part of the whole corpus, but requires the sentence '
-                'ids in alignment files to be in sequence.'),
+                'ids in alignment files to be in sequence.',
             action='store_true')
         parser.add_argument('-rd',
             help='Change root directory (default=/proj/nlpl/data/OPUS/)',
@@ -61,34 +61,34 @@ class OpusRead:
         parser.add_argument('-pa', help='Print annotations, if they exist',
             action='store_true')
         parser.add_argument('-sa',
-            help=('Set source sentence annotation attributes to be printed'
+            help='Set source sentence annotation attributes to be printed'
                 ', e.g. -sa pos lem. To print all available attributes use '
-                '-sa all_attrs (default=pos,lem)'),
+                '-sa all_attrs (default=pos,lem)',
             nargs='+',
             default=['pos', 'lem'])
         parser.add_argument('-ta',
-            help=('Set target sentence annotation attributes to be printed'
+            help='Set target sentence annotation attributes to be printed'
                 ', e.g. -ta pos lem. To print all available attributes use '
-                '-ta all_attrs (default=pos,lem)'),
+                '-ta all_attrs (default=pos,lem)',
             nargs='+',
             default=['pos', 'lem'])
         parser.add_argument('-ca',
             help='Change annotation delimiter (default=|)', default='|')
         parser.add_argument('--src_cld2',
-            help=('Filter source sentences by their cld2 language id labels '
-                'and confidence score, e.g. en 0.9'),
+            help='Filter source sentences by their cld2 language id labels '
+                'and confidence score, e.g. en 0.9',
             nargs=2)
         parser.add_argument('--trg_cld2',
-            help=('Filter target sentences by their cld2 language id labels '
-                'and confidence score, e.g. en 0.9'),
+            help='Filter target sentences by their cld2 language id labels '
+                'and confidence score, e.g. en 0.9',
             nargs=2)
         parser.add_argument('--src_langid',
-            help=('Filter source sentences by their langid.py language id '
-                'labels and confidence score, e.g. en 0.9'),
+            help='Filter source sentences by their langid.py language id '
+                'labels and confidence score, e.g. en 0.9',
             nargs=2)
         parser.add_argument('--trg_langid',
-            help=('Filter target sentences by their langid.py language id '
-                'labels and confidence score, e.g. en 0.9'),
+            help='Filter target sentences by their langid.py language id '
+                'labels and confidence score, e.g. en 0.9',
             nargs=2)
                 
 

@@ -108,8 +108,8 @@ class AlignmentParser:
                         self.openZipFiles()
                         self.zipFilesOpened = True
                     except FileNotFoundError:
-                        print(('\nZip files are not found. The following '
-                            'files are available for downloading:\n'))
+                        print('\nZip files are not found. The following '
+                            'files are available for downloading:\n')
                         arguments = ['-s', self.fromto[0], '-t',
                             self.fromto[1], '-d', self.args.d, '-r',
                             self.args.r, '-p', self.args.p, '-l']
@@ -122,10 +122,10 @@ class AlignmentParser:
                         self.openZipFiles()
                         self.zipFilesOpened = True
 
-                sourcefile = self.sourcezip.open((self.args.d+'/'+self.args.p+
-                    '/'+attrs['fromDoc'][:-3]), 'r')
-                targetfile = self.targetzip.open((self.args.d+'/'+self.args.p+
-                    '/'+attrs['toDoc'][:-3]), 'r')
+                sourcefile = self.sourcezip.open(self.args.d+'/'+self.args.p+
+                    '/'+attrs['fromDoc'][:-3], 'r')
+                targetfile = self.targetzip.open(self.args.d+'/'+self.args.p+
+                    '/'+attrs['toDoc'][:-3], 'r')
 
             if self.sPar and self.tPar:
                 self.sPar.document.close()
