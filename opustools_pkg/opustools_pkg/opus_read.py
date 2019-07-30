@@ -2,6 +2,7 @@ import argparse
 import gzip
 
 from .parse.alignment_parser import AlignmentParser
+from .parse.links_alignment_parser import LinksAlignmentParser
 #from .parse.moses_read import MosesRead
 from .opus_get import OpusGet
 
@@ -141,9 +142,14 @@ class OpusRead:
             else:
                 self.resultfile = open(self.args.w[0], 'w')
 
-        self.par = AlignmentParser(self.source, self.target, self.args,
-            self.resultfile, self.mosessrc, self.mosestrg, self.fromto,
-            self.switch_langs)
+        if self.args.wm:
+            self.par = LinksAlignmentParser(self.source, self.target, self.args,
+                self.resultfile, self.mosessrc, self.mosestrg, self.fromto,
+                self.switch_langs)
+        else:
+            self.par = AlignmentParser(self.source, self.target, self.args,
+                self.resultfile, self.mosessrc, self.mosestrg, self.fromto,
+                self.switch_langs)
 
     def printPair(self, sPair):
         ret = ''
