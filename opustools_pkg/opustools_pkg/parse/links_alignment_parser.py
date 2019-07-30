@@ -28,13 +28,6 @@ class LinksAlignmentParser(AlignmentParser):
         #if link printing mode is activated, no need to open 
         #zipfiles and create sentence parsers
         if self.testConfidenceOn:
-            docnames = ('\n# ' + attrs['fromDoc'] + '\n# ' +
-                attrs['toDoc'] + '\n\n================================')
-            if self.args.w != None:
-                self.result.write(docnames + '\n')
-            else:
-                print(docnames)
-
             self.openSentenceParsers(attrs)
 
     def readPair(self):

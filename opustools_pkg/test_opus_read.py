@@ -1814,6 +1814,46 @@ class TestOpusRead(unittest.TestCase):
             '# sv/1996.xml.gz\n'
             '\n================================\n')
 
+    def test_filtering_by_src_cld2_print_links(self):
+        var = pairPrinterToVariable(
+            '-d RF -s en -t sv -r v1 -m 1 --src_cld2 en 0.98'
+            ' -af books_alignment.xml -wm links'.split())
+        self.assertEqual(var,
+            '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
+            'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
+            'version="1.0">\n'
+            '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+            '/1996.xml.gz" >\n<link xtargets="s5.0;s5.0" id="SL5.0"/>'
+            '\n </linkGrp>\n</cesAlign>\n')
+
+    def test_filtering_by_lang_labels_print_links(self):
+        var = pairPrinterToVariable(
+            '-d RF -s en -t sv -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
+            'fi 0.97 --src_langid en 0.17 --trg_langid fi 1'
+            ' -af books_alignment.xml -wm links'.split())
+        self.assertEqual(var,
+            '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
+            'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
+            'version="1.0">\n'
+            '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+            '/1996.xml.gz" >\n<link xtargets="s8.1;s8.1" id="SL8.1"/>'
+            '\n </linkGrp>\n</cesAlign>\n')
+
+    def test_filtering_by_lang_labels_write_links(self):
+        OpusRead(
+            '-d RF -s en -t sv -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
+            'fi 0.97 --src_langid en 0.17 --trg_langid fi 1'
+            ' -af books_alignment.xml -wm links '
+            '-w test_files/result'.split()).printPairs()
+        with open('test_files/result', 'r') as f:
+            self.assertEqual(f.read(),
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
+                'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
+                'version="1.0">\n'
+                '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+                '/1996.xml.gz" >\n<link xtargets="s8.1;s8.1" id="SL8.1"/>'
+                '\n </linkGrp>\n</cesAlign>')
+
     def test_use_given_zip_files(self):
         var = pairPrinterToVariable(
             '-d RF -s en -t sv -m1 -sz en.zip -tz sv.zip'
