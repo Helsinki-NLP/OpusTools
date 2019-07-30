@@ -142,7 +142,7 @@ class OpusRead:
             else:
                 self.resultfile = open(self.args.w[0], 'w')
 
-        if self.args.wm:
+        if self.args.wm == 'links':
             self.par = LinksAlignmentParser(self.source, self.target, self.args,
                 self.resultfile, self.mosessrc, self.mosestrg, self.fromto,
                 self.switch_langs)
@@ -197,7 +197,10 @@ class OpusRead:
             return 0, sPair
 
         if sPair == 1:
-            sPair = line.decode('utf-8')[:-1]
+            if type(line) == bytes:
+                sPair = line.decode('utf-8')[:-1]
+            else:
+                sPair = line.rstrip()
 
         if self.args.w != None:
             wpair = self.writePair(sPair)
@@ -237,6 +240,17 @@ class OpusRead:
             self.resultfile.write(' </linkGrp>\n</cesAlign>')
         else:
             print(' </linkGrp>\n</cesAlign>')
+    
+    def addLinkGrpEnding(self, line):
+        if type(line) == bytes:
+            line = line.decode('utf-8')
+        if (self.args.wm == 'links' and self.par.end == 'linkGrp' 
+            and line.strip() != '</linkGrp>'):
+            if self.args.w != None:
+                self.resultfile.write(' </linkGrp>')
+            else:
+                print(' </linkGrp>')
+            self.par.end = ''
 
     def closeResultFiles(self):
         if self.args.wm == 'moses' and len(self.args.w) == 2:    
@@ -249,6 +263,7 @@ class OpusRead:
         if self.args.m == 'all':
             for line in align:
                 lastline = self.outputPair(self.par, line)[1]
+                self.addLinkGrpEnding(line)
         else:
             pairs = int(self.args.m)
             while True:
@@ -256,6 +271,7 @@ class OpusRead:
                 if len(line) == 0:
                     break
                 link, lastline = self.outputPair(self.par, line)
+                self.addLinkGrpEnding(line)
                 pairs -= link
                 if pairs == 0:
                     break

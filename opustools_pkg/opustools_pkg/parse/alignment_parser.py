@@ -70,93 +70,92 @@ class AlignmentParser:
                         self.target,
                         self.args.tz)
 
-    def initializeSentenceParsers(self, attrs):
-        #if link printing mode is activated, no need to open 
-        #zipfiles and create sentence parsers
-        if self.args.wm != 'links':
-            if self.args.wm == 'normal':
-                docnames = ('\n# ' + attrs['fromDoc'] + '\n# ' +
-                    attrs['toDoc'] + '\n\n================================')
-                if self.args.w != None:
-                    self.result.write(docnames + '\n')
-                else:
-                    print(docnames)
-            elif self.args.wm == 'moses' and self.args.pn:
-                sourceDoc = '\n<fromDoc>{}</fromDoc>'.format(attrs['fromDoc'])
-                targetDoc = '\n<toDoc>{}</toDoc>'.format(attrs['toDoc'])
-                if self.args.w != None:
-                    if self.result:
-                        self.result.write(sourceDoc + targetDoc + '\n\n')
-                    else:
-                        self.mosessrc.write(sourceDoc + '\n\n')
-                        self.mosestrg.write(targetDoc + '\n\n')
-                else:
-                    print(sourceDoc + targetDoc + '\n')
-
-            try:
-                if attrs['fromDoc'][-3:] == '.gz':
-                    sourcefile = gzip.open(attrs['fromDoc'], 'rb')
-                else:
-                    sourcefile = open(attrs['fromDoc'], 'r')
-                if attrs['toDoc'][-3:] == '.gz':
-                    targetfile = gzip.open(attrs['toDoc'], 'rb')
-                else:
-                    targetfile = open(attrs['toDoc'], 'r')
-            except FileNotFoundError:
-                if self.zipFilesOpened == False:
-                    try:
-                        self.openZipFiles()
-                        self.zipFilesOpened = True
-                    except FileNotFoundError:
-                        print('\nZip files are not found. The following '
-                            'files are available for downloading:\n')
-                        arguments = ['-s', self.fromto[0], '-t',
-                            self.fromto[1], '-d', self.args.d, '-r',
-                            self.args.r, '-p', self.args.p, '-l']
-                        og = OpusGet(arguments)
-                        og.get_files()
-                        arguments.remove('-l')
-                        og = OpusGet(arguments)
-                        og.get_files()
-
-                        self.openZipFiles()
-                        self.zipFilesOpened = True
-
-                sourcefile = self.sourcezip.open(self.args.d+'/'+self.args.p+
-                    '/'+attrs['fromDoc'][:-3], 'r')
-                targetfile = self.targetzip.open(self.args.d+'/'+self.args.p+
-                    '/'+attrs['toDoc'][:-3], 'r')
-
-            if self.sPar and self.tPar:
-                self.sPar.document.close()
-                self.tPar.document.close()
-
-            pre = self.args.p
-            if pre == 'raw' and self.args.d == 'OpenSubtitles':
-                pre = 'rawos'
-
-            st = ['src', 'trg']
-            langs = [self.args.s, self.args.t]
-            if self.switch_langs:
-                st = ['trg', 'src']
-                langs = [self.args.t, self.args.s]
-
-            if self.args.f:
-                self.sPar = SentenceParser(sourcefile, st[0], pre,
-                    self.args.wm, langs[0], self.args.pa, self.args.sa,
-                    self.args.ca)
-                self.tPar = SentenceParser(targetfile, st[1], pre,
-                    self.args.wm, langs[1], self.args.pa, self.args.ta,
-                    self.args.ca)
+    def openSentenceParsers(self, attrs):
+        try:
+            if attrs['fromDoc'][-3:] == '.gz':
+                sourcefile = gzip.open(attrs['fromDoc'], 'rb')
             else:
-                self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
-                    self.args.wm, langs[0], self.args.pa, self.args.sa,
-                    self.args.ca)
-                self.sPar.storeSentences()
-                self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
-                    self.args.wm, langs[1], self.args.pa, self.args.ta,
-                    self.args.ca)
-                self.tPar.storeSentences()
+                sourcefile = open(attrs['fromDoc'], 'r')
+            if attrs['toDoc'][-3:] == '.gz':
+                targetfile = gzip.open(attrs['toDoc'], 'rb')
+            else:
+                targetfile = open(attrs['toDoc'], 'r')
+        except FileNotFoundError:
+            if self.zipFilesOpened == False:
+                try:
+                    self.openZipFiles()
+                    self.zipFilesOpened = True
+                except FileNotFoundError:
+                    print('\nZip files are not found. The following '
+                        'files are available for downloading:\n')
+                    arguments = ['-s', self.fromto[0], '-t',
+                        self.fromto[1], '-d', self.args.d, '-r',
+                        self.args.r, '-p', self.args.p, '-l']
+                    og = OpusGet(arguments)
+                    og.get_files()
+                    arguments.remove('-l')
+                    og = OpusGet(arguments)
+                    og.get_files()
+
+                    self.openZipFiles()
+                    self.zipFilesOpened = True
+
+            sourcefile = self.sourcezip.open(self.args.d+'/'+self.args.p+
+                '/'+attrs['fromDoc'][:-3], 'r')
+            targetfile = self.targetzip.open(self.args.d+'/'+self.args.p+
+                '/'+attrs['toDoc'][:-3], 'r')
+
+        if self.sPar and self.tPar:
+            self.sPar.document.close()
+            self.tPar.document.close()
+
+        pre = self.args.p
+        if pre == 'raw' and self.args.d == 'OpenSubtitles':
+            pre = 'rawos'
+
+        st = ['src', 'trg']
+        langs = [self.args.s, self.args.t]
+        if self.switch_langs:
+            st = ['trg', 'src']
+            langs = [self.args.t, self.args.s]
+
+        if self.args.f:
+            self.sPar = SentenceParser(sourcefile, st[0], pre,
+                self.args.wm, langs[0], self.args.pa, self.args.sa,
+                self.args.ca)
+            self.tPar = SentenceParser(targetfile, st[1], pre,
+                self.args.wm, langs[1], self.args.pa, self.args.ta,
+                self.args.ca)
+        else:
+            self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
+                self.args.wm, langs[0], self.args.pa, self.args.sa,
+                self.args.ca)
+            self.sPar.storeSentences()
+            self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
+                self.args.wm, langs[1], self.args.pa, self.args.ta,
+                self.args.ca)
+            self.tPar.storeSentences()
+
+    def initializeSentenceParsers(self, attrs):
+        if self.args.wm == 'normal':
+            docnames = ('\n# ' + attrs['fromDoc'] + '\n# ' +
+                attrs['toDoc'] + '\n\n================================')
+            if self.args.w != None:
+                self.result.write(docnames + '\n')
+            else:
+                print(docnames)
+        elif self.args.wm == 'moses' and self.args.pn:
+            sourceDoc = '\n<fromDoc>{}</fromDoc>'.format(attrs['fromDoc'])
+            targetDoc = '\n<toDoc>{}</toDoc>'.format(attrs['toDoc'])
+            if self.args.w != None:
+                if self.result:
+                    self.result.write(sourceDoc + targetDoc + '\n\n')
+                else:
+                    self.mosessrc.write(sourceDoc + '\n\n')
+                    self.mosestrg.write(targetDoc + '\n\n')
+            else:
+                print(sourceDoc + targetDoc + '\n')
+        self.openSentenceParsers(attrs)
 
     def processLink(self, attrs):
         if self.args.a in attrs.keys():
@@ -210,10 +209,7 @@ class AlignmentParser:
         #tags other than link are printed in link printing mode, 
         #otherwise they are skipped
         if self.start != 'link':
-            if self.args.wm == 'links':
-                return 1
-            else:
-                return -1
+            return -1
 
         srcAttrs, trgAttrs = {}, {}
         #no need to parse sentences in link printing mode

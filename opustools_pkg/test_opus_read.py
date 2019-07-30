@@ -265,10 +265,13 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(self.fastopr.par.sPar.readSentence([''])[0], '')
 
     def test_AlignmentParser_readPair_returns_1_if_tag_is_not_link_and_write_mode_is_links(self):
-        self.opr.par.args.wm='links'
-        self.opr.par.parseLine('<s>')
-        ret = self.opr.par.readPair()
+        opr = OpusRead('-d RF -s en -t sv -wm links'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+        opr.par.parseLine('<s>')
+        ret = opr.par.readPair()
         self.assertEqual(ret, 1)
+        opr.par.closeFiles()
 
     def test_AlignmentParser_readPair_returns_minus_1_if_tag_is_not_link_and_write_mode_id_not_links(self):
         self.opr.par.parseLine('<s>')
@@ -1576,6 +1579,64 @@ class TestOpusRead(unittest.TestCase):
             """v betydelse för vår nationella säkerhet .\n=========="""
             """======================\n\n# en/1996.xml.gz\n# sv/1996."""
             """xml.gz\n\n================================\n""")
+
+    def test_use_given_sentence_alignment_file_and_print_links(self):
+        OpusRead(
+            '-d RF -s en -t sv -m 1 -wm links '
+            '-w test_files/testlinks'.split()).printPairs()
+        var = pairPrinterToVariable(
+            '-d RF -s en -t sv -wm links -af test_files/testlinks'.split())
+        self.assertEqual(var, '<?xml version="1.0" encoding="utf-8"?>'
+        '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "'
+        '">\n<cesAlign version="1.0">\n <linkGrp targType="s" toDoc="'
+        'sv/1988.xml.gz" fromDoc="en/1988.xml.gz">\n<link certainty="'
+        '-0.0636364" xtargets="s1.1;s1.1" id="SL1" />\n </linkGrp>\n<'
+        '/cesAlign>\n') 
+
+    def test_use_given_sentence_alignment_file_and_write_links(self):
+        OpusRead(
+            '-d RF -s en -t sv -m 1 -wm links '
+            '-w test_files/testlinks'.split()).printPairs()
+        OpusRead(
+            '-d RF -s en -t sv -wm links -af test_files/testlinks -w '
+            'test_files/testresult'.split()).printPairs()
+        with open('test_files/testresult', 'r') as f:
+            self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>'
+            '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "'
+            '">\n<cesAlign version="1.0">\n <linkGrp targType="s" toDoc="'
+            'sv/1988.xml.gz" fromDoc="en/1988.xml.gz">\n<link certainty="'
+            '-0.0636364" xtargets="s1.1;s1.1" id="SL1" />\n </linkGrp>\n<'
+            '/cesAlign>\n') 
+
+    def test_use_given_sentence_alignment_file_and_print_links_Books(self):
+        OpusRead(
+            '-d Books -s en -t fi -m 1 -wm links '
+            '-w test_files/testlinks'.split()).printPairs()
+        var = pairPrinterToVariable(
+            '-d Books -s en -t fi -wm links -af test_files/testlinks'.split())
+        self.assertEqual(var, '<?xml version="1.0" encoding="utf-8"?>'
+        '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "'
+        '">\n<cesAlign version="1.0">\n<linkGrp targType="s" fromDoc'
+        '="en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz" to'
+        'Doc="fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"'
+        ' >\n<link xtargets="s1;s1" id="SL1"/>\n </linkGrp>\n<'
+        '/cesAlign>\n') 
+
+    def test_use_given_sentence_alignment_file_and_write_links_Books(self):
+        OpusRead(
+            '-d Books -s en -t fi -m 1 -wm links '
+            '-w test_files/testlinks'.split()).printPairs()
+        OpusRead(
+            '-d Books -s en -t fi -wm links -af test_files/testlinks '
+            '-w test_files/testresult'.split()).printPairs()
+        with open('test_files/testresult', 'r') as f:
+            self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>'
+            '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "'
+            '">\n<cesAlign version="1.0">\n<linkGrp targType="s" fromDoc'
+            '="en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz" to'
+            'Doc="fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz"'
+            ' >\n<link xtargets="s1;s1" id="SL1"/>\n </linkGrp>\n<'
+            '/cesAlign>\n') 
 
     def test_checks_first_whether_documents_are_in_path(self):
         with open('test_files/testlinks', 'w') as f:
