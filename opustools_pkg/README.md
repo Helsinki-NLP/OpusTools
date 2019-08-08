@@ -12,64 +12,73 @@ Tools for accessing and processing OPUS data.
 ### Usage
 
 ```
-opus_read [-h] -d D -s S -t T [-r R] [-p P] [-m M] [-S S] [-T T] [-a A]
-            [-tr TR] [-ln] [-w W [W ...]] [-wm WM] [-pn] [-f] [-rd RD]
-            [-af AF] [-sz SZ] [-tz TZ] [-cm CM] [-pa] [-sa SA [SA ...]]
-            [-ta TA [TA ...]] [-ca CA] [--src_cld2 SRC_CLD2 SRC_CLD2]
-            [--trg_cld2 TRG_CLD2 TRG_CLD2]
-            [--src_langid SRC_LANGID SRC_LANGID]
-            [--trg_langid TRG_LANGID TRG_LANGID]
+usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
+                 [-p {raw,xml,parsed}] [-m M] [-S S] [-T T] [-a attribute]
+                 [-tr TR] [-ln] [-w file_name [file_name ...]]
+                 [-wm {normal,moses,tmx,links}] [-pn] [-f] [-rd path_to_dir]
+                 [-af path_to_file] [-sz path_to_zip] [-tz path_to_zip]
+                 [-cm delimiter] [-pa] [-sa attribute [attribute ...]]
+                 [-ta attribute [attribute ...]] [-ca delimiter]
+                 [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
+                 [--src_langid lang_id score] [--trg_langid lang_id score]
+                 [-id file_name]
 ```
 
 arguments:
 
 ```
 -h, --help            show this help message and exit
--d D                  Corpus name
--s S                  Source language
--t T                  Target language
--r R                  Release (default=latest)
--p P                  Pre-process-type (raw, xml or parsed, default=xml)
+-d corpus_name        Corpus name
+-s langid             Source language
+-t langid             Target language
+-r version            Release (default=latest)
+-p {raw,xml,parsed}   Pre-process-type (raw, xml or parsed, default=xml)
 -m M                  Maximum number of alignments
 -S S                  Number of source sentences in alignments (range is
                       allowed, eg. -S 1-2)
 -T T                  Number of target sentences in alignments (range is
                       allowed, eg. -T 1-2)
--a A                  Set attribute for filttering
+-a attribute          Set attribute for filttering
 -tr TR                Set threshold for an attribute
 -ln                   Leave non-alignments out
--w W [W ...]          Write to file. To print moses format in separate
+-w file_name [file_name ...]
+                      Write to file. To print moses format in separate
                       files, enter two file names. Otherwise enter one file
                       name.
--wm WM                Set writing mode (normal, moses, tmx, links)
+-wm {normal,moses,tmx,links}
+                      Set write mode
 -pn                   Print file names when using moses format
 -f                    Fast parsing. Faster than normal parsing, if you print
                       a small part of the whole corpus, but requires the
                       sentence ids in alignment files to be in sequence.
--rd RD                Change root directory (default=/proj/nlpl/data/OPUS/)
--af AF                Use given alignment file
--sz SZ                Use given source zip file
--tz TZ                Use given target zip file
--cm CM                Change moses delimiter (default=tab)
+-rd path_to_dir       Change root directory (default=/proj/nlpl/data/OPUS/)
+-af path_to_file      Use given alignment file
+-sz path_to_zip       Use given source zip file
+-tz path_to_zip       Use given target zip file
+-cm delimiter         Change moses delimiter (default=tab)
 -pa                   Print annotations, if they exist
--sa SA [SA ...]       Set source sentence annotation attributes to be
+-sa attribute [attribute ...]
+                      Set source sentence annotation attributes to be
                       printed, e.g. -sa pos lem. To print all available
                       attributes use -sa all_attrs (default=pos,lem)
--ta TA [TA ...]       Set target sentence annotation attributes to be
+-ta attribute [attribute ...]
+                      Set target sentence annotation attributes to be
                       printed, e.g. -ta pos lem. To print all available
                       attributes use -ta all_attrs (default=pos,lem)
--ca CA                Change annotation delimiter (default=|)
---src_cld2 SRC_CLD2 SRC_CLD2
+-ca delimiter         Change annotation delimiter (default=|)
+--src_cld2 lang_id score
                       Filter source sentences by their cld2 language id
                       labels and confidence score, e.g. en 0.9
---trg_cld2 TRG_CLD2 TRG_CLD2
+--trg_cld2 lang_id score
                       Filter target sentences by their cld2 language id
                       labels and confidence score, e.g. en 0.9
---src_langid SRC_LANGID SRC_LANGID
+--src_langid lang_id score
                       Filter source sentences by their langid.py language id
                       labels and confidence score, e.g. en 0.9
---trg_langid TRG_LANGID TRG_LANGID
+--trg_langid lang_id score
                       Filter target sentences by their langid.py language id
+                      labels and confidence score, e.g. en 0.9
+-id file_name         Write sentence ids to a file.
                       labels and confidence score, e.g. en 0.9
 ```
 

@@ -92,7 +92,7 @@ class LanguageIdAdder(SentenceParser):
 class OpusLangid:
 
     def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='add_lan_ids',
+        parser = argparse.ArgumentParser(prog='opus_langid',
             description= ('Add language ids to sentences in plain xml files '
                         'or xml files in zip archives using pycld2 and '
                         'langid.py'))

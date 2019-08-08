@@ -12,10 +12,14 @@ class OpusRead:
         parser = argparse.ArgumentParser(prog='opus_read',
             description='Read sentence alignment in XCES align format')
 
-        parser.add_argument('-d', help='Corpus name', required=True)
-        parser.add_argument('-s', help='Source language', required=True)
-        parser.add_argument('-t', help='Target language', required=True)
+        parser.add_argument('-d', help='Corpus name', metavar='corpus_name',
+            required=True)
+        parser.add_argument('-s', help='Source language', metavar='langid',
+            required=True)
+        parser.add_argument('-t', help='Target language', metavar='langid',
+            required=True)
         parser.add_argument('-r', help='Release (default=latest)',
+            metavar='version',
             default='latest')
         parser.add_argument('-p',
             help='Pre-process-type (raw, xml or parsed, default=xml)',
@@ -31,17 +35,19 @@ class OpusRead:
                 'allowed, eg. -T 1-2)',
             default='all')
         parser.add_argument('-a', help='Set attribute for filttering',
+            metavar='attribute',
             default='any')
         parser.add_argument('-tr', help='Set threshold for an attribute',
             default=0)
         parser.add_argument('-ln', help='Leave non-alignments out',
             action='store_true')
         parser.add_argument('-w',
+            metavar='file_name',
             help='Write to file. To print moses format in separate files, '
                 'enter two file names. Otherwise enter one file name.',
             nargs='+')
         parser.add_argument('-wm',
-            help='Set writing mode (normal, moses, tmx, links)',
+            help='Set write mode',
             default='normal', choices=['normal', 'moses', 'tmx', 'links'])
         parser.add_argument('-pn',
             help='Print file names when using moses format',
@@ -53,11 +59,16 @@ class OpusRead:
             action='store_true')
         parser.add_argument('-rd',
             help='Change root directory (default=/proj/nlpl/data/OPUS/)',
+            metavar='path_to_dir',
             default='/proj/nlpl/data/OPUS/')
-        parser.add_argument('-af', help='Use given alignment file', default=-1)
-        parser.add_argument('-sz', help='Use given source zip file')
-        parser.add_argument('-tz', help='Use given target zip file')
+        parser.add_argument('-af', help='Use given alignment file',
+            metavar='path_to_file', default=-1)
+        parser.add_argument('-sz', help='Use given source zip file',
+            metavar='path_to_zip')
+        parser.add_argument('-tz', help='Use given target zip file',
+            metavar='path_to_zip')
         parser.add_argument('-cm', help='Change moses delimiter (default=tab)',
+            metavar='delimiter',
             default='\t')
         parser.add_argument('-pa', help='Print annotations, if they exist',
             action='store_true')
@@ -65,33 +76,43 @@ class OpusRead:
             help='Set source sentence annotation attributes to be printed'
                 ', e.g. -sa pos lem. To print all available attributes use '
                 '-sa all_attrs (default=pos,lem)',
+            metavar='attribute',
             nargs='+',
             default=['pos', 'lem'])
         parser.add_argument('-ta',
             help='Set target sentence annotation attributes to be printed'
                 ', e.g. -ta pos lem. To print all available attributes use '
                 '-ta all_attrs (default=pos,lem)',
+            metavar='attribute',
             nargs='+',
             default=['pos', 'lem'])
         parser.add_argument('-ca',
-            help='Change annotation delimiter (default=|)', default='|')
+            help='Change annotation delimiter (default=|)',
+            metavar='delimiter',
+            default='|')
         parser.add_argument('--src_cld2',
             help='Filter source sentences by their cld2 language id labels '
                 'and confidence score, e.g. en 0.9',
+            metavar=('lang_id', 'score'),
             nargs=2)
         parser.add_argument('--trg_cld2',
             help='Filter target sentences by their cld2 language id labels '
                 'and confidence score, e.g. en 0.9',
+            metavar=('lang_id', 'score'),
             nargs=2)
         parser.add_argument('--src_langid',
             help='Filter source sentences by their langid.py language id '
                 'labels and confidence score, e.g. en 0.9',
+            metavar=('lang_id', 'score'),
             nargs=2)
         parser.add_argument('--trg_langid',
             help='Filter target sentences by their langid.py language id '
                 'labels and confidence score, e.g. en 0.9',
+            metavar=('lang_id', 'score'),
             nargs=2)
-                
+        parser.add_argument('-id',
+            metavar='file_name',
+            help='Write sentence ids to a file.')
 
         if len(arguments) == 0:
             self.args = parser.parse_args()
@@ -134,6 +155,8 @@ class OpusRead:
         self.resultfile = None
         self.mosessrc = None
         self.mosestrg = None
+        if self.args.id != None:
+            self.id_file = open(self.args.id, 'w')
 
         if self.args.w != None:
             if self.args.wm == 'moses' and len(self.args.w) == 2:
@@ -183,9 +206,21 @@ class OpusRead:
     def outputPair(self, par, line):
         par.parseLine(line)
         sPair = par.readPair()
+        ftDocs = [par.fromDoc, par.toDoc]
+        ftIds = [par.fromids, par.toids]
+
         if self.switch_langs and type(sPair) == tuple:
             copypair = [sPair[1], sPair[0]]
             sPair = copypair.copy()
+            copypair = [ftDocs[1], ftDocs[0]]
+            ftDocs = copypair.copy()
+            copypair = [ftIds[1], ftIds[0]]
+            ftIds = copypair.copy()
+
+        if self.args.id != None:
+            id_line = '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(
+                ftDocs[0], ftDocs[1], ' '.join(ftIds[0]),
+                ' '.join(ftIds[1]), par.ascore)
 
         par.fromids = []
         par.toids = []
@@ -211,6 +246,9 @@ class OpusRead:
                 self.resultfile.write(wpair[0])
         else:
             print(self.printPair(sPair))
+
+        if self.args.id != None:
+            self.id_file.write(id_line)
 
         #if the sentence pair is printed:
         #return 1, which will increment the pairs-counter in printPairs()        
@@ -320,6 +358,9 @@ class OpusRead:
 
         if self.args.w != None:
             self.closeResultFiles()
+
+        if self.args.id != None:
+            self.id_file.close()
 
 '''
     def printPairsMoses(self):

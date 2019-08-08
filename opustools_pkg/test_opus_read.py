@@ -2011,6 +2011,20 @@ class TestOpusRead(unittest.TestCase):
     def test_testConfidence_with_empty_attrsList(self):
         self.assertFalse(self.opr.par.testConfidence('', [], ''))
 
+    def test_id_file_printing(self):
+        OpusRead('-d RF -s en -t sv -m 1 -a certainty -tr 1 '
+            '-id test_files/test.id'.split()).printPairs()
+        with open('test_files/test.id') as id_file:
+            self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
+                '.xml.gz\ts3.2\ts3.2\t1.14214\n')
+
+    def test_id_file_printing_unalphabetical(self):
+        OpusRead('-d RF -s sv -t en -m 1 -S 1 -T 2 -a certainty -tr 0.1 '
+            '-id test_files/test.id'.split()).printPairs()
+        with open('test_files/test.id') as id_file:
+            self.assertEqual(id_file.read(), 'sv/1988.xml.gz\ten/1988'
+                '.xml.gz\ts4.4\ts4.4 s4.5\t0.188136\n')
+
 class TestOpusCat(unittest.TestCase):
 
     @classmethod

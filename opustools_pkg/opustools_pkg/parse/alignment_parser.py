@@ -25,6 +25,9 @@ class AlignmentParser:
 
         self.toids = []
         self.fromids = []
+        self.ascore = 0.0
+        self.fromDoc = ''
+        self.toDoc = ''
 
         self.zipFilesOpened = False
 
@@ -158,8 +161,10 @@ class AlignmentParser:
         self.openSentenceParsers(attrs)
 
     def processLink(self, attrs):
+        self.ascore = 0.0
         if self.args.a in attrs.keys():
-            if float(attrs[self.args.a]) >= float(self.args.tr):
+            self.ascore = attrs[self.args.a]
+            if float(self.ascore) >= float(self.args.tr):
                 self.overThreshold = True
         m = re.search('(.*);(.*)', attrs['xtargets'])
         self.toids = m.group(2).split(' ')
@@ -168,6 +173,8 @@ class AlignmentParser:
     def start_element(self, name, attrs):
         self.start = name
         if name == 'linkGrp':
+            self.fromDoc = attrs['fromDoc']
+            self.toDoc = attrs['toDoc']
             self.initializeSentenceParsers(attrs)
         elif name == 'link':
             self.processLink(attrs)
