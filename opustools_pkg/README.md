@@ -79,7 +79,6 @@ arguments:
                       Filter target sentences by their langid.py language id
                       labels and confidence score, e.g. en 0.9
 -id file_name         Write sentence ids to a file.
-                      labels and confidence score, e.g. en 0.9
 ```
 
 
