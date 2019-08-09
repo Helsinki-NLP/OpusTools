@@ -1,5 +1,8 @@
 import argparse
 import gzip
+import math
+import difflib
+import string
 
 from opustools_pkg.parse.alignment_parser import AlignmentParser
 
@@ -49,11 +52,6 @@ alignment = (
 source = (root_dir+args.d+'/'+args.r+'/'+args.p+'/'+fromto[0]+'.zip')
 target = (root_dir+args.d+'/'+args.r+'/'+args.p+'/'+fromto[1]+'.zip')
 
-alignment_parser = AlignmentParser(
-    source, target, args, '', '', '', fromto, False)
-
-gzipAlign = gzip.open(alignment)
-
 def detectLanguage(sentence, sid, suppress):
     try:
         clddetails = pycld2.detect(sentence)
@@ -75,6 +73,38 @@ def detectLanguage(sentence, sid, suppress):
 
     return cldlan, cldconf, lilan, liconf
 
+def getTPunct(line):
+    pun = len([c for c in line if c in ['.', '?', '!']])
+    return pun
+
+def terminalPunctuation(sline, tline):
+    spun = getTPunct(sline)
+    tpun = getTPunct(tline)
+    score = abs(spun-tpun)
+    if spun > 1:
+        score += spun - 1
+    if tpun > 1:
+        score += tpun - 1
+    score = -math.log(score + 1)
+    return score
+
+def getNZN(line):
+    nums = [int(c) for c in line if c in string.digits and c != '0']
+    return nums
+
+def nonZeroNumerals(sline, tline):
+    snums = getNZN(sline)
+    tnums = getNZN(tline)
+
+    seq = difflib.SequenceMatcher(None, snums, tnums)
+
+    return seq.ratio()
+
+alignment_parser = AlignmentParser(
+    source, target, args, '', '', '', fromto, False)
+
+gzipAlign = gzip.open(alignment)
+
 for line in gzipAlign:
     alignment_parser.parseLine(line)
     pair = alignment_parser.readPair()
@@ -84,6 +114,7 @@ for line in gzipAlign:
         slang = detectLanguage(ssent, '', False)
         tlang = detectLanguage(tsent, '', False)
         print(ssent, slang)
-        print(tsent, tlang, end='\n\n')
-
+        print(tsent, tlang)
+        print(terminalPunctuation(ssent, tsent),
+            nonZeroNumerals(ssent, tsent), end='\n\n')
 
