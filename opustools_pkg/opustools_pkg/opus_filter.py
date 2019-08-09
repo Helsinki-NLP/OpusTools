@@ -42,8 +42,6 @@ args.ca = '\t'
 args.a = 'any'
 
 fromto = sorted([args.s, args.t])
-fromto_copy = [args.s, args.t]
-switch_langs = fromto_copy != fromto
 
 root_dir = '/proj/nlpl/data/OPUS/'
 
@@ -52,24 +50,25 @@ alignment = (
 source = (root_dir+args.d+'/'+args.r+'/'+args.p+'/'+fromto[0]+'.zip')
 target = (root_dir+args.d+'/'+args.r+'/'+args.p+'/'+fromto[1]+'.zip')
 
-def detectLanguage(sentence, sid, suppress):
+def detectLanguage(sentence, lan):
     try:
         clddetails = pycld2.detect(sentence)
     except Exception as e:
-        if not suppress:
-            print('Sentence id <{0}>: {1}'.format(sid, e))
         clddetails = (0, 0, ((0, 'un', 0.0), 0))
     try:
         lidetails = identifier.classify(sentence)
     except Exception as e:
-        if not suppress:
-            print('Sentence id <{0}>: {1}'.format(sid, e))
         lidetails = ('un', 0.0)
 
     cldlan = clddetails[2][0][1]
     cldconf = str(round(clddetails[2][0][2]/100, 2))
     lilan, liconf = [str(round(x,2)) if type(x) == float
             else x for x in lidetails]
+
+    if cldlan != lan:
+        cldconf = 0.0
+    if lilan != lan:
+        liconf = 0.0
 
     return cldlan, cldconf, lilan, liconf
 
@@ -100,21 +99,43 @@ def nonZeroNumerals(sline, tline):
 
     return seq.ratio()
 
+def characterScore(line, script):
+    total = 0
+    invalid = 0
+    for c in line:
+        if c not in string.whitespace and c not in string.punctuation:
+            total += 1
+            try:
+                c.encode(script)
+            except UnicodeEncodeError:
+                invalid += 1 
+    if total == 0:
+        return 1.0
+    proper = total-invalid
+    return proper/total
+
 alignment_parser = AlignmentParser(
     source, target, args, '', '', '', fromto, False)
 
-gzipAlign = gzip.open(alignment)
+with gzip.open(alignment) as gzipAlign:
+    with open('pairs.{0}-{1}'.format(fromto[0], fromto[1]), 'w') as pair_file:
+        with open('scores.{0}-{1}'.format(fromto[0], fromto[1]),
+                'w') as score_file:
+            for line in gzipAlign:
+                alignment_parser.parseLine(line)
+                pair = alignment_parser.readPair()
+                if pair != -1:
+                    ssent = pair[0]
+                    tsent = pair[1]
+                    pair_file.write('{0}\t{1}\n'.format(ssent, tsent))
+                    slang = detectLanguage(ssent, fromto[0])
+                    tlang = detectLanguage(tsent, fromto[1])
+                    schars = characterScore(ssent, 'latin-1')
+                    tchars = characterScore(tsent, 'latin-1')
+                    terPun = terminalPunctuation(ssent, tsent)
+                    noZeNu = nonZeroNumerals(ssent, tsent)
+                    score_file.write('{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n'.format(
+                        slang[3], tlang[3], schars, tchars, terPun, noZeNu))
 
-for line in gzipAlign:
-    alignment_parser.parseLine(line)
-    pair = alignment_parser.readPair()
-    if pair != -1:
-        ssent = pair[0]
-        tsent = pair[1]
-        slang = detectLanguage(ssent, '', False)
-        tlang = detectLanguage(tsent, '', False)
-        print(ssent, slang)
-        print(tsent, tlang)
-        print(terminalPunctuation(ssent, tsent),
-            nonZeroNumerals(ssent, tsent), end='\n\n')
-
+print('Score file scores: langid_src langid_trg char_score_src cha'
+    'r_score_trg term_punct non_zero_num')
