@@ -118,24 +118,31 @@ alignment_parser = AlignmentParser(
     source, target, args, '', '', '', fromto, False)
 
 with gzip.open(alignment) as gzipAlign:
-    with open('pairs.{0}-{1}'.format(fromto[0], fromto[1]), 'w') as pair_file:
-        with open('scores.{0}-{1}'.format(fromto[0], fromto[1]),
-                'w') as score_file:
-            for line in gzipAlign:
-                alignment_parser.parseLine(line)
-                pair = alignment_parser.readPair()
-                if pair != -1:
-                    ssent = pair[0]
-                    tsent = pair[1]
-                    pair_file.write('{0}\t{1}\n'.format(ssent, tsent))
-                    slang = detectLanguage(ssent, fromto[0])
-                    tlang = detectLanguage(tsent, fromto[1])
-                    schars = characterScore(ssent, 'latin-1')
-                    tchars = characterScore(tsent, 'latin-1')
-                    terPun = terminalPunctuation(ssent, tsent)
-                    noZeNu = nonZeroNumerals(ssent, tsent)
-                    score_file.write('{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n'.format(
-                        slang[3], tlang[3], schars, tchars, terPun, noZeNu))
+    with open('pairs.{0}-{1}'.format(fromto[0], fromto[1]), 'w') as pairs_file:
+        with open('pairs.{}'.format(fromto[0]), 'w') as source_file:
+            with open('pairs.{}'.format(fromto[1]), 'w') as target_file:
+                with open('scores.{0}-{1}'.format(fromto[0], fromto[1]),
+                        'w') as score_file:
+                    for line in gzipAlign:
+                        alignment_parser.parseLine(line)
+                        pair = alignment_parser.readPair()
+                        if pair != -1:
+                            ssent = pair[0]
+                            tsent = pair[1]
+                            pairs_file.write('{0} ||| {1}\n'.format(
+                                ssent, tsent))
+                            source_file.write('{0}\n'.format(ssent))
+                            target_file.write('{0}\n'.format(tsent))
+                            slang = detectLanguage(ssent, fromto[0])
+                            tlang = detectLanguage(tsent, fromto[1])
+                            schars = characterScore(ssent, 'latin-1')
+                            tchars = characterScore(tsent, 'latin-1')
+                            terPun = terminalPunctuation(ssent, tsent)
+                            noZeNu = nonZeroNumerals(ssent, tsent)
+                            score_file.write(
+                                '{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n'.format(
+                                slang[3], tlang[3], schars, tchars,
+                                terPun, noZeNu))
 
 print('Score file scores: langid_src langid_trg char_score_src cha'
     'r_score_trg term_punct non_zero_num')
