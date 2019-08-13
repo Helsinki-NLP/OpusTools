@@ -2025,6 +2025,40 @@ class TestOpusRead(unittest.TestCase):
             self.assertEqual(id_file.read(), 'sv/1988.xml.gz\ten/1988'
                 '.xml.gz\ts4.4\ts4.4 s4.5\t0.188136\n')
 
+    def test_pair_output_sending_with_single_output_file(self):
+        self.opr.args.wm = 'moses'
+        self.opr.args.w = ['test_files/moses.txt']
+        self.opr.resultfile = open(self.opr.args.w[0], 'w')
+        wpair = ('sentence 1\tsentence 2\n', '')
+        self.opr.sendPairOutput(wpair)
+        self.opr.resultfile.close()
+        with open('test_files/moses.txt') as mosesf:
+            self.assertEqual(mosesf.read(), 'sentence 1\tsentence 2\n')
+        
+    def test_pair_output_sending_with_two_output_files(self):
+        self.opr.args.wm = 'moses'
+        self.opr.args.w = ['test_files/moses.src', 'test_files/moses.trg']
+        self.opr.mosessrc = open(self.opr.args.w[0], 'w')
+        self.opr.mosestrg = open(self.opr.args.w[1], 'w')
+        wpair = ('sentence 1\t', 'sentence 2\n')
+        self.opr.sendPairOutput(wpair)
+        self.opr.mosessrc.close()
+        self.opr.mosestrg.close()
+        with open('test_files/moses.src') as mosessrc:
+            self.assertEqual(mosessrc.read(), 'sentence 1\t')
+        with open('test_files/moses.trg') as mosestrg:
+            self.assertEqual(mosestrg.read(), 'sentence 2\n')
+
+    def test_writing_id_file_line(self):
+        self.opr.id_file = open('test_files/id_file', 'w')
+        id_details = ('file_name1', 'file_name2',
+            ['id1', 'id2'], ['id1'], 'value')
+        self.opr.sendIdOutput(id_details)
+        self.opr.id_file.close()
+        with open('test_files/id_file') as id_file:
+            self.assertEqual(id_file.read(),
+                'file_name1\tfile_name2\tid1 id2\tid1\tvalue\n')
+
 class TestOpusCat(unittest.TestCase):
 
     @classmethod
