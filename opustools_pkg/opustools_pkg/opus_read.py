@@ -203,6 +203,19 @@ class OpusRead:
                 ret1 = ret1 + '================================\n'
         return (ret1, ret2)
 
+    def sendPairOutput(self, wpair):
+        if self.args.wm == 'moses' and len(self.args.w) == 2:
+            self.mosessrc.write(wpair[0])
+            self.mosestrg.write(wpair[1])
+        else:
+            self.resultfile.write(wpair[0])
+
+    def sendIdOutput(self, id_details):
+        id_line = '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(
+            id_details[0], id_details[1], ' '.join(id_details[2]),
+            ' '.join(id_details[3]), id_details[4])
+        self.id_file.write(id_line)
+
     def outputPair(self, par, line):
         par.parseLine(line)
         sPair = par.readPair()
@@ -217,10 +230,7 @@ class OpusRead:
             copypair = [ftIds[1], ftIds[0]]
             ftIds = copypair.copy()
 
-        if self.args.id != None:
-            id_line = '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(
-                ftDocs[0], ftDocs[1], ' '.join(ftIds[0]),
-                ' '.join(ftIds[1]), par.ascore)
+        id_details = (ftDocs[0], ftDocs[1], ftIds[0], ftIds[1], par.ascore)
 
         par.fromids = []
         par.toids = []
@@ -239,16 +249,12 @@ class OpusRead:
 
         if self.args.w != None:
             wpair = self.writePair(sPair)
-            if self.args.wm == 'moses' and len(self.args.w) == 2:
-                self.mosessrc.write(wpair[0])
-                self.mosestrg.write(wpair[1])
-            else:
-                self.resultfile.write(wpair[0])
+            self.sendPairOutput(wpair)
         else:
             print(self.printPair(sPair))
 
         if self.args.id != None:
-            self.id_file.write(id_line)
+            self.sendIdOutput(id_details)
 
         #if the sentence pair is printed:
         #return 1, which will increment the pairs-counter in printPairs()        
