@@ -3,13 +3,14 @@ import gzip
 import math
 import difflib
 import string
+import subprocess
 
 from opustools_pkg.parse.alignment_parser import AlignmentParser
 
 from bs4 import BeautifulSoup as bs
 import pycld2
-from mosestokenizer import MosesTokenizer
-import eflomal
+#from mosestokenizer import MosesTokenizer
+#import eflomal
 from langid.langid import LanguageIdentifier, model
 
 identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
@@ -159,8 +160,7 @@ alignment_parser = AlignmentParser(
 source_file = open('sents.{}'.format(fromto[0]), 'w')
 target_file = open('sents.{}'.format(fromto[1]), 'w')
 score_file = open('scores.{0}-{1}'.format(fromto[0], fromto[1]), 'w')
-#source_clean = open('clean.{}'.format(fromto[0]), 'w')
-#target_clean = open('clean.{}'.format(fromto[1]), 'w')
+clean_file = open('clean.{0}-{1}'.format(fromto[0], fromto[1]), 'w')
 
 #s_tokenizer = MosesTokenizer(fromtto[0])
 #t_tokenizer = MosesTokenizer(fromtto[1])
@@ -172,11 +172,10 @@ with gzip.open(alignment) as gzipAlign:
         if pair != -1:
             ssent = pair[0]
             tsent = pair[1]
-            #if cleanPair(ssent, tsent, 'latin-1', 'latin-1'):
-                #source_clean.write(ssent)
-                #target_clean.write(tsent)
-            source_file.write('{0}\n'.format(ssent))
-            target_file.write('{0}\n'.format(tsent))
+            if cleanPair(ssent, tsent, 'latin-1', 'latin-1'):
+                clean_file.write('{0} ||| {1}\n'.format(ssent, tsent))
+            source_file.write(ssent+'\n')
+            target_file.write(tsent+'\n')
             slang = detectLanguage(ssent, fromto[0])
             tlang = detectLanguage(tsent, fromto[1])
             schars = characterScore(ssent, 'latin-1')
@@ -190,27 +189,25 @@ with gzip.open(alignment) as gzipAlign:
 source_file.close()
 target_file.close()
 score_file.close()
-#source_clean.close()
-#target_clean.close()
+clean_file.close()
 
-print('Score file scores: langid_src langid_trg char_score_src cha'
-    'r_score_trg term_punct non_zero_num')
+eflomal_path = '/homeappl/home/miaulamo/appl_taito/eflomal/'
+subprocess.run('{0}align.py -i clean.{1}-{2} -f {1}-{2}.fwd -r '
+    '{1}-{2}.rev --model 3'.format(
+        eflomal_path, fromto[0], fromto[1]).split())
+subprocess.run('{0}makepriors.py -i clean.{1}-{2} -f {1}-{2}.fwd -r '
+    '{1}-{2}.rev --priors {1}-{2}.priors'.format(
+        eflomal_path, fromto[0], fromto[1]).split())
+subprocess.run('{0}align.py -s sents.{1} -t sents.{2} -F {1}-{2}_score.fwd -R '
+    '{1}-{2}_score.rev --model 3 -M 3 --priors {1}-{2}.priors'.format(
+        eflomal_path, fromto[0], fromto[1]).split())
 
-with open('sents.'+fromto[0]) as pen:
-    en_sents = eflomal.read_text(pen, False, 10, 0)
+subprocess.run('subword-nmt learn-bpe -s 37000 < sents.{0} > '
+    '{0}.bpe'.format(fromto[0]), shell=True)
+subprocess.run('subword-nmt apply-bpe -c {0}.bpe < sents.{0} > '
+    'sents.seg.{0}'.format(fromto[0]), shell=True)
 
-with open('sents.'+fromto[1]) as psv:
-    sv_sents = eflomal.read_text(psv, False, 10, 0)
-    
-with open('efsents.'+fromto[0], 'w') as ensents_file:
-    eflomal.write_text(ensents_file,
-        tuple(en_sents[0]), len(en_sents[1]))
-
-with open('efsents.'+fromto[1], 'w') as svsents_file:
-    eflomal.write_text(svsents_file,
-        tuple(sv_sents[0]), len(sv_sents[1]))
-
-eflomal.align('efsents.en', 'efsents.sv',
-    scores_filename_fwd='ef-en-sv-scores.fwd',
-    scores_filename_rev='ef-en-sv-scores.rev',
-    model=3, score_model=3)
+subprocess.run('subword-nmt learn-bpe -s 37000 < sents.{0} > '
+    '{0}.bpe'.format(fromto[1]), shell=True)
+subprocess.run('subword-nmt apply-bpe -c {0}.bpe < sents.{0} > '
+    'sents.seg.{0}'.format(fromto[1]), shell=True)
