@@ -161,7 +161,7 @@ class AlignmentParser:
         self.openSentenceParsers(attrs)
 
     def processLink(self, attrs):
-        self.ascore = 0.0
+        self.ascore = None
         if self.args.a in attrs.keys():
             self.ascore = attrs[self.args.a]
             if float(self.ascore) >= float(self.args.tr):
