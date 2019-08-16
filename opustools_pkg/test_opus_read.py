@@ -2025,6 +2025,20 @@ class TestOpusRead(unittest.TestCase):
             self.assertEqual(id_file.read(), 'sv/1988.xml.gz\ten/1988'
                 '.xml.gz\ts4.4\ts4.4 s4.5\t0.188136\n')
 
+    def test_id_file_printing_with_no_attribute(self):
+        OpusRead('-d RF -s en -t sv -m 1 '
+            '-id test_files/test.id'.split()).printPairs()
+        with open('test_files/test.id') as id_file:
+            self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
+                '.xml.gz\ts1.1\ts1.1\tNone\n')
+
+    def test_id_file_printing_with_invalid_attribute(self):
+        OpusRead('-d RF -s en -t sv -m 1 -a asfg -tr 1 '
+            '-id test_files/test.id'.split()).printPairs()
+        with open('test_files/test.id') as id_file:
+            self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
+                '.xml.gz\ts1.1\ts1.1\tNone\n')
+
     def test_pair_output_sending_with_single_output_file(self):
         self.opr.args.wm = 'moses'
         self.opr.args.w = ['test_files/moses.txt']
