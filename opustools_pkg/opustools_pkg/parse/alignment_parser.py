@@ -164,7 +164,13 @@ class AlignmentParser:
         self.ascore = None
         if self.args.a in attrs.keys():
             self.ascore = attrs[self.args.a]
-            if float(self.ascore) >= float(self.args.tr):
+            if self.args.tr != None:
+                if float(self.ascore) >= float(self.args.tr):
+                    self.overThreshold = True
+            else:
+                self.overThreshold = True
+        else:
+            if self.args.tr == None:
                 self.overThreshold = True
         m = re.search('(.*);(.*)', attrs['xtargets'])
         self.toids = m.group(2).split(' ')

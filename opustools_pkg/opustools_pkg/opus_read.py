@@ -37,8 +37,7 @@ class OpusRead:
         parser.add_argument('-a', help='Set attribute for filttering',
             metavar='attribute',
             default='any')
-        parser.add_argument('-tr', help='Set threshold for an attribute',
-            default=0)
+        parser.add_argument('-tr', help='Set threshold for an attribute')
         parser.add_argument('-ln', help='Leave non-alignments out',
             action='store_true')
         parser.add_argument('-w',

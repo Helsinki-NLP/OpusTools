@@ -2032,8 +2032,22 @@ class TestOpusRead(unittest.TestCase):
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
                 '.xml.gz\ts1.1\ts1.1\tNone\n')
 
+    def test_id_file_printing_with_attribute_no_threshold(self):
+        OpusRead('-d RF -s en -t sv -m 1 -a certainty '
+            '-id test_files/test.id'.split()).printPairs()
+        with open('test_files/test.id') as id_file:
+            self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
+                '.xml.gz\ts1.1\ts1.1\t-0.0636364\n')
+
     def test_id_file_printing_with_invalid_attribute(self):
-        OpusRead('-d RF -s en -t sv -m 1 -a asfg -tr 1 '
+        OpusRead('-d RF -s en -t sv -m 1 -a asfg '
+            '-id test_files/test.id'.split()).printPairs()
+        with open('test_files/test.id') as id_file:
+            self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
+                '.xml.gz\ts1.1\ts1.1\tNone\n')
+
+    def test_id_file_printing_with_only_threshold(self):
+        OpusRead('-d RF -s en -t sv -m 1 -tr 0 '
             '-id test_files/test.id'.split()).printPairs()
         with open('test_files/test.id') as id_file:
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
