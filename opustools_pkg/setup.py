@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="opustools_pkg",
-    version="0.0.40",
+    version="0.0.41",
     author="Mikko Aulamo",
     author_email="mikko.aulamo@helsinki.fi",
     description="Tools to read OPUS",
@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/Helsinki-NLP/OpusTools",
     packages=setuptools.find_packages(),
     scripts=["bin/opus_read", "bin/opus_cat", "bin/opus_get",
-        "bin/opus_langid"],
+        "bin/opus_langid", "bin/opus_express"],
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

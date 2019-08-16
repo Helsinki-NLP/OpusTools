@@ -3,6 +3,7 @@
 Tools for accessing and processing OPUS data.
 
 * opus_read: read parallel data sets and convert to different output formats
+* opus_express: Create test/dev/train sets from OPUS data.
 * opus_cat: extract given OPUS document from release data
 * opus_get: download files from OPUS
 * opus_langid: add language ids to sentences in xml files in zip archives
@@ -153,6 +154,74 @@ XCES align format. Set the "-wm" flag to "links" to enable this mode.
 
 Using the "-f" flag allows the usage of `SentenceParser`, which is faster than ExhaustiveSentenceParser in cases where only a small part of a corpus is read. `SentenceParser` does not store the sentences in a hashmap. Rather, when it finds a `<link>` tag, it iterates through a sentence file until a sentence id is matched with the sentence id found in the `<link>` tag. SentenceParser can't go backwards, which means that if the ids are not in sequential order in the alignment file, the parser will not find alignment pairs after the sentence id sequence breaks. `SentenceParser` is less reliable than `ExhaustiveSentenceParser`, but using the "-f" flag is beneficial when the whole corpus does not need to be scanned, in other words, when using the "-m" flag.
 
+## opus_express
+
+### Usage
+
+```
+usage: opus_express [-h] [-f] -s lang_id -t lang_id
+                    [-c [coll_name [coll_name ...]]]
+                    [--root-dir /path/to/OPUS] [--test-override /path/to/file]
+                    [--test-quota num_sents] [--dev-quota num_sents]
+                    [--doc-bounds] [--quality-aware]
+                    [--overlap-threshold min_pct] [--shuffle]
+                    [--test-set filename] [--dev-set filename]
+                    [--train-set filename]
+```
+
+arguments:
+
+```
+-h, --help            show this help message and exit
+-f, --force           suppress warnings (default: False)
+-s lang_id, --src-lang lang_id
+                      source language (e.g. `en')
+-t lang_id, --tgt-lang lang_id
+                      target language (e.g. `pt')
+-c [coll_name [coll_name ...]], --collections [coll_name [coll_name ...]]
+                      OPUS collection(s) to fetch (default: `OpenSubtitles')
+                      Collections list: ['ALL', 'ada83', 'Bianet', 'bible-
+                      uedin', 'Books', 'CAPES', 'DGT', 'DOGC', 'ECB',
+                      'EhuHac', 'Elhuyar', 'EMEA', 'EUbookshop', 'EUconst',
+                      'Europarl', 'Finlex', 'fiskmo', 'giga-fren',
+                      'GlobalVoices', 'GNOME', 'hrenWaC', 'JRC-Acquis',
+                      'KDE4', 'KDEdoc', 'MBS', 'memat', 'MontenegrinSubs',
+                      'MPC1', 'MultiUN', 'News-Commentary', 'OfisPublik',
+                      'OpenOffice', 'OpenSubtitles', 'ParaCrawl', 'PHP',
+                      'QED', 'RF', 'sardware', 'SciELO', 'SETIMES', 'SPC',
+                      'Tanzil', 'Tatoeba', 'TED2013', 'TedTalks', 'TEP',
+                      'TildeMODEL', 'Ubuntu', 'UN', 'UNPC', 'wikimedia',
+                      'Wikipedia', 'WikiSource', 'WMT-News', 'XhosaNavy']
+--root-dir /path/to/OPUS
+                      Root directory for OPUS
+                      (default:`/proj/nlpl/data/OPUS')
+--test-override /path/to/file
+                      path to file containing resource IDs to reserve for
+                      the test set (default: None)
+--test-quota num_sents
+                      test set size in sentences (default: 10000)
+--dev-quota num_sents
+                      development set size in sentences (default: 10000)
+--doc-bounds          preserve document blocks (also marks document
+                      boundaries) (default: False)
+--quality-aware       reserve one-to-one aligned samples with high overlap
+                      for test/dev sets (incompatible with `--doc-bounds')
+                      (default: False)
+--overlap-threshold min_pct
+                      threshold for alignment overlap in `--quality-aware'
+                      mode (default: 0.8)
+--shuffle             shuffle samples (incompatible with `--doc-bounds')
+                      (default: False)
+--test-set filename   filename stub for output test set (default: `test')
+--dev-set filename    filename stub for output development set (default:
+                      `dev')
+--train-set filename  filename stub for output training set (default:
+                      `train')
+```
+
+### Description
+
+All aboard the OPUS Express! Create test/dev/train sets from OPUS data.
 
 ## opus_cat
 
