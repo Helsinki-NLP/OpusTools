@@ -25,7 +25,7 @@ class AlignmentParser:
 
         self.toids = []
         self.fromids = []
-        self.ascore = 0.0
+        self.ascore = float('-inf')
         self.fromDoc = ''
         self.toDoc = ''
 
