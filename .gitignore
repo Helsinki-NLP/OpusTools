@@ -6,6 +6,7 @@ build
 *~
 *.egg-info
 test_files
+filter_files
 .coverage
 htmlcov
 *.xml
