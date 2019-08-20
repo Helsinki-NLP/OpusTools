@@ -7,7 +7,7 @@ import string
 import subprocess
 import math
 
-from opustools_pkg.parse.alignment_parser import AlignmentParser
+from opustools_pkg import OpusRead
 
 import varikn
 from bs4 import BeautifulSoup as bs
@@ -17,6 +17,15 @@ from bs4 import BeautifulSoup as bs
 from langid.langid import LanguageIdentifier, model
 
 identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
+
+class OpusGetSents(OpusRead):
+
+    def __init__(self, arguments):
+        super().__init__(arguments)
+        self.sents = []
+
+    def sendPairOutput(self, wpair):
+        self.sents.append(wpair)
 
 parser = argparse.ArgumentParser(prog='opus_filter',
     description='Filter OPUS bitexts')
@@ -35,29 +44,7 @@ parser.add_argument('-p',
     default='xml', choices=['raw', 'xml', 'parsed'])
 
 args = parser.parse_args()
-
-args.src_cld2, args.trg_cld2, args.src_langid, args.trg_langid = (None, None,
-                                                                None, None)
-args.ln = True
-args.S, args.T = 'all', 'all'
-args.wm = 'moses'
-args.pn = False
-args.sz, args.tz = None, None
-args.f = False
-args.pa = False
-args.sa, args.ta = '', ''
-args.ca = '\t'
-args.a = 'any'
-args.tr = None
-
 fromto = sorted([args.s, args.t])
-
-root_dir = '/proj/nlpl/data/OPUS/'
-
-alignment = (
-    root_dir+args.d+'/'+args.r+'/xml/'+fromto[0]+'-'+fromto[1]+'.xml.gz')
-source = (root_dir+args.d+'/'+args.r+'/'+args.p+'/'+fromto[0]+'.zip')
-target = (root_dir+args.d+'/'+args.r+'/'+args.p+'/'+fromto[1]+'.zip')
 
 try:
     os.mkdir('filter_files')
@@ -164,8 +151,11 @@ def characterScore(line, script):
     proper = total-invalid
     return proper/total
 
-alignment_parser = AlignmentParser(
-    source, target, args, '', '', '', fromto, False)
+get_sents = OpusGetSents('-d {0} -s {1} -t {2} -r {3} -p {4} -wm moses '
+    '-w filter_files/temp filter_files/temp -ln'.format(
+        args.d, args.s, args.t, args.r, args.p).split())
+
+get_sents.printPairs()
 
 source_file = open('filter_files/sents.{}'.format(fromto[0]), 'w')
 target_file = open('filter_files/sents.{}'.format(fromto[1]), 'w')
@@ -177,26 +167,21 @@ clean_file = open('filter_files/clean.{0}-{1}'.format(fromto[0], fromto[1])
 #s_tokenizer = MosesTokenizer(fromtto[0])
 #t_tokenizer = MosesTokenizer(fromtto[1])
 
-with gzip.open(alignment) as gzipAlign:
-    for line in gzipAlign:
-        alignment_parser.parseLine(line)
-        pair = alignment_parser.readPair()
-        if pair != -1:
-            ssent = pair[0]
-            tsent = pair[1]
-            if cleanPair(ssent, tsent, 'latin-1', 'latin-1'):
-                clean_file.write('{0} ||| {1}\n'.format(ssent, tsent))
-            source_file.write(ssent+'\n')
-            target_file.write(tsent+'\n')
-            slang = detectLanguage(ssent, fromto[0])
-            tlang = detectLanguage(tsent, fromto[1])
-            schars = characterScore(ssent, 'latin-1')
-            tchars = characterScore(tsent, 'latin-1')
-            terPun = terminalPunctuation(ssent, tsent)
-            noZeNu = nonZeroNumerals(ssent, tsent)
-            score_file.write('{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n'.format(
-                slang[1], tlang[1], schars, tchars,
-                terPun, noZeNu))
+for s in get_sents.sents:
+    ssent, tsent = s[0][:-1], s[1][:-1]
+    if cleanPair(ssent, tsent, 'latin-1', 'latin-1'):
+        clean_file.write('{0} ||| {1}\n'.format(ssent, tsent))
+    source_file.write(ssent+'\n')
+    target_file.write(tsent+'\n')
+    slang = detectLanguage(ssent, fromto[0])
+    tlang = detectLanguage(tsent, fromto[1])
+    schars = characterScore(ssent, 'latin-1')
+    tchars = characterScore(tsent, 'latin-1')
+    terPun = terminalPunctuation(ssent, tsent)
+    noZeNu = nonZeroNumerals(ssent, tsent)
+    score_file.write('{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n'.format(
+        slang[1], tlang[1], schars, tchars,
+        terPun, noZeNu))
 
 source_file.close()
 target_file.close()
