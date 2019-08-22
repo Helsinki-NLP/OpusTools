@@ -31,14 +31,18 @@ class FilterABC(metaclass=abc.ABCMeta):
 
 
 class LengthRatioFilter(FilterABC):
-    """Character length ratio (0 < score < 1)"""
+    """Character length ratio"""
 
     def __init__(self, threshold=3, **kwargs):
         self.threshold = threshold
         super().__init__(**kwargs)
 
     def score(self, sent1, sent2):
-        lens = sorted([len(sent1), len(sent2)])
+        length1 = len(sent1.split())
+        length2 = len(sent2.split())
+        if length1 == 0 or length2 == 0:
+            return float('inf')
+        lens = sorted([length1, length2])
         return lens[1] / lens[0]
 
     def filter(self, sent1, sent2):
@@ -78,8 +82,7 @@ class LongWordFilter(FilterABC):
 class HtmlTagFilter(FilterABC):
     """Html tag filter"""
 
-    def __init__(self, threshold=False, **kwargs):
-        self.threshold = threshold
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def score(self, sent1, sent2):
@@ -89,7 +92,7 @@ class HtmlTagFilter(FilterABC):
 
     def filter(self, sent1, sent2):
         src_tags, tgt_tags = self.score(sent1, sent2)
-        return src_tags == self.threshold and tgt_tags == self.threshold
+        return not (src_tags or tgt_tags)
 
 class CharacterScoreFilter(FilterABC):
     """Proportion of character are in the given script"""
@@ -158,7 +161,7 @@ class LanguageIDFilter(FilterABC):
 
     def filter(self, sent1, sent2):
         score1, score2 = self.score(sent1, sent2)
-        return score1 >= self.src_threshold and score2 >= self.tgt_threshold
+        return score1 > self.src_threshold and score2 > self.tgt_threshold
 
 class TerminalPunctuationFilter(FilterABC):
     """Penalty score with respect to the co-occurrence of terminal
