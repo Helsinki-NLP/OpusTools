@@ -166,6 +166,7 @@ class TerminalPunctuationFilter(FilterABC):
 
     def __init__(self, threshold=-2, **kwargs):
         self.threshold = threshold
+        super().__init__(**kwargs)
 
     def score(self, sent1, sent2):
         spun = len([c for c in sent1 if c in ['.', '?', '!']])
@@ -187,6 +188,7 @@ class NonZeroNumeralsFilter(FilterABC):
 
     def __init__(self, threshold=0.5, **kwargs):
         self.threshold = threshold
+        super().__init__(**kwargs)
 
     def score(self, sent1, sent2):
         snums = [int(c) for c in sent1 if c in string.digits and c != '0']
@@ -199,3 +201,25 @@ class NonZeroNumeralsFilter(FilterABC):
     def filter(self, sent1, sent2):
         return self.score(sent1, sent2) >= self.threshold
 
+class CleanCorpusN(FilterABC):
+    """Filter sentence pairs where one of the sentences is empty,
+    too short, too long or violates a given sentence ratio"""
+
+    def __init__(self, min_length=1, max_length=50, ratio_limit=9, **kwargs):
+        self.min_length = min_length
+        self.max_length = max_length
+        self.ratio_limit = ratio_limit
+        self.lengthRatioFilter = LengthRatioFilter()
+        super().__init__(**kwargs)
+
+    def score(self, sent1, sent2):
+        length1 = len(sent1.split())
+        length2 = len(sent2.split())
+        ratio = self.lengthRatioFilter.score(sent1, sent2)
+        return length1, length2, ratio
+
+    def filter(self, sent1, sent2):
+        length1 ,length2, ratio = self.score(sent1, sent2)
+        return (length1 >= self.min_length and length2 >= self.min_length and
+                length1 <= self.max_length and length2 <= self.max_length and
+                ratio < self.ratio_limit)

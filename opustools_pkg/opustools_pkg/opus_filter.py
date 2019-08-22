@@ -1,10 +1,19 @@
 import os
 import argparse
 
-from opustools_pkg import OpusGetSents
-from opustools_pkg.filter import LengthRatioFilter, LanguageIDFilter, \
+from . import OpusRead
+from .filter import LengthRatioFilter, LanguageIDFilter, \
     LongSentenceFilter, LongWordFilter, HtmlTagFilter, CharacterScoreFilter, \
-    TerminalPunctuationFilter, NonZeroNumeralsFilter
+    TerminalPunctuationFilter, NonZeroNumeralsFilter, CleanCorpusN
+
+class OpusGetSents(OpusRead):
+
+    def __init__(self, arguments):
+        super().__init__(arguments)
+        self.sents = []
+
+    def sendPairOutput(self, wpair):
+        self.sents.append(wpair)
 
 class OpusFilter:
 
@@ -49,6 +58,7 @@ class OpusFilter:
         self.characterScoreFilter = CharacterScoreFilter()
         self.terminalPunctuationFilter = TerminalPunctuationFilter()
         self.nonZeroNumeralsFilter = NonZeroNumeralsFilter()
+        self.cleanCorpusN = CleanCorpusN()
 
         get_sents = OpusGetSents('-d {0} -s {1} -t {2} -r {3} -p {4} -wm '
             'moses -w filter_files/temp filter_files/temp -ln'.format(
@@ -61,16 +71,15 @@ class OpusFilter:
     def filter(self):
         for pair in self.sents:
             ssent, tsent = pair[0][:-1], pair[1][:-1]
-            print(self.lengthRatioFilter.score(ssent, tsent))
-            print(self.languageIDFilter.score(ssent, tsent))
-            print(self.longSentenceFilter.score(ssent, tsent))
-            print(self.longWordFilter.score(ssent, tsent))
-            print(self.htmlTagFilter.score(ssent, tsent))
-            print(self.characterScoreFilter.score(ssent, tsent))
-            print(self.terminalPunctuationFilter.score(ssent, tsent))
-            print(self.nonZeroNumeralsFilter.score(ssent, tsent))
-            print(ssent, tsent)
+            #print(self.lengthRatioFilter.score(ssent, tsent))
+            #print(self.languageIDFilter.score(ssent, tsent))
+            #print(self.longSentenceFilter.score(ssent, tsent))
+            #print(self.longWordFilter.score(ssent, tsent))
+            #print(self.htmlTagFilter.score(ssent, tsent))
+            #print(self.characterScoreFilter.score(ssent, tsent))
+            #print(self.terminalPunctuationFilter.score(ssent, tsent))
+            #print(self.nonZeroNumeralsFilter.score(ssent, tsent))
+            print(self.cleanCorpusN.filter(ssent, tsent), ssent, tsent)
+            #print(ssent, tsent)
 
-of = OpusFilter()
-of.filter()
 
