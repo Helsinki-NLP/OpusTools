@@ -7,7 +7,6 @@ import math
 import difflib
 
 from langid.langid import LanguageIdentifier, model
-
 from bs4 import BeautifulSoup as bs
 
 
@@ -219,10 +218,13 @@ class CleanCorpusN(FilterABC):
         length1 = len(sent1.split())
         length2 = len(sent2.split())
         ratio = self.lengthRatioFilter.score(sent1, sent2)
-        return length1, length2, ratio
+        if (length1 >= self.min_length and length2 >= self.min_length and
+                length1 <= self.max_length and length2 <= self.max_length and
+                ratio < self.ratio_limit):
+            return 1
+        else:
+            return 0
 
     def filter(self, sent1, sent2):
-        length1 ,length2, ratio = self.score(sent1, sent2)
-        return (length1 >= self.min_length and length2 >= self.min_length and
-                length1 <= self.max_length and length2 <= self.max_length and
-                ratio < self.ratio_limit)
+        score = self.score(sent1, sent2)
+        return score == 1

@@ -1,5 +1,6 @@
 import os
 import argparse
+import json
 
 from . import OpusRead
 from .filter import LengthRatioFilter, LanguageIDFilter, \
@@ -44,7 +45,7 @@ class OpusFilter:
 
         self.source_file = open('filter_files/sents.{}'.format(fromto[0]), 'w')
         self.target_file = open('filter_files/sents.{}'.format(fromto[1]), 'w')
-        self.score_file = open('filter_files/scores.{0}-{1}'.format(
+        self.score_file = open('filter_files/scores.{0}-{1}.json'.format(
             fromto[0], fromto[1]) , 'w')
         self.clean_file = open('filter_files/clean.{0}-{1}'.format(
             fromto[0], fromto[1]) , 'w')
@@ -69,8 +70,28 @@ class OpusFilter:
         self.sents = get_sents.sents
 
     def filter(self):
+        scores = {}
+        number = 0
         for pair in self.sents:
+            number += 1
             ssent, tsent = pair[0][:-1], pair[1][:-1]
+            if (self.lengthRatioFilter.filter(ssent, tsent) and
+                    self.longSentenceFilter.filter(ssent, tsent) and
+                    self.longWordFilter.filter(ssent, tsent) and
+                    self.htmlTagFilter.filter(ssent, tsent) and
+                    self.characterScoreFilter.filter(ssent, tsent)):
+                self.clean_file.write('{0} ||| {1}\n'.format(ssent, tsent))
+            entry = {
+                'src': ssent,
+                'tgt': tsent,
+                'lang-id': self.languageIDFilter.score(ssent, tsent),
+                'char-score': self.characterScoreFilter.score(ssent, tsent),
+                'term-punct':
+                    self.terminalPunctuationFilter.score(ssent, tsent),
+                'non-zero': self.nonZeroNumeralsFilter.score(ssent, tsent),
+                'clean-corpus': self.cleanCorpusN.score(ssent, tsent)
+                }
+            scores[number] = entry
             #print(self.lengthRatioFilter.score(ssent, tsent))
             #print(self.languageIDFilter.score(ssent, tsent))
             #print(self.longSentenceFilter.score(ssent, tsent))
@@ -79,7 +100,12 @@ class OpusFilter:
             #print(self.characterScoreFilter.score(ssent, tsent))
             #print(self.terminalPunctuationFilter.score(ssent, tsent))
             #print(self.nonZeroNumeralsFilter.score(ssent, tsent))
-            print(self.cleanCorpusN.filter(ssent, tsent), ssent, tsent)
+            #print(self.cleanCorpusN.filter(ssent, tsent), ssent, tsent)
             #print(ssent, tsent)
+        self.score_file.write(json.dumps(scores))
+        self.source_file.close()
+        self.target_file.close()
+        self.score_file.close()
+        self.clean_file.close()
 
 

@@ -196,7 +196,19 @@ class TestOpusFilter(unittest.TestCase):
         sent1 = 'This sentence has five words.'
         sent2 = 'This has four words.'
         score = self.cleanCorpusN.score(sent1, sent2)
-        self.assertEqual(score, (5, 4, 1.25))
+        self.assertEqual(score, 1)
+        sent1 = 'This sentence has five words This sentence has five words.'
+        sent2 = 'This.'
+        score = self.cleanCorpusN.score(sent1, sent2)
+        self.assertEqual(score, 0)
+        sent2 = ''
+        score = self.cleanCorpusN.score(sent1, sent2)
+        sent2 = ' '.join('word' for i in range(50))
+        score = self.cleanCorpusN.score(sent1, sent2)
+        self.assertEqual(score, 1)
+        sent2 = ' '.join('word' for i in range(51))
+        score = self.cleanCorpusN.score(sent1, sent2)
+        self.assertEqual(score, 0)
 
     def test_CleanCorpusN_filter(self):
         sent1 = 'This sentence has five words.'
