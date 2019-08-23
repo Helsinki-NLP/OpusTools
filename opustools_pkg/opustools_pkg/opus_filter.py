@@ -81,11 +81,16 @@ class OpusFilter:
                     self.htmlTagFilter.filter(ssent, tsent) and
                     self.characterScoreFilter.filter(ssent, tsent)):
                 self.clean_file.write('{0} ||| {1}\n'.format(ssent, tsent))
+            src_langid, tgt_langid = self.languageIDFilter.score(ssent, tsent)
+            src_charscore, tgt_charscore = self.characterScoreFilter.score(
+                ssent, tsent)
             entry = {
                 'src': ssent,
                 'tgt': tsent,
-                'lang-id': self.languageIDFilter.score(ssent, tsent),
-                'char-score': self.characterScoreFilter.score(ssent, tsent),
+                'src_lang-id': src_langid,
+                'tgt_lang-id': tgt_langid,
+                'src_char-score': src_charscore,
+                'tgt_char-score': tgt_charscore,
                 'term-punct':
                     self.terminalPunctuationFilter.score(ssent, tsent),
                 'non-zero': self.nonZeroNumeralsFilter.score(ssent, tsent),
