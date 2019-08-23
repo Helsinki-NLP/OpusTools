@@ -2203,7 +2203,7 @@ class TestOpusCat(unittest.TestCase):
         OpusCat.openFiles(OpusCat('-d RF -l en'.split()),
             'RF_latest_xml_en.zip', '')
         sys.stdout = old_stdout
-        
+
         self.assertEqual(printout.getvalue()[-161:-132],
            'No file found with parameters')
 
@@ -2217,7 +2217,9 @@ class TestOpusGet(unittest.TestCase):
         temp_args = sys.argv.copy()
         sys.argv = [temp_args[0]] + '-s eo'.split()
         opg = OpusGet([])
-        self.assertEqual(opg.url, 'http://opus.nlpl.eu/opusapi/?source=eo&')
+        self.assertEqual(opg.url,
+            'http://opus.nlpl.eu/opusapi/?source=eo&version=latest&'
+            'preprocessing=xml&')
         sys.argv = temp_args.copy()
 
     def test_format_size(self):
@@ -2259,6 +2261,39 @@ class TestOpusGet(unittest.TestCase):
         sys.stdout = old_stdout
 
         self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
+
+    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    def test_dont_list_files_that_are_already_in_path(self, mocked_input):
+        mocked_input.side_effect = ['y']
+        OpusGet('-d RF -s en -t sv -p xml'.split()).get_files()
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
+        OpusGet('-d RF -s en -t sv -p xml -l'.split()).get_files()
+        sys.stdout = old_stdout
+        os.remove('RF_latest_xml_en-sv.xml.gz')
+        os.remove('RF_latest_xml_en.zip')
+        os.remove('RF_latest_xml_sv.zip')
+
+        self.assertEqual(printout.getvalue(),
+            '        RF_latest_xml_en-sv.xml.gz already exists\n        '
+            'RF_latest_xml_en.zip already exists\n        '
+            'RF_latest_xml_sv.zip already exists\n\n   0 KB Total size\n')
+
+    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    def test_dont_download_files_that_are_already_in_path(self, mocked_input):
+        mocked_input.side_effect = ['y', 'y']
+        OpusGet('-d RF -s en -t sv -p xml'.split()).get_files()
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
+        OpusGet('-d RF -s en -t sv -p xml'.split()).get_files()
+        sys.stdout = old_stdout
+        os.remove('RF_latest_xml_en-sv.xml.gz')
+        os.remove('RF_latest_xml_en.zip')
+        os.remove('RF_latest_xml_sv.zip')
+
+        self.assertEqual(printout.getvalue(), '')
 
 if __name__ == '__main__':
     unittest.main()

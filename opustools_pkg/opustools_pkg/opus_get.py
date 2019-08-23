@@ -1,19 +1,24 @@
 
-import urllib.request, json, argparse, sys
+import urllib.request
+import json
+import argparse
+import sys
+import os.path
 
 class OpusGet:
 
     def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='opus-get', 
+        parser = argparse.ArgumentParser(prog='opus-get',
             description='Download files from OPUS')
         parser.add_argument('-s', help='Source language', required=True)
         parser.add_argument('-t', help='Target language')
         parser.add_argument('-d', help='Corpus name')
-        parser.add_argument('-r', help='Release')
-        parser.add_argument('-p', help='Pre-process type')
+        parser.add_argument('-r', help='Release', default='latest')
+        parser.add_argument('-p', help='Pre-process type',
+            default='xml', choices=['raw', 'xml', 'parsed'])
         parser.add_argument('-l', help='List resources', action='store_true')
-        parser.add_argument('-dl', 
-            help='Set download directory (default=current directory)', 
+        parser.add_argument('-dl',
+            help='Set download directory (default=current directory)',
             default='')
         parser.add_argument('-q',
             help='Download necessary files without prompting (y/n)',
@@ -29,7 +34,7 @@ class OpusGet:
             self.fromto.sort()
 
         self.url = 'http://opus.nlpl.eu/opusapi/?'
-        urlparts = {'s': 'source', 't': 'target', 'd': 'corpus', 
+        urlparts = {'s': 'source', 't': 'target', 'd': 'corpus',
             'r': 'version', 'p': 'preprocessing'}
 
         for a in urlparts.keys():
@@ -90,6 +95,14 @@ class OpusGet:
         retdata = self.add_data_with_aligment(tempdata, retdata)
         return retdata
 
+    def make_file_name(self, c):
+        filename = c['url'].replace('/', '_').replace(
+            'https:__object.pouta.csc.fi_OPUS-', '')
+        if self.args.r == 'latest':
+            filename = filename.replace(
+                '_'+c['version']+'_', '_latest_')
+        return filename
+
     def get_corpora_data(self):
         file_n = 0
         total_size = 0
@@ -100,17 +113,26 @@ class OpusGet:
         else:
             corpora = data['corpora']
 
+        ret_corpora = []
         for c in corpora:
-            file_n += 1
-            total_size += c['size']
+            filename = self.make_file_name(c)
+            if os.path.isfile(filename):
+                if self.args.l:
+                    print('        {} already exists'.format(filename))
+            else:
+                ret_corpora.append(c)
+                file_n += 1
+                total_size += c['size']
 
         total_size = self.format_size(total_size)
 
-        return corpora, file_n, total_size
+        return ret_corpora, file_n, total_size
 
     def progress_status(self, count, blockSize, totalSize):
         percent = int(count*blockSize*100/totalSize)
-        print('\r{0} ... {1}% of {2}'.format(self.filename, percent, 
+        if percent > 100:
+            percent = 100
+        print('\r{0} ... {1}% of {2}'.format(self.filename, percent,
             self.filesize), end='', flush=True)
 
     def download(self, corpora, file_n, total_size):
@@ -122,15 +144,11 @@ class OpusGet:
 
         if answer == 'y':
             for c in corpora:
-                self.filename = c['url'].replace('/', '_').replace(
-                    'https:__object.pouta.csc.fi_OPUS-', '')
-                if self.args.r == 'latest':
-                    self.filename = self.filename.replace(
-                        '_'+c['version']+'_', '_latest_')
+                self.filename = self.make_file_name(c)
                 self.filesize = self.format_size(c['size'])
                 try:
-                    urllib.request.urlretrieve(c['url'], 
-                        self.args.dl + self.filename, 
+                    urllib.request.urlretrieve(c['url'],
+                        self.args.dl + self.filename,
                         reporthook=self.progress_status)
                     print('')
                 except urllib.error.URLError as e:
