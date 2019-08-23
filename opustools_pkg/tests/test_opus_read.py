@@ -2299,6 +2299,7 @@ class TestOpusGet(unittest.TestCase):
         self.assertEqual(opg.format_size(2304006273), '2 TB')
 
     def test_remove_data_with_no_alignment_if_needed(self):
+        #TODO: fix test
         opg = OpusGet('-s en -t sv -l'.split())
         self.assertEqual(opg.get_corpora_data()[2], '76 GB')
 
