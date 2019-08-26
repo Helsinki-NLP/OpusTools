@@ -5,7 +5,8 @@ import json
 from . import OpusRead
 from .filter import LengthRatioFilter, LanguageIDFilter, \
     LongSentenceFilter, LongWordFilter, HtmlTagFilter, CharacterScoreFilter, \
-    TerminalPunctuationFilter, NonZeroNumeralsFilter, CleanCorpusN
+    TerminalPunctuationFilter, NonZeroNumeralsFilter, CleanCorpusN, \
+    WordAlignment
 
 class OpusGetSents(OpusRead):
 
@@ -37,6 +38,7 @@ class OpusFilter:
 
         args = parser.parse_args()
         fromto = sorted([args.s, args.t])
+        self.fromto = fromto
 
         try:
             os.mkdir('filter_files')
@@ -45,9 +47,9 @@ class OpusFilter:
 
         self.source_file = open('filter_files/sents.{}'.format(fromto[0]), 'w')
         self.target_file = open('filter_files/sents.{}'.format(fromto[1]), 'w')
+        self.source_clean= open('filter_files/clean.{}'.format(fromto[0]), 'w')
+        self.target_clean= open('filter_files/clean.{}'.format(fromto[1]), 'w')
         self.score_file = open('filter_files/scores.{0}-{1}.json'.format(
-            fromto[0], fromto[1]) , 'w')
-        self.clean_file = open('filter_files/clean.{0}-{1}'.format(
             fromto[0], fromto[1]) , 'w')
 
         self.lengthRatioFilter = LengthRatioFilter()
@@ -60,6 +62,7 @@ class OpusFilter:
         self.terminalPunctuationFilter = TerminalPunctuationFilter()
         self.nonZeroNumeralsFilter = NonZeroNumeralsFilter()
         self.cleanCorpusN = CleanCorpusN()
+        self.wordAlignment = WordAlignment(eflomal_path='/home/mikko/eflomal')
 
         get_sents = OpusGetSents('-d {0} -s {1} -t {2} -r {3} -p {4} -wm '
             'moses -w filter_files/temp filter_files/temp -ln'.format(
@@ -80,7 +83,8 @@ class OpusFilter:
                     self.longWordFilter.filter(ssent, tsent) and
                     self.htmlTagFilter.filter(ssent, tsent) and
                     self.characterScoreFilter.filter(ssent, tsent)):
-                self.clean_file.write('{0} ||| {1}\n'.format(ssent, tsent))
+                self.source_clean.write('{}\n'.format(ssent))
+                self.target_clean.write('{}\n'.format(tsent))
             src_langid, tgt_langid = self.languageIDFilter.score(ssent, tsent)
             src_charscore, tgt_charscore = self.characterScoreFilter.score(
                 ssent, tsent)
@@ -97,20 +101,42 @@ class OpusFilter:
                 'clean-corpus': self.cleanCorpusN.score(ssent, tsent)
                 }
             scores[number] = entry
-            #print(self.lengthRatioFilter.score(ssent, tsent))
-            #print(self.languageIDFilter.score(ssent, tsent))
-            #print(self.longSentenceFilter.score(ssent, tsent))
-            #print(self.longWordFilter.score(ssent, tsent))
-            #print(self.htmlTagFilter.score(ssent, tsent))
-            #print(self.characterScoreFilter.score(ssent, tsent))
-            #print(self.terminalPunctuationFilter.score(ssent, tsent))
-            #print(self.nonZeroNumeralsFilter.score(ssent, tsent))
-            #print(self.cleanCorpusN.filter(ssent, tsent), ssent, tsent)
-            #print(ssent, tsent)
         self.score_file.write(json.dumps(scores))
         self.source_file.close()
         self.target_file.close()
         self.score_file.close()
-        self.clean_file.close()
+        self.source_clean.close()
+        self.target_clean.close()
+
+    def word_alignment_score(self):
+        self.wordAlignment.align(
+                src_file='filter_files/clean.{}'.format(self.fromto[0]),
+                trg_file='filter_files/clean.{}'.format(self.fromto[1]),
+                src_fwd='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
+                    self.fromto[1]),
+                trg_fwd='filter_files/{0}-{1}.rev'.format(self.fromto[0],
+                    self.fromto[1])
+            )
+        self.wordAlignment.make_priors(
+                src_file='filter_files/clean.{}'.format(self.fromto[0]),
+                trg_file='filter_files/clean.{}'.format(self.fromto[1]),
+                src_fwd='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
+                    self.fromto[1]),
+                trg_fwd='filter_files/{0}-{1}.rev'.format(self.fromto[0],
+                    self.fromto[1]),
+                priors='filter_files/{0}-{1}.priors'.format(self.fromto[0],
+                    self.fromto[1])
+            )
+        self.wordAlignment.align(
+                src_file='filter_files/clean.{}'.format(self.fromto[0]),
+                trg_file='filter_files/clean.{}'.format(self.fromto[1]),
+                src_score='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
+                    self.fromto[1]),
+                trg_score='filter_files/{0}-{1}.rev'.format(self.fromto[0],
+                    self.fromto[1]),
+                priors='filter_files/{0}-{1}.priors'.format(self.fromto[0],
+                    self.fromto[1])
+            )
+
 
 

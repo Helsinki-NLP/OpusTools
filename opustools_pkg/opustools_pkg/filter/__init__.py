@@ -9,6 +9,8 @@ import difflib
 from langid.langid import LanguageIdentifier, model
 from bs4 import BeautifulSoup as bs
 
+from .word_alignment import WordAlignment
+
 
 class FilterABC(metaclass=abc.ABCMeta):
     """Abstract base class for sentence pair filters"""

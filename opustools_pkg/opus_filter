@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
 from opustools_pkg import OpusFilter
 
-OpusFilter().filter()
+of = OpusFilter()
+of.filter()
+#of.word_alignment_score()
