@@ -2,6 +2,8 @@ import os
 import argparse
 import json
 
+from yaml import load, Loader
+
 from . import OpusRead
 from .filter import LengthRatioFilter, LanguageIDFilter, \
     LongSentenceFilter, LongWordFilter, HtmlTagFilter, CharacterScoreFilter, \
@@ -29,6 +31,8 @@ class OpusFilter:
             required=True)
         parser.add_argument('-t', help='Target language', metavar='langid',
             required=True)
+        parser.add_argument('-f', help='yaml file to specify filters',
+            required=True)
         parser.add_argument('-r', help='Release (default=latest)',
             metavar='version',
             default='latest')
@@ -45,12 +49,8 @@ class OpusFilter:
         except FileExistsError:
             pass
 
-        self.source_file = open('filter_files/sents.{}'.format(fromto[0]), 'w')
-        self.target_file = open('filter_files/sents.{}'.format(fromto[1]), 'w')
-        self.source_clean= open('filter_files/clean.{}'.format(fromto[0]), 'w')
-        self.target_clean= open('filter_files/clean.{}'.format(fromto[1]), 'w')
-        self.score_file = open('filter_files/scores.{0}-{1}.json'.format(
-            fromto[0], fromto[1]) , 'w')
+        with open(args.f) as yaml_file:
+            filters = load(yaml_file, Loader=Loader)
 
         self.lengthRatioFilter = LengthRatioFilter()
         self.languageIDFilter = LanguageIDFilter(
@@ -72,19 +72,28 @@ class OpusFilter:
 
         self.sents = get_sents.sents
 
-    def filter(self):
-        scores = {}
-        number = 0
+    def clean_data(self):
+        clean_file= open('filter_files/clean.{0}-{1}'.format(
+            self.fromto[0], self.fromto[1]), 'w')
         for pair in self.sents:
-            number += 1
             ssent, tsent = pair[0][:-1], pair[1][:-1]
             if (self.lengthRatioFilter.filter(ssent, tsent) and
                     self.longSentenceFilter.filter(ssent, tsent) and
                     self.longWordFilter.filter(ssent, tsent) and
                     self.htmlTagFilter.filter(ssent, tsent) and
                     self.characterScoreFilter.filter(ssent, tsent)):
-                self.source_clean.write('{}\n'.format(ssent))
-                self.target_clean.write('{}\n'.format(tsent))
+                clean_file.write('{0} ||| {1}\n'.format(ssent, tsent))
+        clean_file.close()
+
+    def filter(self):
+        source_file = open('filter_files/sents.{}'.format(self.fromto[0]), 'w')
+        target_file = open('filter_files/sents.{}'.format(self.fromto[1]), 'w')
+
+        scores = {}
+        number = 0
+        for pair in self.sents:
+            number += 1
+            ssent, tsent = pair[0][:-1], pair[1][:-1]
             src_langid, tgt_langid = self.languageIDFilter.score(ssent, tsent)
             src_charscore, tgt_charscore = self.characterScoreFilter.score(
                 ssent, tsent)
@@ -101,25 +110,26 @@ class OpusFilter:
                 'clean-corpus': self.cleanCorpusN.score(ssent, tsent)
                 }
             scores[number] = entry
-        self.score_file.write(json.dumps(scores))
-        self.source_file.close()
-        self.target_file.close()
-        self.score_file.close()
-        self.source_clean.close()
-        self.target_clean.close()
+        source_file.close()
+        target_file.close()
+
+        score_file = open('filter_files/scores.{0}-{1}.json'.format(
+            self.fromto[0], self.fromto[1]) , 'w')
+        score_file.write(json.dumps(scores))
+        score_file.close()
 
     def word_alignment_score(self):
         self.wordAlignment.align(
-                src_file='filter_files/clean.{}'.format(self.fromto[0]),
-                trg_file='filter_files/clean.{}'.format(self.fromto[1]),
+                clean_file='filter_files/clean.{0}-{1}'.format(
+                    self.fromto[0], self.fromto[1]),
                 src_fwd='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
                     self.fromto[1]),
                 trg_fwd='filter_files/{0}-{1}.rev'.format(self.fromto[0],
                     self.fromto[1])
             )
         self.wordAlignment.make_priors(
-                src_file='filter_files/clean.{}'.format(self.fromto[0]),
-                trg_file='filter_files/clean.{}'.format(self.fromto[1]),
+                clean_file='filter_files/clean.{0}-{1}'.format(
+                    self.fromto[0], self.fromto[1]),
                 src_fwd='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
                     self.fromto[1]),
                 trg_fwd='filter_files/{0}-{1}.rev'.format(self.fromto[0],
@@ -128,8 +138,8 @@ class OpusFilter:
                     self.fromto[1])
             )
         self.wordAlignment.align(
-                src_file='filter_files/clean.{}'.format(self.fromto[0]),
-                trg_file='filter_files/clean.{}'.format(self.fromto[1]),
+                clean_file='filter_files/clean.{0}-{1}'.format(
+                    self.fromto[0], self.fromto[1]),
                 src_score='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
                     self.fromto[1]),
                 trg_score='filter_files/{0}-{1}.rev'.format(self.fromto[0],

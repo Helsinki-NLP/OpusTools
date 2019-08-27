@@ -2,5 +2,6 @@
 from opustools_pkg import OpusFilter
 
 of = OpusFilter()
+of.clean_data()
 of.filter()
-#of.word_alignment_score()
+of.word_alignment_score()
