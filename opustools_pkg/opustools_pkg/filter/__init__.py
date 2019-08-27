@@ -9,8 +9,6 @@ import difflib
 from langid.langid import LanguageIdentifier, model
 from bs4 import BeautifulSoup as bs
 
-from .word_alignment import WordAlignment
-
 
 class ConfigurationError(Exception):
     """Configuration error for filters"""
@@ -35,10 +33,16 @@ class FilterABC(metaclass=abc.ABCMeta):
         """Return filtering decision for score"""
         pass
 
-    def filter(self, pairs):
+    def decisions(self, pairs):
         """For each sentence pair, yield True if pair is accepted, False otherwise"""
         for score in self.score(pairs):
             yield self.accept(score)
+
+    def filter(self, pairs):
+        """Yield only accepted sentence pairs"""
+        for sent1, sent2 in pairs:
+            if self.accept(next(self.score([(sent1, sent2)]))):
+                yield sent1, sent2
 
 
 class LengthFilter(FilterABC):

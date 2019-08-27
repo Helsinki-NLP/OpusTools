@@ -28,20 +28,20 @@ class TestOpusFilter(unittest.TestCase):
         self.assertEqual(score, float('inf'))
 
     def test_LengthRatioFilter_filter(self):
-        answer = next(self.lengthRatioFilter.filter(
+        answer = next(self.lengthRatioFilter.decisions(
             [('This sentence has five words', 'This one has four')]))
         self.assertTrue(answer)
-        answer = next(self.lengthRatioFilter.filter(
+        answer = next(self.lengthRatioFilter.decisions(
             [('One', 'This one has four')]))
         self.assertFalse(answer)
-        answer = next(self.lengthRatioFilter.filter(
+        answer = next(self.lengthRatioFilter.decisions(
             [('', 'This one has four')]))
         self.assertFalse(answer)
         self.lengthRatioFilter.threshold = 1.25
-        answer = next(self.lengthRatioFilter.filter(
+        answer = next(self.lengthRatioFilter.decisions(
             [('This sentence has five words', 'This one has four')]))
         self.assertFalse(answer)
-        answer = next(self.lengthRatioFilter.filter(
+        answer = next(self.lengthRatioFilter.decisions(
             [('This sentence has five words more', 'This one has four more')]))
         self.assertTrue(answer)
 
@@ -54,13 +54,13 @@ class TestOpusFilter(unittest.TestCase):
     def test_LengthFilter_filter(self):
         sent1 = ' '.join('word' for i in range(99))
         sent2 = ' '.join('word' for i in range(62))
-        answer = next(self.lengthFilter.filter([(sent1, sent2)]))
+        answer = next(self.lengthFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
         sent1 = ' '.join('word' for i in range(101))
-        answer = next(self.lengthFilter.filter([(sent1, sent2)]))
+        answer = next(self.lengthFilter.decisions([(sent1, sent2)]))
         self.assertFalse(answer)
         self.lengthFilter.max_length = 101
-        answer = next(self.lengthFilter.filter([(sent1, sent2)]))
+        answer = next(self.lengthFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
 
     def test_LongWordFilter_score(self):
@@ -72,13 +72,13 @@ class TestOpusFilter(unittest.TestCase):
     def test_LongWordFilter_filter(self):
         sent1 = 'This is a sentence'
         sent2 = 'This is also'
-        answer = next(self.longWordFilter.filter([(sent1, sent2)]))
+        answer = next(self.longWordFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
         sent2 = sent2 + ' ' + ''.join('w' for i in range(40))
-        answer = next(self.longWordFilter.filter([(sent1, sent2)]))
+        answer = next(self.longWordFilter.decisions([(sent1, sent2)]))
         self.assertFalse(answer)
         self.longWordFilter.threshold = 41
-        answer = next(self.longWordFilter.filter([(sent1, sent2)]))
+        answer = next(self.longWordFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
         self.longWordFilter.threshold = 40
 
@@ -91,10 +91,10 @@ class TestOpusFilter(unittest.TestCase):
     def test_HtmlTagFilter_filter(self):
         sent1 = '<s>This contains tags'
         sent2 = 'This does not'
-        answer = next(self.htmlTagFilter.filter([(sent1, sent2)]))
+        answer = next(self.htmlTagFilter.decisions([(sent1, sent2)]))
         self.assertFalse(answer)
         sent1 = 'This contains tags not'
-        answer = next(self.htmlTagFilter.filter([(sent1, sent2)]))
+        answer = next(self.htmlTagFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
 
     def test_CharacterScoreFilter_characterScore(self):
@@ -116,13 +116,13 @@ class TestOpusFilter(unittest.TestCase):
     def test_CharacterScoreFilter_filter(self):
         sent1 = 'This has ten.'
         sent2 = 'This has ten.'
-        answer = next(self.characterScoreFilter.filter([(sent1, sent2)]))
+        answer = next(self.characterScoreFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
         sent2 = 'This hαs ten.'
-        answer = next(self.characterScoreFilter.filter([(sent1, sent2)]))
+        answer = next(self.characterScoreFilter.decisions([(sent1, sent2)]))
         self.assertFalse(answer)
         self.characterScoreFilter.tgt_threshold=0.9
-        answer = next(self.characterScoreFilter.filter([(sent1, sent2)]))
+        answer = next(self.characterScoreFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
 
     def test_LanguageIDFilter_confidence(self):
@@ -141,9 +141,9 @@ class TestOpusFilter(unittest.TestCase):
     def test_LanguageIDFilter_filter(self):
         english = 'This sentence is written in English.'
         finnish = 'Tämä lause on kirjoitettu suomeksi.'
-        answer = next(self.languageIDFilter.filter([(english, finnish)]))
+        answer = next(self.languageIDFilter.decisions([(english, finnish)]))
         self.assertTrue(answer)
-        answer = next(self.languageIDFilter.filter([(finnish, english)]))
+        answer = next(self.languageIDFilter.decisions([(finnish, english)]))
         self.assertFalse(answer)
 
     def test_TerminalPunctuationFilter_score(self):
@@ -159,14 +159,14 @@ class TestOpusFilter(unittest.TestCase):
     def test_TerminalPunctuationFilter_filter(self):
         sent1 = 'This is sentence.'
         sent2 = 'This is sentence.'
-        answer = next(self.terminalPunctuationFilter.filter([(sent1, sent2)]))
+        answer = next(self.terminalPunctuationFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
         sent1 = 'This is sentence'
         sent2 = 'This is sentence.....'
-        answer = next(self.terminalPunctuationFilter.filter([(sent1, sent2)]))
+        answer = next(self.terminalPunctuationFilter.decisions([(sent1, sent2)]))
         self.assertFalse(answer)
         self.terminalPunctuationFilter.threshold = -2.4
-        answer = next(self.terminalPunctuationFilter.filter([(sent1, sent2)]))
+        answer = next(self.terminalPunctuationFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
         self.terminalPunctuationFilter.threshold = -2
 
@@ -182,10 +182,10 @@ class TestOpusFilter(unittest.TestCase):
     def test_NonZeroNumeralsFilter_filter(self):
         sent1 = '12345'
         sent2 = '23451'
-        answer = next(self.nonZeroNumeralsFilter.filter([(sent1, sent2)]))
+        answer = next(self.nonZeroNumeralsFilter.decisions([(sent1, sent2)]))
         self.assertTrue(answer)
         self.nonZeroNumeralsFilter.threshold = 0.81
-        answer = next(self.nonZeroNumeralsFilter.filter([(sent1, sent2)]))
+        answer = next(self.nonZeroNumeralsFilter.decisions([(sent1, sent2)]))
         self.assertFalse(answer)
 
 #    def test_CleanCorpusN_score(self):
