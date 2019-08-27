@@ -6,9 +6,8 @@ from yaml import load, Loader
 
 from . import OpusRead
 from .filter import LengthRatioFilter, LanguageIDFilter, \
-    LongSentenceFilter, LongWordFilter, HtmlTagFilter, CharacterScoreFilter, \
-    TerminalPunctuationFilter, NonZeroNumeralsFilter, CleanCorpusN, \
-    WordAlignment
+    LengthFilter, LongWordFilter, HtmlTagFilter, CharacterScoreFilter, \
+    TerminalPunctuationFilter, NonZeroNumeralsFilter, WordAlignment
 
 class OpusGetSents(OpusRead):
 
@@ -55,13 +54,13 @@ class OpusFilter:
         self.lengthRatioFilter = LengthRatioFilter()
         self.languageIDFilter = LanguageIDFilter(
             src_lang=fromto[0], tgt_lang=fromto[1])
-        self.longSentenceFilter = LongSentenceFilter()
+        self.lengthFilter = LengthFilter()
         self.longWordFilter = LongWordFilter()
         self.htmlTagFilter = HtmlTagFilter()
         self.characterScoreFilter = CharacterScoreFilter()
         self.terminalPunctuationFilter = TerminalPunctuationFilter()
         self.nonZeroNumeralsFilter = NonZeroNumeralsFilter()
-        self.cleanCorpusN = CleanCorpusN()
+        #self.cleanCorpusN = CleanCorpusN()
         self.wordAlignment = WordAlignment(eflomal_path='/home/mikko/eflomal')
 
         get_sents = OpusGetSents('-d {0} -s {1} -t {2} -r {3} -p {4} -wm '
@@ -107,7 +106,7 @@ class OpusFilter:
                 'term-punct':
                     self.terminalPunctuationFilter.score(ssent, tsent),
                 'non-zero': self.nonZeroNumeralsFilter.score(ssent, tsent),
-                'clean-corpus': self.cleanCorpusN.score(ssent, tsent)
+                #'clean-corpus': self.cleanCorpusN.score(ssent, tsent)
                 }
             scores[number] = entry
         source_file.close()

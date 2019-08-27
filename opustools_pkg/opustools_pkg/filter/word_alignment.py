@@ -1,5 +1,7 @@
 import subprocess
 
+#from . import FilterABC
+
 
 class WordAlignment:
 
@@ -31,3 +33,18 @@ class WordAlignment:
                 src_fwd, trg_fwd, priors).split())
         subprocess.run(command)
 
+
+#class WordAlignFilter(FilterABC):
+#
+#    def __init__(self, src_threshold=0, tgt_threshold=0, priors=None, **kwargs):
+#        self.src_threshold = src_threshold
+#        self.tgt_threshold = tgt_threshold
+#        self.priors = priors
+#        super().__init__(**kwargs)
+#
+#    def filter(self, sent1, sent2):
+#        src, tgt = self.score(sent1, sent2)
+#        return src < self.src_threshold and tgt < self.tgt_threshold
+#
+#    def score(self, sent1, sent2):
+#        pass

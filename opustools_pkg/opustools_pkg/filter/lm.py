@@ -6,7 +6,7 @@ import logging
 import math
 import tempfile
 
-from . import FilterABC
+from . import FilterABC, ConfigurationError
 
 
 logger = logging.getLogger(__name__)
@@ -16,11 +16,6 @@ try:
     import varikn
 except ImportError:
     logger.warning("Could not load varikn, language model filtering not supported")
-
-
-class ConfigurationError(Exception):
-    """Configuration error"""
-    pass
 
 
 _VARIKN_TRAINING_PARAMS = {
@@ -173,18 +168,19 @@ class CrossEntropyFilter(FilterABC):
         tokens.append(self.s_end)
         return tokens
 
-    def filter(self, sent1, sent2):
-        src, tgt = self.score(sent1, sent2)
+    def accept(self, score):
+        src, tgt = score
         diff = abs(src - tgt)
         return src < self.src_threshold and tgt < self.tgt_threshold and diff < self.diff_threshold
 
-    def score(self, sent1, sent2):
-        scores = []
-        for lm, params, sent in [(self.src_lm, self.src_lm_params, sent1),
-                                 (self.tgt_lm, self.tgt_lm_params, sent2)]:
-            fullparams = get_perplexity_params(params)
-            tokens = self.char_tokenize(sent, fullparams)
-            use_word = fullparams['wb'] or fullparams['mb']
-            scores.append(word_perplexity(lm, tokens, not self.perplexity) if use_word else \
-                          token_perplexity(lm, tokens, not self.perplexity))
-        return scores
+    def score(self, pairs):
+        for sent1, sent2 in pairs:
+            scores = []
+            for lm, params, sent in [(self.src_lm, self.src_lm_params, sent1),
+                                     (self.tgt_lm, self.tgt_lm_params, sent2)]:
+                fullparams = get_perplexity_params(params)
+                tokens = self.char_tokenize(sent, fullparams)
+                use_word = fullparams['wb'] or fullparams['mb']
+                scores.append(word_perplexity(lm, tokens, not self.perplexity) if use_word else \
+                              token_perplexity(lm, tokens, not self.perplexity))
+            yield scores

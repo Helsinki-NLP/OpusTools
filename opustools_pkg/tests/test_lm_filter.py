@@ -54,8 +54,8 @@ class TestLMFilter(unittest.TestCase):
         inputs = [('ab', 'AB'), ('abbb abbb', 'AB'), ('ab', 'BAA'), ('abbb', 'BA'), ('abbb', 'AB')]
         scores = []
         bools = []
-        for src, tgt in inputs:
-            scores.append(cefilter.score(src, tgt))
-            bools.append(cefilter.filter(src, tgt))
+        for score in cefilter.score(inputs):
+            scores.append(score)
+            bools.append(cefilter.accept(score))
         logging.info(scores)
         self.assertSequenceEqual(bools, [True, False, False, True, False])
