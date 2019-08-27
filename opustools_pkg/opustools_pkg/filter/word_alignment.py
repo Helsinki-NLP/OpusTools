@@ -1,6 +1,20 @@
-import subprocess
+"""Word alignment filtering"""
 
-#from . import FilterABC
+import logging
+import os
+import subprocess
+import tempfile
+
+from . import FilterABC
+
+
+logger = logging.getLogger(__name__)
+
+
+EFLOMAL_PATH = os.environ.get('EFLOMAL_PATH')
+if EFLOMAL_PATH is None:
+    logger.warning("Please set enviroment variable EFLOMAL_PATH to use word alignment scores")
+    EFLOMAL_PATH = '.'
 
 
 class WordAlignment:
@@ -34,17 +48,62 @@ class WordAlignment:
         subprocess.run(command)
 
 
-#class WordAlignFilter(FilterABC):
-#
-#    def __init__(self, src_threshold=0, tgt_threshold=0, priors=None, **kwargs):
-#        self.src_threshold = src_threshold
-#        self.tgt_threshold = tgt_threshold
-#        self.priors = priors
-#        super().__init__(**kwargs)
-#
-#    def filter(self, sent1, sent2):
-#        src, tgt = self.score(sent1, sent2)
-#        return src < self.src_threshold and tgt < self.tgt_threshold
-#
-#    def score(self, sent1, sent2):
-#        pass
+def create_align_input_file(sentence_pairs):
+    inputfile = tempfile.NamedTemporaryFile('w+')
+    for sent1, sent2 in sentence_pairs:
+        inputfile.write('{} ||| {}\n'.format(sent1, sent2))
+    inputfile.flush()
+    return inputfile
+
+
+class WordAlignFilter(FilterABC):
+    """Filtering based on eflomal word aligment scores"""
+
+    def __init__(self, src_threshold=0, tgt_threshold=0, priors=None, model=3, **kwargs):
+        self.src_threshold = src_threshold
+        self.tgt_threshold = tgt_threshold
+        self.priors = priors
+        self.model = model
+        super().__init__(**kwargs)
+
+    def _run(self, input_file, scores_fwd_file, scores_rev_file):
+        """Run eflomal alignment"""
+        priors_arg = '--priors {}'.format(self.priors) if self.priors else ''
+        command = '{path}/align.py -i {input} -F {fwd} -R {rev} --model {model} -M {model} {priors}'.format(
+            path=EFLOMAL_PATH, input=input_file, fwd=scores_fwd_file, rev=scores_rev_file,
+            model=self.model, priors=priors_arg)
+        subprocess.run(command.split())
+
+    def score(self, pairs):
+        input_file = create_align_input_file(pairs)
+        scores_fwd_file = tempfile.NamedTemporaryFile('w+')
+        scores_rev_file = tempfile.NamedTemporaryFile('w+')
+        self._run(input_file.name, scores_fwd_file.name, scores_rev_file.name)
+        scores_fwd_file.seek(0)
+        scores_rev_file.seek(0)
+        for line1, line2 in zip(scores_fwd_file, scores_rev_file):
+            yield float(line1.strip()), float(line2.strip())
+        input_file.close()
+        scores_fwd_file.close()
+        scores_rev_file.close()
+
+    def accept(self, score):
+        src, tgt = score
+        return src > self.src_threshold and tgt > self.tgt_threshold
+
+    def filter(self, pairs):
+        input_file = create_align_input_file(pairs)
+        scores_fwd_file = tempfile.NamedTemporaryFile('w+')
+        scores_rev_file = tempfile.NamedTemporaryFile('w+')
+        self._run(input_file.name, scores_fwd_file.name, scores_rev_file.name)
+        input_file.seek(0)
+        scores_fwd_file.seek(0)
+        scores_rev_file.seek(0)
+        for input_pair, line1, line2 in zip(input_file, scores_fwd_file, scores_rev_file):
+            score = float(line1.strip()), float(line2.strip())
+            if self.accept(score):
+                sent1, sent2 = input_pair.strip().split(' ||| ')
+                yield sent1, sent2
+        input_file.close()
+        scores_fwd_file.close()
+        scores_rev_file.close()

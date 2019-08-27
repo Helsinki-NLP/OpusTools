@@ -7,7 +7,8 @@ from yaml import load, Loader
 from . import OpusRead
 from .filter import LengthRatioFilter, LanguageIDFilter, \
     LengthFilter, LongWordFilter, HtmlTagFilter, CharacterScoreFilter, \
-    TerminalPunctuationFilter, NonZeroNumeralsFilter, WordAlignment
+    TerminalPunctuationFilter, NonZeroNumeralsFilter
+from .filter.word_alignment import WordAlignment
 
 class OpusGetSents(OpusRead):
 
