@@ -1,6 +1,7 @@
 """Language model filtering"""
 
 import argparse
+import copy
 import logging
 import math
 import tempfile
@@ -80,13 +81,19 @@ _VARIKN_PERPLEXITY_PARAMS = {
     'arpa': True,
     'unk': '<UNK>',
     'include_unks': False,
-    'css': None,
-    'wb': ['<w>'],
+    'ccs': None,
+    'wb': '<w>',
     'mb': None,
     'init_hist': 2,
     'interpolate': None,
     'filename': None
 }
+
+
+def get_perplexity_params(params):
+    new = copy.copy(_VARIKN_PERPLEXITY_PARAMS)
+    new.update(params)
+    return new
 
 
 def _temptokenfile(item):
@@ -103,7 +110,7 @@ def get_lm(**kwargs):
     for key, default in _VARIKN_PERPLEXITY_PARAMS.items():
         setattr(args, key, kwargs.get(key, default))
 
-    args.css = _temptokenfile(args.ccs) if args.css else ''
+    args.ccs = _temptokenfile(args.ccs) if args.ccs else ''
     args.wb = _temptokenfile(args.wb) if args.wb else ''
     args.mb = _temptokenfile(args.mb) if args.mb else ''
 
@@ -120,6 +127,7 @@ def get_lm(**kwargs):
             args.filename, 0 if args.arpa else 1,
             args.ccs, args.wb, args.mb, args.unk, 0, not args.include_unks)
     lm.set_init_hist(args.init_hist)
+    lm.init_variables()
     return lm
 
 
@@ -129,42 +137,54 @@ class CrossEntropyFilter(FilterABC):
     s_beg = '<s>'
     s_end = '</s>'
 
-    def __init__(self, src_lm_params=None, tgt_lm_params=None, perplexity=False, threshold=50.0, **kwargs):
+    def __init__(self, src_lm_params=None, tgt_lm_params=None, perplexity=False,
+                 src_threshold=50.0, tgt_threshold=50.0, diff_threshold=10.0, **kwargs):
+        if not src_lm_params or not tgt_lm_params:
+            raise ConfigurationError("Language model configurations need to be defined")
         if src_lm_params.get('segmentation', {}).get('type', 'char') != 'char':
             raise ConfigurationError("Only segmentation type supported currently is 'char'")
         self.src_lm_params = src_lm_params
         self.tgt_lm_params = tgt_lm_params
-        self.src_lm = get_lm(self.src_lm_params)
-        self.tgt_lm = get_lm(self.tgt_lm_params)
+        self.src_lm = get_lm(**self.src_lm_params)
+        self.tgt_lm = get_lm(**self.tgt_lm_params)
         self.perplexity = perplexity
-        self.threshold = threshold
-        super().__init__(kwargs)
+        self.src_threshold = src_threshold
+        self.tgt_threshold = tgt_threshold
+        self.diff_threshold = diff_threshold
+        super().__init__(**kwargs)
 
     def char_tokenize(self, sent, params):
-        tokens = [s_beg]
-        if params['wb']:
-            tokens.append(params['wb'])
+        mb = params['mb']
+        wb = params['wb']
+        tokens = [self.s_beg]
+        if wb:
+            tokens.append(wb)
         for word in sent.strip().split():
-            if params['mb'] and params['mb'].endswith('$'):
-                for char in word.replace('', params['mb'][:-1] + ' '):
+            if mb and mb.endswith('$'):
+                for char in word.replace('', mb[:-1] + ' '):
                     tokens.append(char)
-            elif params['mb'] and params['mb'].startswith('^'):
-                for char in word.replace('', ' ' + params['mb'][1:]):
+            elif mb and mb.startswith('^'):
+                for char in word.replace('', ' ' + mb[1:]):
                     tokens.append(char)
             else:
                 tokens += list(word)
-            if params['wb']:
-                tokens.append(params['wb'])
-        tokens.append(s_end)
+            if wb:
+                tokens.append(wb)
+        tokens.append(self.s_end)
         return tokens
 
     def filter(self, sent1, sent2):
-        return self.score(sent1, sent2) > self.threshold
+        src, tgt = self.score(sent1, sent2)
+        diff = abs(src - tgt)
+        return src < self.src_threshold and tgt < self.tgt_threshold and diff < self.diff_threshold
 
     def score(self, sent1, sent2):
+        scores = []
         for lm, params, sent in [(self.src_lm, self.src_lm_params, sent1),
-                                 (self.src_lm, self.src_lm_params, sent1)]:
-            tokens = self.char_tokenize(sent, params)
-            use_word = params['wb'] or params['mb']
-            return word_perplexity(lm, tokens, not self.perplexity) if use_word else \
-                token_perplexity(lm, tokens, not self.perplexity)
+                                 (self.tgt_lm, self.tgt_lm_params, sent2)]:
+            fullparams = get_perplexity_params(params)
+            tokens = self.char_tokenize(sent, fullparams)
+            use_word = fullparams['wb'] or fullparams['mb']
+            scores.append(word_perplexity(lm, tokens, not self.perplexity) if use_word else \
+                          token_perplexity(lm, tokens, not self.perplexity))
+        return scores
