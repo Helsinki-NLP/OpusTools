@@ -2,7 +2,9 @@ import sys
 
 from . import LengthRatioFilter, LanguageIDFilter, \
     LengthFilter, LongWordFilter, HtmlTagFilter, CharacterScoreFilter, \
-    TerminalPunctuationFilter, NonZeroNumeralsFilter#, CleanCorpusN
+    TerminalPunctuationFilter, NonZeroNumeralsFilter
+from .lm import CrossEntropyFilter
+from .word_alignment import WordAlignFilter
 
 class FilterPipeline:
 
@@ -21,22 +23,14 @@ class FilterPipeline:
         return pipeline
 
     def score(self, pairs):
-        scores = []
-        num = 0
+        scores = [{} for p in range(len(pairs))]
         for f in self.filters:
+            num = 0
             filter_gen = f.score(pairs)
-            scores.append([])
-            for score in filter_gen:
-                scores[num].append((f.__class__.__name__, score))
-            num += 1
+            for sco in filter_gen:
+                scores[num][f.__class__.__name__] = sco
+                num += 1
 
-        entries = []
-        for i in range(len(scores[0])):
-            entry = {}
-            for j in range(len(scores)):
-                entry[scores[j][i][0]] = scores[j][i][1]
-            entries.append(entry)
-
-        return entries
+        return scores
 
 

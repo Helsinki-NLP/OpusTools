@@ -6,25 +6,25 @@ class TestFilterPipeline(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        self.config = [{'LanguageIDFilter':
-                            {'src_lang': 'en',
-                            'tgt_lang': 'sv',
-                            'src_threshold': 0,
-                            'tgt_threshold': 0}},
-                        {'TerminalPunctuationFilter':
-                            {'threshold': -2}},
-                        {'NonZeroNumeralsFilter':
-                            {'threshold': 0.5}},
-                        {'CharacterScoreFilter':
-                            {'src_script': 'latin-1',
-                            'tgt_script': 'latin-1',
-                            'src_threshold': 1,
-                            'tgt_threshold': 1}}]
+        self.config = [
+                {'LengthFilter': {'min_length': 1, 'max_length': 100,
+                    'unit': 'word'}},
+                {'LengthRatioFilter': {'threshold': 3, 'unit': 'word'}},
+                {'LongWordFilter': {'threshold': 40}},
+                {'HtmlTagFilter': {}},
+                {'CharacterScoreFilter': {'src_script': 'latin-1',
+                    'tgt_script': 'latin-1', 'src_threshold': 1,
+                    'tgt_threshold': 1}},
+                {'LanguageIDFilter': {'src_lang': 'en', 'tgt_lang': 'sv',
+                    'src_threshold': 0, 'tgt_threshold': 0}},
+                {'TerminalPunctuationFilter': {'threshold': -2}},
+                {'NonZeroNumeralsFilter': {'threshold': 0.5}}
+           ]
 
     def test_from_config(self):
         fp = FilterPipeline.from_config(self.config)
 
-        self.assertEqual(len(fp.filters), 4)
+        self.assertEqual(len(fp.filters), 8)
 
     def test_score(self):
         fp = FilterPipeline.from_config(self.config)
@@ -35,13 +35,21 @@ class TestFilterPipeline(unittest.TestCase):
                     '12345.....')]
         scores = fp.score(pairs)
         self.assertEqual(scores[0],
-                {'LanguageIDFilter': (1.0, 1.0),
+                {'LengthFilter': (5, 9),
+                    'LengthRatioFilter': 1.8,
+                    'LongWordFilter': 12,
+                    'HtmlTagFilter': (False, False),
+                    'CharacterScoreFilter': (1.0, 1.0),
+                    'LanguageIDFilter': (1.0, 1.0),
                     'TerminalPunctuationFilter': -0.0,
-                    'NonZeroNumeralsFilter': 1.0,
-                    'CharacterScoreFilter': (1.0, 1.0)})
+                    'NonZeroNumeralsFilter': 1.0})
         self.assertEqual(scores[1],
-                {'LanguageIDFilter': (0.17, 0.0),
+                {'LengthFilter': (1, 1),
+                    'LengthRatioFilter': 1.0,
+                    'LongWordFilter': 10,
+                    'HtmlTagFilter': (False, False),
+                    'CharacterScoreFilter': (1.0, 1.0),
+                    'LanguageIDFilter': (0.17, 0.0),
                     'TerminalPunctuationFilter': -2.1972245773362196,
-                    'NonZeroNumeralsFilter': 0.8888888888888888,
-                    'CharacterScoreFilter': (1.0, 1.0)})
+                    'NonZeroNumeralsFilter': 0.8888888888888888})
 
