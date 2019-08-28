@@ -27,10 +27,20 @@ class FilterPipeline:
         for f in self.filters:
             num = 0
             filter_gen = f.score(pairs)
-            for sco in filter_gen:
-                scores[num][f.__class__.__name__] = sco
+            for score in filter_gen:
+                scores[num][f.__class__.__name__] = score
                 num += 1
 
         return scores
+
+    def filter(self, pairs):
+        for f in self.filters:
+            filter_gen = f.filter(pairs)
+            accepted = []
+            for pair in filter_gen:
+                accepted.append(pair)
+            pairs = accepted.copy()
+
+        return pairs
 
 

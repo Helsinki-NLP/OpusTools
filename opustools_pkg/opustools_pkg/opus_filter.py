@@ -5,10 +5,6 @@ import json
 from yaml import load, Loader
 
 from . import OpusRead
-from .filter import LengthRatioFilter, LanguageIDFilter, \
-    LengthFilter, LongWordFilter, HtmlTagFilter, CharacterScoreFilter, \
-    TerminalPunctuationFilter, NonZeroNumeralsFilter
-from .filter.word_alignment import WordAlignment
 
 class OpusGetSents(OpusRead):
 
@@ -51,18 +47,6 @@ class OpusFilter:
 
         with open(args.f) as yaml_file:
             filters = load(yaml_file, Loader=Loader)
-
-        self.lengthRatioFilter = LengthRatioFilter()
-        self.languageIDFilter = LanguageIDFilter(
-            src_lang=fromto[0], tgt_lang=fromto[1])
-        self.lengthFilter = LengthFilter()
-        self.longWordFilter = LongWordFilter()
-        self.htmlTagFilter = HtmlTagFilter()
-        self.characterScoreFilter = CharacterScoreFilter()
-        self.terminalPunctuationFilter = TerminalPunctuationFilter()
-        self.nonZeroNumeralsFilter = NonZeroNumeralsFilter()
-        #self.cleanCorpusN = CleanCorpusN()
-        self.wordAlignment = WordAlignment(eflomal_path='/home/mikko/eflomal')
 
         get_sents = OpusGetSents('-d {0} -s {1} -t {2} -r {3} -p {4} -wm '
             'moses -w filter_files/temp filter_files/temp -ln'.format(

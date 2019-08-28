@@ -53,3 +53,25 @@ class TestFilterPipeline(unittest.TestCase):
                     'TerminalPunctuationFilter': -2.1972245773362196,
                     'NonZeroNumeralsFilter': 0.8888888888888888})
 
+    def test_filter(self):
+        fp = FilterPipeline.from_config(self.config)
+        pairs = [('test', ''),
+                (' '.join(['w' for i in range(101)]), 'test'),
+                (''.join(['c' for i in range(41)]), 'test'),
+                ('<s>test', 'test'),
+                ('test', 'Φtest'),
+                ('Tämä lause on kirjoitettu suomeksi.',
+                    'This sentence is written in English.'),
+                ('test', 'test...............'),
+                ('1', '99999999999'),
+                ('This sentence is written in English.',
+                    'Denna mening är skriven på svenska.')]
+        filtered = fp.filter(pairs)
+        self.assertEqual(filtered, [('This sentence is written in English.',
+                    'Denna mening är skriven på svenska.')])
+        rev_pairs = [p for p in reversed(pairs)]
+        filtered = fp.filter(rev_pairs)
+        self.assertEqual(filtered, [('This sentence is written in English.',
+                    'Denna mening är skriven på svenska.')])
+
+
