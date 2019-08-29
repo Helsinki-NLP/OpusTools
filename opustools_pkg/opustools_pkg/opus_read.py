@@ -373,19 +373,19 @@ class OpusRead:
                         self.fromto[0]+'-'+self.fromto[1]+'.xml.gz'))
                 except FileNotFoundError:
                     return
-            
+
             lastline = self.readAlignment(gzipAlign)
             gzipAlign.close()
         else:
             with open(self.alignment) as xmlAlign:
                 lastline = self.readAlignment(xmlAlign)
-        
+
         if self.args.write_mode == 'links' and lastline != '</cesAlign>':
             self.addLinkFileEnding()
 
         if self.args.write_mode == 'tmx':
             self.addTmxEnding()
-            
+
         self.par.closeFiles()
 
         if self.args.write != None:

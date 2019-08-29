@@ -1,7 +1,28 @@
 #!/usr/bin/env python3
+
+import argparse
+
 from opustools_pkg import OpusFilter
 
-of = OpusFilter()
+parser = argparse.ArgumentParser(prog='opus_filter',
+    description='Filter OPUS bitexts')
+
+parser.add_argument('-d', help='Corpus name', metavar='corpus_name',
+    required=True)
+parser.add_argument('-s', help='Source language', metavar='langid',
+    required=True)
+parser.add_argument('-t', help='Target language', metavar='langid',
+    required=True)
+parser.add_argument('-f', help='yaml file to specify filters')
+parser.add_argument('-r', help='Release (default=latest)',
+    metavar='version',
+    default='latest')
+parser.add_argument('-p',
+    help='Pre-process-type (raw, xml or parsed, default=xml)',
+    default='xml', choices=['raw', 'xml', 'parsed'])
+
+args = parser.parse_args()
+
+of = OpusFilter(args)
 of.clean_data()
-of.filter()
-of.word_alignment_score()
+#of.filter()
