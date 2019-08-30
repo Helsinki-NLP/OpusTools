@@ -22,7 +22,7 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [-ta attribute [attribute ...]] [-ca delimiter]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
-                 [-id file_name]
+                 [-id file_name] [-q]
 ```
 
 arguments:
@@ -80,6 +80,7 @@ arguments:
                       Filter target sentences by their langid.py language id
                       labels and confidence score, e.g. en 0.9
 -id file_name         Write sentence ids to a file.
+-q                    Download necessary files without prompting "(y/n)"
 ```
 
 
@@ -288,20 +289,22 @@ Read a document from OPUS and print to STDOUT
 ## Usage
 
 ```
-opus-get [-h] -s S [-t T] [-d D] [-r R] [-p P] [-l] [-dl DL]
+opus-get [-h] -s S [-t T] [-d D] [-r R] [-p {raw,xml,parsed}] [-l]
+         [-dl DL] [-q]
 ```
 
 arguments:
 
 ```
--h, --help  show this help message and exit
--s S        Source language
--t T        Target language
--d D        Corpus name
--r R        Release
--p P        Pre-process type
--l          List resources
--dl DL      Set download directory (default=current directory)
+-h, --help           show this help message and exit
+-s S                 Source language
+-t T                 Target language
+-d D                 Corpus name
+-r R                 Release
+-p {raw,xml,parsed}  Pre-process type
+-l                   List resources
+-dl DL               Set download directory (default=current directory)
+-q                   Download necessary files without prompting "(y/n)"
 ```
 
 

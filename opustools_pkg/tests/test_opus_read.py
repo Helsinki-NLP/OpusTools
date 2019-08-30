@@ -1986,8 +1986,6 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(var[-18:], '128 KB Total size\n') 
 
     def test_alignment_file_not_found_no_prompt(self):
-        pass
-        '''
         opr = OpusRead(
             '-d RF -s en -t sv -m 1 -af unfound.xml.gz -q'.split())
         opr.printPairs()
@@ -1997,8 +1995,6 @@ class TestOpusRead(unittest.TestCase):
         os.remove('RF_latest_xml_en-sv.xml.gz')
         os.remove('RF_latest_xml_en.zip')
         os.remove('RF_latest_xml_sv.zip')
-        '''
-
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_zip_file_not_found(self, mocked_input):
@@ -2217,9 +2213,9 @@ class TestOpusGet(unittest.TestCase):
         temp_args = sys.argv.copy()
         sys.argv = [temp_args[0]] + '-s eo'.split()
         opg = OpusGet([])
-        self.assertEqual(opg.url,
-            'http://opus.nlpl.eu/opusapi/?source=eo&version=latest&'
-            'preprocessing=xml&')
+        params = ['source=eo', 'version=latest', 'preprocessing=xml', '']
+        for param in opg.url.split('?')[1].split('&'):
+            self.assertTrue(param in params)
         sys.argv = temp_args.copy()
 
     def test_format_size(self):
@@ -2235,7 +2231,7 @@ class TestOpusGet(unittest.TestCase):
 
     def test_remove_data_with_no_alignment_if_needed(self):
         opg = OpusGet('-s en -t sv -l'.split())
-        self.assertEqual(opg.get_corpora_data()[2], '299 GB')
+        self.assertEqual(opg.get_corpora_data()[2], '101 GB')
 
     def test_get_files_invalid_url(self):
         opg = OpusGet('-d RF -s en -t sv -l'.split())
