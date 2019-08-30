@@ -112,6 +112,9 @@ class OpusRead:
         parser.add_argument('-id',
             metavar='file_name',
             help='Write sentence ids to a file.')
+        parser.add_argument('-q',
+            help='Download necessary files without prompting (y/n)',
+            action='store_true')
 
         if len(arguments) == 0:
             self.args = parser.parse_args()
@@ -339,6 +342,7 @@ class OpusRead:
                 og = OpusGet(arguments)
                 og.get_files()
                 arguments.remove('-l')
+                arguments.append('-q')
                 og = OpusGet(arguments)
                 og.get_files()
                 try:

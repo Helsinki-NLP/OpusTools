@@ -15,6 +15,9 @@ class OpusGet:
         parser.add_argument('-dl', 
             help='Set download directory (default=current directory)', 
             default='')
+        parser.add_argument('-q',
+            help='Download necessary files without prompting (y/n)',
+            action='store_true')
 
         if len(arguments) == 0:
             self.args = parser.parse_args()
@@ -111,8 +114,11 @@ class OpusGet:
             self.filesize), end='', flush=True)
 
     def download(self, corpora, file_n, total_size):
-        answer = input(('Downloading ' + str(file_n) + ' file(s) with the '
-            'total size of ' + total_size + '. Continue? (y/n) '))
+        if self.args.q:
+            answer = 'y'
+        else:
+            answer = input(('Downloading ' + str(file_n) + ' file(s) with the '
+                'total size of ' + total_size + '. Continue? (y/n) '))
 
         if answer == 'y':
             for c in corpora:
