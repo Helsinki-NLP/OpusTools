@@ -16,6 +16,16 @@ class TestOpusFilter(unittest.TestCase):
         self.args.p = 'xml'
         self.opus_filter = OpusFilter(self.args)
         self.opus_filter.sents_to_file()
+        self.opus_filter.segment_file(
+                'filter_files/sents.en',
+                'filter_files/sents.seg.en',
+                char=True
+                )
+        self.opus_filter.segment_file(
+                'filter_files/sents.sv',
+                'filter_files/sents.seg.sv',
+                char=True
+                )
 
     def test_clean_data(self):
         config = [
@@ -40,8 +50,24 @@ class TestOpusFilter(unittest.TestCase):
                 {'LanguageIDFilter': {'src_lang': 'en', 'tgt_lang': 'sv'}},
                 {'CharacterScoreFilter': {}},
                 {'TerminalPunctuationFilter': {}},
-                {'NonZeroNumeralsFilter': {}}
+                {'NonZeroNumeralsFilter': {}},
+                {'CrossEntropyFilter':
+                    {'src_lm_params':
+                        {'filename': 'filter_files/lm.en'},
+                    'tgt_lm_params':
+                        {'filename': 'filter_files/lm.sv'}
+                    }}
                ]
+
+        train_args = argparse.Namespace()
+        for key, default in lm._VARIKN_TRAINING_PARAMS.items():
+            setattr(train_args, key, default)
+        train_args.data = 'filter_files/sents.seg.en'
+        train_args.model = 'filter_files/lm.en'
+        lm.train(train_args)
+        train_args.data = 'filter_files/sents.seg.sv'
+        train_args.model = 'filter_files/lm.sv'
+        lm.train(train_args)
 
         self.opus_filter.score_data(config)
 
@@ -51,6 +77,8 @@ class TestOpusFilter(unittest.TestCase):
                     scores[0],
                     {'LanguageIDFilter': [1.0, 0.98],
                         'CharacterScoreFilter': [1.0, 1.0],
+                        'CrossEntropyFilter': [11.311833035785716,
+                            25.531239597436915],
                         'TerminalPunctuationFilter': -0.0,
                         'NonZeroNumeralsFilter': 0.0}
                     )
@@ -102,6 +130,12 @@ class TestOpusFilter(unittest.TestCase):
                 '<w> 4 <w> October <w> , <w> 1988 <w> . <w> </s> \n')
                 )
 
+    def test_segment_line_char(self):
+        line = 'this is a test\n'
+        line = self.opus_filter.segment_line_char(line)
+        self.assertEqual(line,
+                '<s> <w> t h i s <w> i s <w> a <w> t e s t <w> </s> \n')
+
     def test_segment_file(self):
         train_file = 'filter_files/sents.en'
         input_file = 'filter_files/sents.en'
@@ -140,6 +174,26 @@ class TestOpusFilter(unittest.TestCase):
                     '<w> 4 <w> October <w> , <w> 1988 <w> . <w> </s> \n')
                     )
 
+    def test_segment_file_char(self):
+        self.opus_filter.segment_file(
+                'filter_files/sents.en',
+                'filter_files/sents.en.seg',
+                char=True
+                )
+        with open('filter_files/sents.en.seg') as output_file:
+            seg_lines = output_file.readlines()
+            self.assertEqual(len(seg_lines), 180)
+            self.assertEqual(
+                    seg_lines[0],
+                    ('<s> <w> S t a t e m e n t <w> o f <w> G o v e r n m e '
+                    'n t <w> P o l i c y <w> b y <w> t h e <w> P r i m e <w> '
+                    'M i n i s t e r <w> , <w> M r <w> I n g v a r <w> C a r '
+                    'l s s o n <w> , <w> a t <w> t h e <w> O p e n i n g <w> '
+                    'o f <w> t h e <w> S w e d i s h <w> P a r l i a m e n t '
+                    '<w> o n <w> T u e s d a y <w> , <w> 4 <w> O c t o b e r '
+                    '<w> , <w> 1 9 8 8 <w> . <w> </s> \n')
+                    )
+
     def test_sents_to_file(self):
         with open('filter_files/sents.en') as sents_file_en:
             with open('filter_files/sents.sv') as sents_file_sv:
@@ -155,4 +209,5 @@ class TestOpusFilter(unittest.TestCase):
                         ', 1988 .\n')
                         )
                 self.assertEqual(sents_sv[0], 'REGERINGSFÖRKLARING .\n')
+
 

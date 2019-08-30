@@ -72,11 +72,18 @@ class OpusFilter:
         newli.extend(['</s>', '\n'])
         return ' '.join(newli)
 
-    def segment_file(self, input_file, output_file):
+    def segment_line_char(self, line):
+        return '<s> <w> {} <w> </s> \n'.format(
+                ' '.join(line.rstrip()).replace('   ', ' <w> '))
+
+    def segment_file(self, input_file, output_file, char=False):
         with open(input_file, 'r') as infile:
             with open(output_file, 'w') as outfile:
                 for line in infile:
-                    new_line = self.segment_line(line)
+                    if char:
+                        new_line = self.segment_line_char(line)
+                    else:
+                        new_line = self.segment_line(line)
                     outfile.write(new_line)
 
     def sents_to_file(self, bpe=False, segment=False):
@@ -91,40 +98,6 @@ class OpusFilter:
 
         source_file.close()
         target_file.close()
-
-        if bpe:
-            src_train_file_name = 'filter_files/sents.{}'.format(
-                    self.fromto[0])
-            source_bpe_file_name = source_file_name+'.bpe'
-            self.make_bpe(
-                    src_train_file_name,
-                    source_file_name,
-                    source_bpe_file_name
-                    )
-            tgt_train_file_name = 'filter_files/sents.{}'.format(
-                    self.fromto[1])
-            target_bpe_file_name = target_file_name+'.bpe'
-            self.make_bpe(
-                    tgt_train_file_name,
-                    target_file_name,
-                    target_bpe_file_name
-                    )
-
-        if segment:
-            if bpe:
-                source_file_name = source_bpe_file_name
-                target_file_name = target_bpe_file_name
-            source_seg_file_name = source_file_name+'.seg'
-            target_seg_file_name = target_file_name+'.seg'
-
-            self.segment_file(
-                    source_file_name,
-                    source_seg_file_name
-                    )
-            self.segment_file(
-                    target_file_name,
-                    target_seg_file_name
-                    )
 
     '''
     def word_alignment_score(self):
