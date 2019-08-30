@@ -357,7 +357,7 @@ class OpusRead:
             except FileNotFoundError:
                 print(('\nAlignment file ' + self.alignment + ' not found. '
                     'The following files are available for downloading:\n'))
-                arguments = ['-s', self.fromto[0], '-t', self.fromto[1], '-d', 
+                arguments = ['-s', self.fromto[0], '-t', self.fromto[1], '-d',
                     self.args.directory, '-r', self.args.release, '-p',
                     self.args.preprocess, '-l']
                 og = OpusGet(arguments)

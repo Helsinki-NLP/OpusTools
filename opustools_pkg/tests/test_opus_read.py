@@ -2000,7 +2000,18 @@ class TestOpusRead(unittest.TestCase):
         os.remove('RF_latest_xml_sv.zip')
         var = pairPrinterToVariable(
             '-d RF -s en -t sv -m 1 -af unfound.xml.gz'.split())
-        self.assertEqual(var[-18:], '128 KB Total size\n') 
+        self.assertEqual(var[-18:], '128 KB Total size\n')
+
+    def test_alignment_file_not_found_no_prompt(self):
+        opr = OpusRead(
+            '-d RF -s en -t sv -m 1 -af unfound.xml.gz -q'.split())
+        opr.printPairs()
+        self.assertTrue(os.path.isfile('RF_latest_xml_en-sv.xml.gz'))
+        self.assertTrue(os.path.isfile('RF_latest_xml_en.zip'))
+        self.assertTrue(os.path.isfile('RF_latest_xml_sv.zip'))
+        os.remove('RF_latest_xml_en-sv.xml.gz')
+        os.remove('RF_latest_xml_en.zip')
+        os.remove('RF_latest_xml_sv.zip')
 
     def test_alignment_file_not_found_no_prompt(self):
         opr = OpusRead(
