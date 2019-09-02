@@ -158,14 +158,14 @@ class OpusRead:
         self.mosessrc = None
         self.mosestrg = None
         if self.args.id != None:
-            self.id_file = open(self.args.id, 'w')
+            self.id_file = open(self.args.id, 'w', encoding='utf-8')
 
         if self.args.w != None:
             if self.args.wm == 'moses' and len(self.args.w) == 2:
-                self.mosessrc = open(self.args.w[0], 'w')
-                self.mosestrg = open(self.args.w[1], 'w')
+                self.mosessrc = open(self.args.w[0], 'w', encoding='utf-8')
+                self.mosestrg = open(self.args.w[1], 'w', encoding='utf-8')
             else:
-                self.resultfile = open(self.args.w[0], 'w')
+                self.resultfile = open(self.args.w[0], 'w', encoding='utf-8')
 
         if self.args.wm == 'links':
             self.par = LinksAlignmentParser(self.source, self.target, self.args,
