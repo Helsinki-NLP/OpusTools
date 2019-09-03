@@ -12,58 +12,83 @@ from .filter.pipeline import FilterPipeline
 
 class OpusFilter:
 
-    def __init__(self, args):
-        fromto = sorted([args.s, args.t])
-        self.src_lan = fromto[0]
-        self.tgt_lan = fromto[1]
+    def __init__(self, configuration):
+        self.configuration = configuration
+        self.output_dir = configuration['output_directory']
+        if not os.path.isdir(self.output_dir):
+            logging.warning(
+                'Directory "{}" does not exist.'.format(self.output_dir))
 
-        if not os.path.isdir(args.rd):
-            logging.warning('Directory "{}" does not exist.'.format(args.rd))
+        for corpus, settings in configuration['corpora'].items():
+            if settings['type'] == 'OPUS':
+                parameters = settings['parameters']
+                fromto = sorted([parameters['source_language'],
+                    parameters['target_language']])
+                src_lan = fromto[0]
+                tgt_lan = fromto[1]
 
-        opus_reader = OpusRead('-d {corpus} -s {src} -t {tgt} -r {version} '
-            '-p {preprocessing} -wm moses -w {result_dir}/sents.{src} '
-            '{result_dir}/sents.{tgt} -ln'.format(
-                corpus=args.d, src=args.s, tgt=args.t, version=args.r,
-                preprocessing=args.p, result_dir=args.rd).split())
+                opus_reader = OpusRead('-d {corpus_name} -s {src} -t {tgt} '
+                    '-r {version} -p {preprocessing} -wm moses '
+                    '-w {result_dir}/sents.{corpus_name}.{src} '
+                    '{result_dir}/sents.{corpus_name}.{tgt} -ln'.format(
+                        corpus_name=parameters['corpus_name'], src=src_lan,
+                        tgt=tgt_lan, version=parameters['release'],
+                        preprocessing=parameters['preprocessing'],
+                        result_dir=self.output_dir).split())
 
-        self.args = args
+                opus_reader.printPairs()
 
-        opus_reader.printPairs()
-
-    def get_pairs(self, src, tgt):
-        source_file = open('{result_dir}/sents.{src}'.format(
-            result_dir=self.args.rd, src=self.src_lan))
-        target_file = open('{result_dir}/sents.{tgt}'.format(
-            result_dir=self.args.rd, tgt=self.tgt_lan))
+    def get_pairs(self, corpus_name, src, tgt):
+        source_file = open('{result_dir}/sents.{corpus_name}.{src}'.format(
+            result_dir=self.output_dir, corpus_name=corpus_name, src=src))
+        target_file = open('{result_dir}/sents.{corpus_name}.{tgt}'.format(
+            result_dir=self.output_dir, corpus_name=corpus_name, tgt=tgt))
         for src_line in source_file:
             tgt_line = target_file.readline()
             yield (src_line.rstrip(), tgt_line.rstrip())
         source_file.close()
         target_file.close()
 
-    def clean_data(self, config):
-        clean_file= open('{result_dir}/clean.{src}-{tgt}'.format(
-            result_dir=self.args.rd, src=self.src_lan, tgt=self.tgt_lan), 'w')
+    def clean_data(self):
+        for corpus, settings in self.configuration['filtering'].items():
+            clean_file= open('{result_dir}/{output_file}'.format(
+                result_dir=self.output_dir,
+                output_file=settings['output']), 'w')
 
-        filter_pipe = FilterPipeline.from_config(config)
-        pairs_gen = self.get_pairs(self.src_lan, self.tgt_lan)
-        pairs = filter_pipe.filter(pairs_gen)
+            filter_pipe = FilterPipeline.from_config(settings['filters'])
+            corpus_parameters = (self.configuration['corpora'][corpus]
+                    ['parameters'])
+            corpus_name = corpus_parameters['corpus_name']
+            source_language = corpus_parameters['source_language']
+            target_language = corpus_parameters['target_language']
+            pairs_gen = self.get_pairs(corpus_name, source_language,
+                    target_language)
+            pairs = filter_pipe.filter(pairs_gen)
 
-        for pair in pairs:
-            clean_file.write('{} ||| {}\n'.format(pair[0], pair[1]))
-        clean_file.close()
+            for pair in pairs:
+                clean_file.write('{} ||| {}\n'.format(pair[0], pair[1]))
+            clean_file.close()
 
-    def score_data(self, config):
-        pairs_gen = self.get_pairs(self.src_lan, self.tgt_lan)
+    def score_data(self):
+        for corpus, settings in self.configuration['filtering'].items():
+            corpus_parameters = (self.configuration['corpora'][corpus]
+                    ['parameters'])
+            corpus_name = corpus_parameters['corpus_name']
+            source_language = corpus_parameters['source_language']
+            target_language = corpus_parameters['target_language']
+            pairs_gen = self.get_pairs(corpus_name, source_language,
+                    target_language)
 
-        filter_pipe = FilterPipeline.from_config(config)
-        scores_gen = filter_pipe.score(pairs_gen)
-        scores = [score for score in scores_gen]
+            filter_pipe = FilterPipeline.from_config(settings['filters'])
+            scores_gen = filter_pipe.score(pairs_gen)
+            scores = [score for score in scores_gen]
 
-        score_file = open('{result_dir}/scores.{src}-{tgt}.json'.format(
-            result_dir=self.args.rd, src=self.src_lan, tgt=self.tgt_lan) , 'w')
-        score_file.write(json.dumps(scores))
-        score_file.close()
+            score_file = open(
+                '{result_dir}/scores.{corpus_name}.{src}-{tgt}.json'.format(
+                    result_dir=self.output_dir, corpus_name=corpus_name,
+                    src=source_language, tgt=target_language) , 'w')
+            score_file.write(json.dumps(scores))
+            score_file.close()
 
     def make_bpe(self, train_file, input_file, output_file):
         bpe_file = train_file+'.code'
