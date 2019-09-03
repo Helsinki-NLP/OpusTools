@@ -66,11 +66,11 @@ class TestFilterPipeline(unittest.TestCase):
                 ('1', '99999999999'),
                 ('This sentence is written in English.',
                     'Denna mening är skriven på svenska.')]
-        filtered = fp.filter(pairs)
+        filtered = list(fp.filter(pairs))
         self.assertEqual(filtered, [('This sentence is written in English.',
                     'Denna mening är skriven på svenska.')])
         rev_pairs = [p for p in reversed(pairs)]
-        filtered = fp.filter(rev_pairs)
+        filtered = list(fp.filter(rev_pairs))
         self.assertEqual(filtered, [('This sentence is written in English.',
                     'Denna mening är skriven på svenska.')])
 
