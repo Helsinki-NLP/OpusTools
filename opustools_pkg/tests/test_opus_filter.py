@@ -56,7 +56,8 @@ class TestOpusFilter(unittest.TestCase):
                         {'filename': 'filter_files/lm.en'},
                     'tgt_lm_params':
                         {'filename': 'filter_files/lm.sv'}
-                    }}
+                    }},
+                {'WordAlignFilter': {}}
                ]
 
         train_args = argparse.Namespace()
@@ -73,15 +74,13 @@ class TestOpusFilter(unittest.TestCase):
 
         with open('filter_files/scores.en-sv.json') as scores_file:
             scores = json.loads(scores_file.readline())
-            self.assertEqual(
-                    scores[0],
-                    {'LanguageIDFilter': [1.0, 0.98],
-                        'CharacterScoreFilter': [1.0, 1.0],
-                        'CrossEntropyFilter': [11.311833035785716,
-                            25.531239597436915],
-                        'TerminalPunctuationFilter': -0.0,
-                        'NonZeroNumeralsFilter': 0.0}
-                    )
+            self.assertEqual(scores[0]['LanguageIDFilter'], [1.0, 0.98])
+            self.assertEqual(scores[0]['CharacterScoreFilter'], [1.0, 1.0])
+            self.assertEqual(scores[0]['CrossEntropyFilter'],
+                    [11.311833035785716, 25.531239597436915])
+            self.assertEqual(scores[0]['TerminalPunctuationFilter'], -0.0)
+            self.assertEqual(scores[0]['NonZeroNumeralsFilter'], 0.0)
+            self.assertEqual(type(scores[0]['WordAlignFilter']), list)
 
     def test_make_bpe(self):
         train_file = 'filter_files/sents.en'
