@@ -2,57 +2,66 @@ import os
 import argparse
 import json
 import subprocess
+import logging
 
 from yaml import load, Loader
 
 from . import OpusRead
 from .filter.pipeline import FilterPipeline
 
-class OpusGetSents(OpusRead):
-
-    def __init__(self, arguments):
-        super().__init__(arguments)
-        self.sents = []
-
-    def sendPairOutput(self, wpair):
-        self.sents.append((wpair[0].rstrip(), wpair[1].rstrip()))
 
 class OpusFilter:
 
     def __init__(self, args):
         fromto = sorted([args.s, args.t])
-        self.fromto = fromto
+        self.src_lan = fromto[0]
+        self.tgt_lan = fromto[1]
 
-        try:
-            os.mkdir('filter_files')
-        except FileExistsError:
-            pass
+        if not os.path.isdir(args.rd):
+            logging.warning('Directory "{}" does not exist.'.format(args.rd))
 
-        get_sents = OpusGetSents('-d {0} -s {1} -t {2} -r {3} -p {4} -wm '
-            'moses -w filter_files/temp filter_files/temp -ln'.format(
-                args.d, args.s, args.t, args.r, args.p).split())
+        opus_reader = OpusRead('-d {corpus} -s {src} -t {tgt} -r {version} '
+            '-p {preprocessing} -wm moses -w {result_dir}/sents.{src} '
+            '{result_dir}/sents.{tgt} -ln'.format(
+                corpus=args.d, src=args.s, tgt=args.t, version=args.r,
+                preprocessing=args.p, result_dir=args.rd).split())
 
-        get_sents.printPairs()
+        self.args = args
 
-        self.sents = get_sents.sents
+        opus_reader.printPairs()
+
+    def get_pairs(self, src, tgt):
+        source_file = open('{result_dir}/sents.{src}'.format(
+            result_dir=self.args.rd, src=self.src_lan))
+        target_file = open('{result_dir}/sents.{tgt}'.format(
+            result_dir=self.args.rd, tgt=self.tgt_lan))
+        for src_line in source_file:
+            tgt_line = target_file.readline()
+            yield (src_line.rstrip(), tgt_line.rstrip())
+        source_file.close()
+        target_file.close()
 
     def clean_data(self, config):
-        clean_file= open('filter_files/clean.{0}-{1}'.format(
-            self.fromto[0], self.fromto[1]), 'w')
+        clean_file= open('{result_dir}/clean.{src}-{tgt}'.format(
+            result_dir=self.args.rd, src=self.src_lan, tgt=self.tgt_lan), 'w')
 
         filter_pipe = FilterPipeline.from_config(config)
-        pairs = filter_pipe.filter(self.sents)
+        pairs_gen = self.get_pairs(self.src_lan, self.tgt_lan)
+        pairs = filter_pipe.filter(pairs_gen)
 
         for pair in pairs:
             clean_file.write('{} ||| {}\n'.format(pair[0], pair[1]))
         clean_file.close()
 
     def score_data(self, config):
-        filter_pipe = FilterPipeline.from_config(config)
-        scores = filter_pipe.score(self.sents)
+        pairs_gen = self.get_pairs(self.src_lan, self.tgt_lan)
 
-        score_file = open('filter_files/scores.{0}-{1}.json'.format(
-            self.fromto[0], self.fromto[1]) , 'w')
+        filter_pipe = FilterPipeline.from_config(config)
+        scores_gen = filter_pipe.score(pairs_gen)
+        scores = [score for score in scores_gen]
+
+        score_file = open('{result_dir}/scores.{src}-{tgt}.json'.format(
+            result_dir=self.args.rd, src=self.src_lan, tgt=self.tgt_lan) , 'w')
         score_file.write(json.dumps(scores))
         score_file.close()
 
@@ -85,51 +94,4 @@ class OpusFilter:
                     else:
                         new_line = self.segment_line(line)
                     outfile.write(new_line)
-
-    def sents_to_file(self, bpe=False, segment=False):
-        source_file_name = 'filter_files/sents.{}'.format(self.fromto[0])
-        target_file_name = 'filter_files/sents.{}'.format(self.fromto[1])
-        source_file = open(source_file_name, 'w')
-        target_file = open(target_file_name, 'w')
-
-        for pair in self.sents:
-            source_file.write(pair[0] + '\n')
-            target_file.write(pair[1] + '\n')
-
-        source_file.close()
-        target_file.close()
-
-    '''
-    def word_alignment_score(self):
-        self.wordAlignment.align(
-                clean_file='filter_files/clean.{0}-{1}'.format(
-                    self.fromto[0], self.fromto[1]),
-                src_fwd='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
-                    self.fromto[1]),
-                trg_fwd='filter_files/{0}-{1}.rev'.format(self.fromto[0],
-                    self.fromto[1])
-            )
-        self.wordAlignment.make_priors(
-                clean_file='filter_files/clean.{0}-{1}'.format(
-                    self.fromto[0], self.fromto[1]),
-                src_fwd='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
-                    self.fromto[1]),
-                trg_fwd='filter_files/{0}-{1}.rev'.format(self.fromto[0],
-                    self.fromto[1]),
-                priors='filter_files/{0}-{1}.priors'.format(self.fromto[0],
-                    self.fromto[1])
-            )
-        self.wordAlignment.align(
-                clean_file='filter_files/clean.{0}-{1}'.format(
-                    self.fromto[0], self.fromto[1]),
-                src_score='filter_files/{0}-{1}.fwd'.format(self.fromto[0],
-                    self.fromto[1]),
-                trg_score='filter_files/{0}-{1}.rev'.format(self.fromto[0],
-                    self.fromto[1]),
-                priors='filter_files/{0}-{1}.priors'.format(self.fromto[0],
-                    self.fromto[1])
-            )
-    '''
-
-
 

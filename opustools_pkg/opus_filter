@@ -13,6 +13,9 @@ parser.add_argument('-s', help='Source language', metavar='langid',
     required=True)
 parser.add_argument('-t', help='Target language', metavar='langid',
     required=True)
+parser.add_argument('-rd',
+    help='Existing result directory where resulting files will be written',
+    default='filter_files')
 parser.add_argument('-f', help='yaml file to specify filters')
 parser.add_argument('-r', help='Release (default=latest)',
     metavar='version',

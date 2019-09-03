@@ -14,8 +14,9 @@ class TestOpusFilter(unittest.TestCase):
         self.args.t = 'sv'
         self.args.r = 'latest'
         self.args.p = 'xml'
+        self.args.rd = 'filter_files'
         self.opus_filter = OpusFilter(self.args)
-        self.opus_filter.sents_to_file()
+        #self.opus_filter.sents_to_file()
         self.opus_filter.segment_file(
                 'filter_files/sents.en',
                 'filter_files/sents.seg.en',
@@ -26,6 +27,15 @@ class TestOpusFilter(unittest.TestCase):
                 'filter_files/sents.seg.sv',
                 char=True
                 )
+
+    def test_get_sents(self):
+        pair_gen = self.opus_filter.get_pairs(self.args.s, self.args.t)
+        pair = next(pair_gen)
+        for pair in pair_gen:
+            pass
+        self.assertEqual(pair,
+                ('This will ensure the cohesion of Swedish society .',
+                'Så kan vi hålla samman Sverige .'))
 
     def test_clean_data(self):
         config = [
