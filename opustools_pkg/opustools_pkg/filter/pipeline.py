@@ -1,3 +1,6 @@
+"""Filter pipeline"""
+
+import itertools
 import sys
 
 from . import LengthRatioFilter, LanguageIDFilter, \
@@ -7,11 +10,22 @@ from .lm import CrossEntropyFilter
 from .word_alignment import WordAlignFilter
 
 
+def grouper(iterable, n):
+    """Split data into fixed-length chunks"""
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, n))
+        if not chunk:
+            return
+        yield chunk
+
+
 class FilterPipeline:
     """Pipeline for combining multiple filters"""
 
     def __init__(self, filters=None):
         self.filters = [] if filters is None else filters
+        self._chunksize = 10000
 
     @classmethod
     def from_config(cls, config):
@@ -23,17 +37,13 @@ class FilterPipeline:
             filter_ = getattr(sys.modules[__name__], name)
             pipeline.filters.append(filter_(**attributes))
         return pipeline
-
+        
     def score(self, pairs):
-        """Return dictionary of filter scores for a list of sentence pairs"""
-        scores = [{} for p in range(len(pairs))]
-        for f in self.filters:
-            num = 0
-            filter_gen = f.score(pairs)
-            for score in filter_gen:
-                scores[num][f.__class__.__name__] = score
-                num += 1
-        return scores
+        """Yield dictionaries of filter scores for sentence pairs"""
+        fnames = [f.__class__.__name__ for f in self.filters]
+        for chunk in grouper(pairs, self._chunksize):
+            for scores in zip(*[f.score(chunk) for f in self.filters]):
+                yield {fnames[idx]: score for idx, score in enumerate(scores)}
 
     def filter(self, pairs):
         """Yield sentence pairs accepted by all filters"""

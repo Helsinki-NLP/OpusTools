@@ -33,7 +33,7 @@ class TestFilterPipeline(unittest.TestCase):
                     'accepteras .')),
                 ('1245..',
                     '12345.....')]
-        scores = fp.score(pairs)
+        scores = list(fp.score(pairs))
         self.assertEqual(scores[0],
                 {'LengthFilter': (5, 9),
                     'LengthRatioFilter': 1.8,
