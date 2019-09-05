@@ -1,13 +1,15 @@
 import unittest
 import json
 import argparse
+import os
 
 from opustools_pkg.opus_filter import OpusFilter
 from opustools_pkg.filter import lm
 
 class TestOpusFilter(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         configuration = {'output_directory': 'filter_files',
             'corpora': {'RF1': {'type': 'OPUS',
               'parameters': {'corpus_name': 'RF',
@@ -61,7 +63,8 @@ class TestOpusFilter(unittest.TestCase):
                  'model': 3,
                  'src_threshold': 0,
                  'tgt_threshold': 0}},
-               {'CrossEntropyFilter': {'src_lm_params': {'segmentation': {'type': 'char'},
+               {'CrossEntropyFilter': {'src_lm_params':
+                   {'segmentation': {'type': 'char'},
                   'filename': 'RF1_en.arpa'},
                  'tgt_lm_params': {'segmentation': {'type': 'char'},
                   'filename': 'RF1_sv.arpa'},
@@ -70,6 +73,8 @@ class TestOpusFilter(unittest.TestCase):
                  'diff_threshold': 10.0}}]}}}
 
         self.opus_filter = OpusFilter(configuration)
+        self.opus_filter.clean_data()
+        self.opus_filter.train_lms_and_priors()
 
     def test_get_pairs(self):
         pair_gen = self.opus_filter.get_pairs('RF1', 'en', 'sv')
@@ -81,8 +86,6 @@ class TestOpusFilter(unittest.TestCase):
                 'Så kan vi hålla samman Sverige .'))
 
     def test_clean_data(self):
-        self.opus_filter.clean_data()
-
         with open('filter_files/RF1_filtered.en') as clean:
             self.assertEqual(
                     clean.readline(),
@@ -96,8 +99,12 @@ class TestOpusFilter(unittest.TestCase):
                     'talman , ledamöter av Sveriges riksdag !\n'
                     )
 
+    def test_train_lms_and_priors(self):
+        self.assertTrue(os.path.isfile('filter_files/RF1_align.priors'))
+        self.assertTrue(os.path.isfile('filter_files/RF1_en.arpa'))
+        self.assertTrue(os.path.isfile('filter_files/RF1_en.arpa'))
+
     def test_score_data(self):
-        self.opus_filter.train_lms_and_priors()
         self.opus_filter.score_data()
 
         with open('filter_files/scores.RF1.en-sv.json') as scores_file:

@@ -8,7 +8,7 @@ from opustools_pkg import OpusFilter
 parser = argparse.ArgumentParser(prog='opus_filter',
     description='Filter OPUS bitexts')
 
-parser.add_argument('-f', help='yaml configuration file')
+parser.add_argument('-f', help='yaml configuration file', required=True)
 
 args = parser.parse_args()
 
