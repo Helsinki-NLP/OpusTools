@@ -115,6 +115,9 @@ class OpusRead:
         parser.add_argument('-q',
             help='Download necessary files without prompting "(y/n)"',
             action='store_true')
+        parser.add_argument('-pi',
+            help='Preserve inline tags within sentences',
+            action='store_true')
 
         if len(arguments) == 0:
             self.args = parser.parse_args()

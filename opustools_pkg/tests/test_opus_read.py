@@ -2098,6 +2098,58 @@ class TestOpusRead(unittest.TestCase):
             self.assertEqual(id_file.read(),
                 'file_name1\tfile_name2\tid1 id2\tid1\tvalue\n')
 
+    def test_writing_time_tags_xml(self):
+        var = pairPrinterToVariable(
+            '-d OpenSubtitles -s eo -t kk -m 1 -pi'.split())
+        self.assertEqual(var,
+            '\n# eo/2001/245429/5818397.xml.gz\n'
+            '# kk/2001/245429/6899218.xml.gz\n\n'
+            '================================\n(src)="1"><time id="T1S" '
+            'value="00:00:00,300" /> Filmo de " Studio Ghibli '
+            '"<time id="T1E" value="00:00:05,800" />\n(trg)="1"><time '
+            'id="T1S" value="00:00:01,500" /> ГИБЛИ " студиясы<time '
+            'id="T1E" value="00:00:04,500" '
+            '/>\n================================\n')
+        
+    def test_writing_time_tags_xml_fast(self):
+        var = pairPrinterToVariable(
+            '-d OpenSubtitles -s eo -t kk -m 1 -pi -f'.split())
+        self.assertEqual(var,
+            '\n# eo/2001/245429/5818397.xml.gz\n'
+            '# kk/2001/245429/6899218.xml.gz\n\n'
+            '================================\n(src)="1"><time id="T1S" '
+            'value="00:00:00,300" /> Filmo de " Studio Ghibli '
+            '"<time id="T1E" value="00:00:05,800" />\n(trg)="1"><time '
+            'id="T1S" value="00:00:01,500" /> ГИБЛИ " студиясы<time '
+            'id="T1E" value="00:00:04,500" '
+            '/>\n================================\n')
+
+    def test_writing_time_tags_raw(self):
+        var = pairPrinterToVariable(
+            '-d OpenSubtitles -s eo -t kk -m 1 -pi -p raw'.split())
+        self.assertEqual(var,
+            '\n# eo/2001/245429/5818397.xml.gz\n'
+            '# kk/2001/245429/6899218.xml.gz\n\n'
+            '================================\n(src)="1"><time id="T1S" '
+            'value="00:00:00,300" />Filmo de "Studio Ghibli'
+            '"<time id="T1E" value="00:00:05,800" />\n(trg)="1"><time '
+            'id="T1S" value="00:00:01,500" />ГИБЛИ" студиясы<time '
+            'id="T1E" value="00:00:04,500" '
+            '/>\n================================\n')
+        
+    def test_writing_time_tags_raw_fast(self):
+        var = pairPrinterToVariable(
+            '-d OpenSubtitles -s eo -t kk -m 1 -pi -p raw'.split())
+        self.assertEqual(var,
+            '\n# eo/2001/245429/5818397.xml.gz\n'
+            '# kk/2001/245429/6899218.xml.gz\n\n'
+            '================================\n(src)="1"><time id="T1S" '
+            'value="00:00:00,300" />Filmo de "Studio Ghibli'
+            '"<time id="T1E" value="00:00:05,800" />\n(trg)="1"><time '
+            'id="T1S" value="00:00:01,500" />ГИБЛИ" студиясы<time '
+            'id="T1E" value="00:00:04,500" '
+            '/>\n================================\n')
+        
 class TestOpusCat(unittest.TestCase):
 
     @classmethod

@@ -3,9 +3,9 @@ from .sentence_parser import SentenceParser
 class ExhaustiveSentenceParser(SentenceParser):
 
     def __init__(self, document, preprocessing, direction, wmode, 
-            language, annotations, anno_attrs, delimiter):
+            language, annotations, anno_attrs, delimiter, preserve):
         super().__init__(document, direction, preprocessing, wmode, 
-            language, annotations, anno_attrs, delimiter)
+            language, annotations, anno_attrs, delimiter, preserve)
         self.sentences = {}
         self.done = False
 
@@ -21,14 +21,24 @@ class ExhaustiveSentenceParser(SentenceParser):
                 self.parseLine(line)
                 if self.pre == 'xml' or self.pre == 'parsed':
                     sentence = self.addToken(sentence)
+                    if (self.preserve and self.sfound
+                            and self.start not in ['s', 'w']):
+                        if type(line) == bytes:
+                            line = line.decode('utf-8')
+                        sentence += line.strip().replace('</s>', '')
                 elif self.pre == 'raw':
                     if self.sfound and self.start == 's':
                         sentence = self.chara
                         self.chara = ''
                 elif self.pre == 'rawos':
-                    if (self.sfound and self.start == 'time' 
-                            or self.start == 's'):
-                        sentence = self.chara
+                    if self.preserve:
+                        if self.sfound and self.start not in ['s', 'w']:
+                            if type(line) == bytes:
+                                line = line.decode('utf-8')
+                            sentence += line.strip().replace('</s>', '')
+                    else:
+                        if self.sfound and self.start in ['s', 'time']:
+                            sentence = self.chara
                 if self.efound:
                     self.sfound = False
                     self.efound = False

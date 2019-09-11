@@ -22,7 +22,7 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [-ta attribute [attribute ...]] [-ca delimiter]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
-                 [-id file_name] [-q]
+                 [-id file_name] [-q] [-pi]
 ```
 
 arguments:
@@ -81,6 +81,7 @@ arguments:
                       labels and confidence score, e.g. en 0.9
 -id file_name         Write sentence ids to a file.
 -q                    Download necessary files without prompting "(y/n)"
+-pi                   Preserve inline tags within sentences
 ```
 
 

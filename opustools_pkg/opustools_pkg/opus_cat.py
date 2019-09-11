@@ -6,7 +6,8 @@ from .parse.sentence_parser import SentenceParser
 class SentenceParser(SentenceParser):
     
     def __init__(self, document, args):
-        super().__init__(document, '', '', '', '', args.pa, args.sa, args.ca)
+        super().__init__(document, '', '', '', '', args.pa, args.sa, args.ca,
+            False)
         self.args = args
 
         self.stopit = False

@@ -3,7 +3,7 @@ import xml.parsers.expat
 class SentenceParser:
 
     def __init__(self, document, direction, preprocessing, wmode,
-            language, annotations, anno_attrs, delimiter):
+            language, annotations, anno_attrs, delimiter, preserve):
         self.document = document
         self.direction = direction
         self.pre = preprocessing
@@ -11,6 +11,7 @@ class SentenceParser:
         if self.annotations:
             self.anno_attrs = anno_attrs
         self.delimiter = delimiter
+        self.preserve = preserve
 
         self.start = ''
         self.sid = ''
@@ -82,7 +83,7 @@ class SentenceParser:
                 self.posses = []
         return newSentence
 
-    def processTokenizedSentence(self, sentence, ids):
+    def processTokenizedSentence(self, sentence, ids, line):
         newSentence, stop = sentence, 0
         if self.efound:
             self.sfound = False
@@ -92,10 +93,14 @@ class SentenceParser:
             self.chara = ''
         if self.sid in ids:
             newSentence = self.addToken(sentence)
+        if self.preserve and self.sfound and self.start not in ['s', 'w']:
+            if type(line) == bytes:
+                line = line.decode('utf-8')
+            newSentence += line.strip()
 
         return newSentence, stop
 
-    def processRawSentenceOS(self, sentence, ids):
+    def processRawSentenceOS(self, sentence, ids, line):
         newSentence, stop = sentence, 0
         if self.efound:
             self.sfound = False
@@ -104,11 +109,17 @@ class SentenceParser:
                 stop = -1
                 self.chara = ''
         if self.sfound and self.sid in ids:
-            if self.start == 'time' or self.start == 's':
-                newSentence = self.chara
+            if self.preserve:
+                if self.start not in ['s', 'w']:
+                    if type(line) == bytes:
+                        line = line.decode('utf-8')
+                    newSentence += line.strip()
+            else:
+                if self.start == 's' or self.start == 'time':
+                    newSentence = self.chara
         return newSentence, stop
 
-    def processRawSentence(self, sentence, ids):
+    def processRawSentence(self, sentence, ids, line):
         if self.start == 's' and self.sid in ids:
             newSentence = self.chara
             self.chara = ''
@@ -155,13 +166,13 @@ class SentenceParser:
                 line = self.document.readline()
                 self.parseLine(line)
                 newSentence, stop = self.processSentence[self.pre](
-                    sentence, ids)
+                    sentence, ids, line)
                 sentence = newSentence
                 if stop == -1:
                     break
 
             if self.pre == 'xml' or self.pre == 'parsed':
-                sentence = sentence[1:]
+                sentence = sentence.lstrip()
 
             sentences = self.addSentence(sentences, sentence, self.sid)
             attrsList.append(self.attrs)

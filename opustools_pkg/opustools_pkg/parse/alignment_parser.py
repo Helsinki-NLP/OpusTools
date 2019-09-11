@@ -125,18 +125,18 @@ class AlignmentParser:
         if self.args.f:
             self.sPar = SentenceParser(sourcefile, st[0], pre,
                 self.args.wm, langs[0], self.args.pa, self.args.sa,
-                self.args.ca)
+                self.args.ca, self.args.pi)
             self.tPar = SentenceParser(targetfile, st[1], pre,
                 self.args.wm, langs[1], self.args.pa, self.args.ta,
-                self.args.ca)
+                self.args.ca, self.args.pi)
         else:
             self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
                 self.args.wm, langs[0], self.args.pa, self.args.sa,
-                self.args.ca)
+                self.args.ca, self.args.pi)
             self.sPar.storeSentences()
             self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
                 self.args.wm, langs[1], self.args.pa, self.args.ta,
-                self.args.ca)
+                self.args.ca, self.args.pi)
             self.tPar.storeSentences()
 
     def initializeSentenceParsers(self, attrs):
