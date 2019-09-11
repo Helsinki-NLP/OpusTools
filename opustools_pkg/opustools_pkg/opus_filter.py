@@ -24,6 +24,7 @@ class OpusFilter:
             self.output_dir = '.'
 
         for corpus, settings in configuration['corpora'].items():
+            #Download and read corpus from OPUS if type is 'OPUS'
             if settings['type'] == 'OPUS':
                 parameters = settings['parameters']
                 fromto = sorted([parameters['source_language'],
@@ -42,6 +43,7 @@ class OpusFilter:
 
                 opus_reader.printPairs()
 
+        #Add output directory to output file names
         for corpus, settings in configuration['scoring'].items():
             for f in settings['filters']:
                 filter_name = next(iter(f.items()))[0]
@@ -99,6 +101,7 @@ class OpusFilter:
     def train_lms_and_priors(self):
         for model in self.configuration['models']:
             if model['type'] == 'ngram':
+                #TODO: add option for other segmentation types
                 if model['parameters']['segmentation']['type'] == 'char':
                     data_name = model['data']
                     seg_name = data_name + '.seg'
@@ -135,6 +138,7 @@ class OpusFilter:
 
             filter_pipe = FilterPipeline.from_config(settings['filters'])
             scores_gen = filter_pipe.score(pairs_gen)
+            #TODO: write scores in a memory efficient way
             scores = [score for score in scores_gen]
 
             score_file = open(
