@@ -25,6 +25,7 @@ class OpusFilter:
 
         for corpus, settings in configuration['corpora'].items():
             #Download and read corpus from OPUS if type is 'OPUS'
+            #TODO: allow other corpus types
             if settings['type'] == 'OPUS':
                 parameters = settings['parameters']
                 fromto = sorted([parameters['source_language'],
@@ -138,15 +139,16 @@ class OpusFilter:
 
             filter_pipe = FilterPipeline.from_config(settings['filters'])
             scores_gen = filter_pipe.score(pairs_gen)
-            #TODO: write scores in a memory efficient way
-            scores = [score for score in scores_gen]
 
-            score_file = open(
-                '{result_dir}/scores.{corpus_name}.{src}-{tgt}.json'.format(
-                    result_dir=self.output_dir, corpus_name=corpus,
-                    src=source_language, tgt=target_language) , 'w')
-            score_file.write(json.dumps(scores))
-            score_file.close()
+            score_file_name = ('{result_dir}/scores.{corpus_name}.{src}-{tgt}'
+                '.json'.format( result_dir=self.output_dir,
+                corpus_name=corpus, src=source_language,
+                tgt=target_language))
+            with open(score_file_name, 'w') as score_file:
+                score_file.write('[\n'+json.dumps(next(scores_gen)))
+                for score in scores_gen:
+                    score_file.write(',\n'+json.dumps(score))
+                score_file.write('\n]')
 
     def make_bpe(self, train_file, input_file, output_file):
         bpe_file = train_file+'.code'

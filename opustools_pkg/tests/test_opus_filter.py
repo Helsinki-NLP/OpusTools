@@ -108,7 +108,7 @@ class TestOpusFilter(unittest.TestCase):
         self.opus_filter.score_data()
 
         with open('filter_files/scores.RF1.en-sv.json') as scores_file:
-            scores = json.loads(scores_file.readline())
+            scores = json.loads(''.join(scores_file.readlines()))
             self.assertEqual(scores[0]['LanguageIDFilter'], [1.0, 0.98])
             self.assertEqual(scores[0]['CharacterScoreFilter'], [1.0, 1.0])
             self.assertEqual(scores[0]['CrossEntropyFilter'],
