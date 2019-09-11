@@ -15,6 +15,6 @@ args = parser.parse_args()
 configuration = load(open(args.f), Loader=Loader)
 
 of = OpusFilter(configuration)
-of.train_lms_and_priors()
 of.clean_data()
+of.train_lms_and_priors()
 of.score_data()
