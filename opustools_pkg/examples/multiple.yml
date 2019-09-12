@@ -120,7 +120,7 @@ models:
 
 scoring:
     RF1:
-        output: RF1_scores.en-sv.json
+        output: RF1_scores.en-sv.jsonl
         filters:
             - LanguageIDFilter:
                 src_lang: en
@@ -159,7 +159,7 @@ scoring:
                 tgt_threshold: 50.0
                 diff_threshold: 10.0
     RF2:
-        output: RF2_scores.es-sv.json
+        output: RF2_scores.es-sv.jsonl
         filters:
             - LanguageIDFilter:
                 src_lang: es

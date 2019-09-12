@@ -16,5 +16,5 @@ configuration = load(open(args.f), Loader=Loader)
 
 of = OpusFilter(configuration)
 of.clean_data()
-of.train_lms_and_priors()
+of.train_models()
 of.score_data()

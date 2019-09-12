@@ -99,7 +99,7 @@ class OpusFilter:
                     source_file.write(pair[0]+'\n')
                     target_file.write(pair[1]+'\n')
 
-    def train_lms_and_priors(self):
+    def train_models(self):
         for model in self.configuration['models']:
             if model['type'] == 'ngram':
                 #TODO: add option for other segmentation types
@@ -140,15 +140,12 @@ class OpusFilter:
             filter_pipe = FilterPipeline.from_config(settings['filters'])
             scores_gen = filter_pipe.score(pairs_gen)
 
-            score_file_name = ('{result_dir}/scores.{corpus_name}.{src}-{tgt}'
-                '.json'.format( result_dir=self.output_dir,
-                corpus_name=corpus, src=source_language,
-                tgt=target_language))
+            score_file_name = ('{result_dir}/{scored_name}'.format(
+                result_dir=self.output_dir,
+                scored_name=settings['output']))
             with open(score_file_name, 'w') as score_file:
-                score_file.write('[\n'+json.dumps(next(scores_gen)))
                 for score in scores_gen:
-                    score_file.write(',\n'+json.dumps(score))
-                score_file.write('\n]')
+                    score_file.write(json.dumps(score, sort_keys=True)+'\n')
 
     def make_bpe(self, train_file, input_file, output_file):
         bpe_file = train_file+'.code'

@@ -48,7 +48,7 @@ class TestOpusFilter(unittest.TestCase):
               'tgt_data': 'RF1_filtered.sv',
               'parameters': {'model': 3},
               'output': 'RF1_align.priors'}],
-            'scoring': {'RF1': {'output': 'RF1_scores.en-sv.json',
+            'scoring': {'RF1': {'output': 'RF1_scores.en-sv.jsonl',
               'filters': [{'LanguageIDFilter': {'src_lang': 'en',
                  'tgt_lang': 'sv',
                  'src_threshold': 0,
@@ -74,7 +74,7 @@ class TestOpusFilter(unittest.TestCase):
 
         self.opus_filter = OpusFilter(configuration)
         self.opus_filter.clean_data()
-        self.opus_filter.train_lms_and_priors()
+        self.opus_filter.train_models()
 
     def test_get_pairs(self):
         pair_gen = self.opus_filter.get_pairs('RF1', 'en', 'sv')
@@ -99,7 +99,7 @@ class TestOpusFilter(unittest.TestCase):
                     'talman , ledamöter av Sveriges riksdag !\n'
                     )
 
-    def test_train_lms_and_priors(self):
+    def test_train_models(self):
         self.assertTrue(os.path.isfile('filter_files/RF1_align.priors'))
         self.assertTrue(os.path.isfile('filter_files/RF1_en.arpa'))
         self.assertTrue(os.path.isfile('filter_files/RF1_en.arpa'))
@@ -107,15 +107,15 @@ class TestOpusFilter(unittest.TestCase):
     def test_score_data(self):
         self.opus_filter.score_data()
 
-        with open('filter_files/scores.RF1.en-sv.json') as scores_file:
-            scores = json.loads(''.join(scores_file.readlines()))
-            self.assertEqual(scores[0]['LanguageIDFilter'], [1.0, 0.98])
-            self.assertEqual(scores[0]['CharacterScoreFilter'], [1.0, 1.0])
-            self.assertEqual(scores[0]['CrossEntropyFilter'],
+        with open('filter_files/scores.RF1.en-sv.jsonl') as scores_file:
+            score = json.loads(scores_file.readline())
+            self.assertEqual(score['LanguageIDFilter'], [1.0, 0.98])
+            self.assertEqual(score['CharacterScoreFilter'], [1.0, 1.0])
+            self.assertEqual(score['CrossEntropyFilter'],
                     [15.214258903317491, 7.569084909162213])
-            self.assertEqual(scores[0]['TerminalPunctuationFilter'], -0.0)
-            self.assertEqual(scores[0]['NonZeroNumeralsFilter'], 0.0)
-            self.assertEqual(type(scores[0]['WordAlignFilter']), list)
+            self.assertEqual(score['TerminalPunctuationFilter'], -0.0)
+            self.assertEqual(score['NonZeroNumeralsFilter'], 0.0)
+            self.assertEqual(type(score['WordAlignFilter']), list)
 
     def test_make_bpe(self):
         train_file = 'filter_files/sents.RF1.en'
