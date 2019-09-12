@@ -30,18 +30,40 @@ _VARIKN_TRAINING_PARAMS = {
 }
 
 
-# FIXME: replace args with the actual arguments
-def train(args):
+def train(datafile, outputfile, **kwargs):
+    """Train varigram language model with VariKN
+
+    Positional arguments:
+      datafile -- Filename for training corpus
+      outpufile -- Filename for trained model
+
+    Keyword arguments:
+      optdata -- Filename for optimization data
+      norder -- Limit model order (0 = no limit)
+      dscale -- Model size scale factor
+      dscale2 -- Model size scaling during pruning step (default no pruning=0)
+      arpa -- Output arpa instead of binary LM
+      use_3nzer -- Use 3 discounts per order instead of one
+      absolute -- Use absolute discounting instead of Kneser-Ney smoothing
+      cutoffs -- Use the specified cutoffs (default "0 0 1"). The last value is used
+        for all higher order n-grams.
+
+    Any extra keyword arguments are ignored.
+
+    """
+    args = argparse.Namespace()
+    for key, default in _VARIKN_TRAINING_PARAMS.items():
+        setattr(args, key, kwargs.get(key, default))
     vg = varikn.VarigramTrainer(args.use_3nzer, args.absolute)
     vg.set_datacost_scale(args.dscale)
     vg.set_datacost_scale2(args.dscale2)
     if args.norder > 0:
         vg.set_max_order(args.norder)
     # vg->initialize(infilename, hashs, ndrop, nfirst, optiname, "<s>", smallmem, vocabname);
-    vg.initialize(args.data, 0, 0, -1, args.optdata, '<s>', False, '')
+    vg.initialize(datafile, 0, 0, -1, args.optdata, '<s>', False, '')
     vg.set_cutoffs([int(x) for x in args.cutoffs.split()])
     vg.grow(1)
-    vg.write_file(args.model, args.arpa)
+    vg.write_file(outputfile, args.arpa)
 
 
 def token_perplexity(lm, tokens, entropy=False):
@@ -99,7 +121,22 @@ def _temptokenfile(item):
 
 
 def get_lm(**kwargs):
-    """Return language model initialized for perplexity calculation"""
+    """Return language model initialized for perplexity calculation
+
+    Keyword arguments:
+      filename -- Filename for the language model to use
+      arpa -- LM is in arpa format instead of binary LM (default: True)
+      unk -- Unk symbol (default: '<UNK>', case sensitive)
+      include_unks -- Include unknown tokens in perplexity calculations (default: False)
+      ccs -- List of context cues ignored in perplexity calculations (default: None)
+      mb -- Morph boundary marking (default '')
+      wb -- Word boundary tag (default '<w>')
+      init_hist -- Ignore n first tokens after "</s>" in perplexity calculations (default: 2)
+      interpolate -- List of language models (arpa format) and interpolation weights (default: None)
+
+    Any extra keyword arguments are ignored.
+
+    """
 
     args = argparse.Namespace()
     for key, default in _VARIKN_PERPLEXITY_PARAMS.items():
@@ -126,11 +163,49 @@ def get_lm(**kwargs):
     return lm
 
 
-
-class CrossEntropyFilter(FilterABC):
+class LMTokenizer:
 
     s_beg = '<s>'
     s_end = '</s>'
+
+    def __init__(self, segmentation=None, mb='', wb='<w>', **kwargs):
+        """Map sentences to tokens processed by language models
+
+        Keyword arguments:
+          segmentation -- Word segmentation parameters; currently only {'type': 'char'} is
+            supported (default: None)
+          mb -- Morph boundary marking (default '')
+          wb -- Word boundary tag (default '<w>')
+
+        Any extra keyword arguments are ignored.
+
+        """
+        if segmentation and segmentation.get('type', 'char') != 'char':
+            raise ConfigurationError("Only segmentation type supported currently is 'char'")
+        self.mb = mb
+        self.wb = wb
+
+    def tokenize(self, sent):
+        """Tokenize single sentence"""
+        tokens = [self.s_beg]
+        if self.wb:
+            tokens.append(self.wb)
+        for word in sent.strip().split():
+            if self.mb and self.mb.endswith('$'):
+                for char in word.replace('', self.mb[:-1] + ' '):
+                    tokens.append(char)
+            elif self.mb and self.mb.startswith('^'):
+                for char in word.replace('', ' ' + self.mb[1:]):
+                    tokens.append(char)
+            else:
+                tokens += list(word)
+            if self.wb:
+                tokens.append(self.wb)
+        tokens.append(self.s_end)
+        return tokens
+
+
+class CrossEntropyFilter(FilterABC):
 
     def __init__(self, src_lm_params=None, tgt_lm_params=None, perplexity=False,
                  src_threshold=50.0, tgt_threshold=50.0, diff_threshold=10.0, **kwargs):
@@ -148,39 +223,20 @@ class CrossEntropyFilter(FilterABC):
         self.diff_threshold = diff_threshold
         super().__init__(**kwargs)
 
-    def char_tokenize(self, sent, params):
-        mb = params['mb']
-        wb = params['wb']
-        tokens = [self.s_beg]
-        if wb:
-            tokens.append(wb)
-        for word in sent.strip().split():
-            if mb and mb.endswith('$'):
-                for char in word.replace('', mb[:-1] + ' '):
-                    tokens.append(char)
-            elif mb and mb.startswith('^'):
-                for char in word.replace('', ' ' + mb[1:]):
-                    tokens.append(char)
-            else:
-                tokens += list(word)
-            if wb:
-                tokens.append(wb)
-        tokens.append(self.s_end)
-        return tokens
-
     def accept(self, score):
         src, tgt = score
         diff = abs(src - tgt)
         return src < self.src_threshold and tgt < self.tgt_threshold and diff < self.diff_threshold
 
     def score(self, pairs):
+        src_tokenizer = LMTokenizer(**self.src_lm_params)
+        tgt_tokenizer = LMTokenizer(**self.tgt_lm_params)
         for sent1, sent2 in pairs:
             scores = []
-            for lm, params, sent in [(self.src_lm, self.src_lm_params, sent1),
-                                     (self.tgt_lm, self.tgt_lm_params, sent2)]:
-                fullparams = get_perplexity_params(params)
-                tokens = self.char_tokenize(sent, fullparams)
-                use_word = fullparams['wb'] or fullparams['mb']
+            for lm, tokenizer, sent in [(self.src_lm, src_tokenizer, sent1),
+                                        (self.tgt_lm, tgt_tokenizer, sent2)]:
+                tokens = tokenizer.tokenize(sent)
+                use_word = tokenizer.wb or tokenizer.mb
                 scores.append(word_perplexity(lm, tokens, not self.perplexity) if use_word else \
                               token_perplexity(lm, tokens, not self.perplexity))
             yield scores

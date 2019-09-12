@@ -102,23 +102,17 @@ class OpusFilter:
     def train_models(self):
         for model in self.configuration['models']:
             if model['type'] == 'ngram':
-                #TODO: add option for other segmentation types
-                if model['parameters']['segmentation']['type'] == 'char':
-                    data_name = model['data']
-                    seg_name = data_name + '.seg'
-                    self.segment_file(
-                        '{}/{}'.format(self.output_dir, data_name),
-                        '{}/{}'.format(self.output_dir, seg_name))
-                    model['data'] = seg_name
-
-                train_args = argparse.Namespace()
-                for key, default in lm._VARIKN_TRAINING_PARAMS.items():
-                    setattr(train_args, key, default)
-                for key, value in model.items():
-                    if key in ['data', 'output', 'model']:
-                        value = '{}/{}'.format(self.output_dir, value)
-                    setattr(train_args, key, value)
-                lm.train(train_args)
+                data_name = model['data']
+                seg_name = data_name + '.seg'
+                tokenizer = lm.LMTokenizer(**model['parameters'])
+                with open(os.path.join(self.output_dir, data_name), 'r') as infile, \
+                     open(os.path.join(self.output_dir, seg_name), 'w') as outfile:
+                    for line in infile:
+                        tokens = tokenizer.tokenize(line.strip())
+                        outfile.write(' '.join(tokens) + '\n')
+                lm.train(os.path.join(self.output_dir, seg_name),
+                         os.path.join(self.output_dir, model['model']),
+                         **model['parameters'])
             if model['type'] == 'alignment':
                 pair_gen = self.pair_generator(
                         '{}/{}'.format(self.output_dir, model['src_data']),
@@ -146,34 +140,3 @@ class OpusFilter:
             with open(score_file_name, 'w') as score_file:
                 for score in scores_gen:
                     score_file.write(json.dumps(score, sort_keys=True)+'\n')
-
-    def make_bpe(self, train_file, input_file, output_file):
-        bpe_file = train_file+'.code'
-        subprocess.run('subword-nmt learn-bpe -s 37000 < {} > {}'.format(
-            train_file, bpe_file), shell=True)
-        subprocess.run('subword-nmt apply-bpe -c {} < {} > {}'.format(
-            bpe_file, input_file, output_file), shell=True)
-
-    def segment_line(self, line):
-        newli = ['<s>', '<w>']
-        for w in line.split():
-            newli.append(w)
-            if w[-2:] != '@@':
-                newli.append('<w>')
-        newli.extend(['</s>', '\n'])
-        return ' '.join(newli)
-
-    def segment_line_char(self, line):
-        return '<s> <w> {} <w> </s> \n'.format(
-                ' '.join(line.rstrip()).replace('   ', ' <w> '))
-
-    def segment_file(self, input_file, output_file, char=True):
-        with open(input_file, 'r') as infile:
-            with open(output_file, 'w') as outfile:
-                for line in infile:
-                    if char:
-                        new_line = self.segment_line_char(line)
-                    else:
-                        new_line = self.segment_line(line)
-                    outfile.write(new_line)
-

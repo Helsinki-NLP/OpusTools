@@ -8,12 +8,12 @@ import unittest
 from opustools_pkg.filter import lm
 
 
+# TODO: tests for LMTokenizer
+
+
 class TestLMFilter(unittest.TestCase):
 
     def setUp(self):
-        train_args = argparse.Namespace()
-        for key, default in lm._VARIKN_TRAINING_PARAMS.items():
-            setattr(train_args, key, default)
         self.lmdatafile1 = tempfile.mkstemp()[1]
         self.lmfile1 = tempfile.mkstemp()[1]
         with open(self.lmdatafile1, 'w') as lmdatafile:
@@ -24,12 +24,8 @@ class TestLMFilter(unittest.TestCase):
         with open(self.lmdatafile2, 'w') as lmdatafile:
             for line in range(10):
                 lmdatafile.write('<s> <w> %s</s>\n' % ('A B <w> ' * (line + 1)))
-        train_args.data = self.lmdatafile1
-        train_args.model = self.lmfile1
-        lm.train(train_args)
-        train_args.data = self.lmdatafile2
-        train_args.model = self.lmfile2
-        lm.train(train_args)
+        lm.train(self.lmdatafile1, self.lmfile1)
+        lm.train(self.lmdatafile2, self.lmfile2)
         logging.info(self.lmfile1)
         with open(self.lmfile1, 'r') as fobj:
             for line in fobj:
