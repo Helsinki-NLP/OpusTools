@@ -11,7 +11,7 @@ from .parse.sentence_parser import SentenceParser
 class LanguageIdAdder(SentenceParser):
 
     def __init__(self, suppress, iszip):
-        super().__init__('', '', '', False, '', '', '', '')
+        super().__init__('', '', '', False, '', '', '', '', False)
         self.iszip = iszip
         self.suppress = suppress
 
