@@ -35,12 +35,14 @@ class OpusFilter:
 
                 opus_reader = OpusRead('-d {corpus_name} -s {src} -t {tgt} '
                     '-r {version} -p {preprocessing} -wm moses '
-                    '-w {result_dir}/sents.{corpus}.{src} '
-                    '{result_dir}/sents.{corpus}.{tgt} -ln'.format(
+                    '-w {result_dir}/{src_filename} '
+                    '{result_dir}/{tgt_filename} -ln'.format(
                         corpus_name=parameters['corpus_name'], src=src_lan,
                         tgt=tgt_lan, version=parameters['release'],
                         preprocessing=parameters['preprocessing'],
-                        result_dir=self.output_dir, corpus=corpus).split())
+                        result_dir=self.output_dir,
+                        src_filename=parameters['src_filename'],
+                        tgt_filename=parameters['tgt_filename']).split())
 
                 opus_reader.printPairs()
 
@@ -66,11 +68,11 @@ class OpusFilter:
                 tgt_line = target_file.readline()
                 yield (src_line.rstrip(), tgt_line.rstrip())
 
-    def get_pairs(self, corpus_name, src, tgt):
-        source_file_name = '{result_dir}/sents.{corpus_name}.{src}'.format(
-            result_dir=self.output_dir, corpus_name=corpus_name, src=src)
-        target_file_name = '{result_dir}/sents.{corpus_name}.{tgt}'.format(
-            result_dir=self.output_dir, corpus_name=corpus_name, tgt=tgt)
+    def get_pairs(self, src_filename, tgt_filename):
+        source_file_name = '{result_dir}/{src_filename}'.format(
+            result_dir=self.output_dir, src_filename=src_filename)
+        target_file_name = '{result_dir}/{tgt_filename}'.format(
+            result_dir=self.output_dir, tgt_filename=tgt_filename)
 
         return self.pair_generator(source_file_name, target_file_name)
 
@@ -82,16 +84,16 @@ class OpusFilter:
                     ['parameters'])
             source_language = corpus_parameters['source_language']
             target_language = corpus_parameters['target_language']
-            pairs_gen = self.get_pairs(corpus, source_language,
-                    target_language)
+            pairs_gen = self.get_pairs(settings['src_input'],
+                    settings['tgt_input'])
             pairs = filter_pipe.filter(pairs_gen)
 
-            source_file_name = '{result_dir}/{filtered_name}'.format(
+            source_file_name = '{result_dir}/{src_filtered}'.format(
                 result_dir=self.output_dir,
-                filtered_name=settings['src_output'])
-            target_file_name = '{result_dir}/{filtered_name}'.format(
+                src_filtered=settings['src_output'])
+            target_file_name = '{result_dir}/{tgt_filtered}'.format(
                 result_dir=self.output_dir,
-                filtered_name=settings['tgt_output'])
+                tgt_filtered=settings['tgt_output'])
 
             with open(source_file_name, 'w') as source_file, \
                     open(target_file_name, 'w') as target_file:
@@ -128,8 +130,8 @@ class OpusFilter:
                     ['parameters'])
             source_language = corpus_parameters['source_language']
             target_language = corpus_parameters['target_language']
-            pairs_gen = self.get_pairs(corpus, source_language,
-                    target_language)
+            pairs_gen = self.get_pairs(settings['src_input'],
+                    settings['tgt_input'])
 
             filter_pipe = FilterPipeline.from_config(settings['filters'])
             scores_gen = filter_pipe.score(pairs_gen)

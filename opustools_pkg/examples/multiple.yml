@@ -9,6 +9,8 @@ corpora:
             target_language: sv
             release: latest
             preprocessing: xml
+            src_filename: RF1_sents.en
+            tgt_filename: RF1_sents.sv
     RF2:
         type: OPUS
         parameters:
@@ -17,9 +19,13 @@ corpora:
             target_language: sv
             release: latest
             preprocessing: xml
+            src_filename: RF2_sents.es
+            tgt_filename: RF2_sents.sv
 
 filtering:
     RF1:
+        src_input: RF1_sents.en
+        tgt_input: RF1_sents.sv
         src_output: RF1_filtered.en
         tgt_output: RF1_filtered.sv
         filters:
@@ -41,6 +47,8 @@ filtering:
                 src_threshold: 1
                 tgt_threshold: 1
     RF2:
+        src_input: RF2_sents.es
+        tgt_input: RF2_sents.sv
         src_output: RF2_filtered.es
         tgt_output: RF2_filtered.sv
         filters:
@@ -120,6 +128,8 @@ models:
 
 scoring:
     RF1:
+        src_input: RF1_sents.en
+        tgt_input: RF1_sents.sv
         output: RF1_scores.en-sv.jsonl
         filters:
             - LanguageIDFilter:
@@ -159,6 +169,8 @@ scoring:
                 tgt_threshold: 50.0
                 diff_threshold: 10.0
     RF2:
+        src_input: RF2_sents.es
+        tgt_input: RF2_sents.sv
         output: RF2_scores.es-sv.jsonl
         filters:
             - LanguageIDFilter:
