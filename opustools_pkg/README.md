@@ -29,59 +29,80 @@ arguments:
 
 ```
 -h, --help            show this help message and exit
--d corpus_name        Corpus name
--s langid             Source language
--t langid             Target language
--r version            Release (default=latest)
--p {raw,xml,parsed}   Pre-process-type (raw, xml or parsed, default=xml)
--m M                  Maximum number of alignments
--S S                  Number of source sentences in alignments (range is
-                      allowed, eg. -S 1-2)
--T T                  Number of target sentences in alignments (range is
-                      allowed, eg. -T 1-2)
--a attribute          Set attribute for filttering
--tr TR                Set threshold for an attribute
--ln                   Leave non-alignments out
--w file_name [file_name ...]
-                      Write to file. To print moses format in separate
-                      files, enter two file names. Otherwise enter one file
-                      name.
--wm {normal,moses,tmx,links}
-                      Set write mode
--pn                   Print file names when using moses format
--f                    Fast parsing. Faster than normal parsing, if you print
-                      a small part of the whole corpus, but requires the
-                      sentence ids in alignment files to be in sequence.
--rd path_to_dir       Change root directory (default=/proj/nlpl/data/OPUS/)
--af path_to_file      Use given alignment file
--sz path_to_zip       Use given source zip file
--tz path_to_zip       Use given target zip file
--cm delimiter         Change moses delimiter (default=tab)
--pa                   Print annotations, if they exist
--sa attribute [attribute ...]
-                      Set source sentence annotation attributes to be
-                      printed, e.g. -sa pos lem. To print all available
-                      attributes use -sa all_attrs (default=pos,lem)
--ta attribute [attribute ...]
-                      Set target sentence annotation attributes to be
-                      printed, e.g. -ta pos lem. To print all available
-                      attributes use -ta all_attrs (default=pos,lem)
--ca delimiter         Change annotation delimiter (default=|)
+-d corpus_name, --directory corpus_name
+                    Corpus name
+-s langid, --source langid
+                    Source language
+-t langid, --target langid
+                    Target language
+-r version, --release version
+                    Release (default=latest)
+-p {raw,xml,parsed}, --preprocess {raw,xml,parsed}
+                    Preprocess-type (raw, xml or parsed, default=xml)
+-m MAX, --max MAX     Maximum number of alignments
+-S SRC_RANGE, --src_range SRC_RANGE
+                    Number of source sentences in alignments (range is
+                    allowed, eg. -S 1-2)
+-T TGT_RANGE, --tgt_range TGT_RANGE
+                    Number of target sentences in alignments (range is
+                    allowed, eg. -T 1-2)
+-a attribute, --attribute attribute
+                    Set attribute for filttering
+-tr THRESHOLD, --threshold THRESHOLD
+                    Set threshold for an attribute
+-ln, --leave_non_alignments_out
+                    Leave non-alignments out
+-w file_name [file_name ...], --write file_name [file_name ...]
+                    Write to file. To print moses format in separate
+                    files, enter two file names. Otherwise enter one file
+                    name.
+-wm {normal,moses,tmx,links}, --write_mode {normal,moses,tmx,links}
+                    Set write mode
+-pn, --print_file_names
+                    Print file names when using moses format
+-f, --fast          Fast parsing. Faster than normal parsing, if you print
+                    a small part of the whole corpus, but requires the
+                    sentence ids in alignment files to be in sequence.
+-rd path_to_dir, --root_directory path_to_dir
+                    Change root directory (default=/proj/nlpl/data/OPUS/)
+-af path_to_file, --alignment_file path_to_file
+                    Use given alignment file
+-sz path_to_zip, --source_zip path_to_zip
+                    Use given source zip file
+-tz path_to_zip, --target_zip path_to_zip
+                    Use given target zip file
+-cm delimiter, --change_moses_delimiter delimiter
+                    Change moses delimiter (default=tab)
+-pa, --print_annotations
+                    Print annotations, if they exist
+-sa attribute [attribute ...], --source_annotations attribute [attribute ...]
+                    Set source sentence annotation attributes to be
+                    printed, e.g. -sa pos lem. To print all available
+                    attributes use -sa all_attrs (default=pos,lem)
+-ta attribute [attribute ...], --target_annotations attribute [attribute ...]
+                    Set target sentence annotation attributes to be
+                    printed, e.g. -ta pos lem. To print all available
+                    attributes use -ta all_attrs (default=pos,lem)
+-ca delimiter, --change_annotation_delimiter delimiter
+                    Change annotation delimiter (default=|)
 --src_cld2 lang_id score
-                      Filter source sentences by their cld2 language id
-                      labels and confidence score, e.g. en 0.9
+                    Filter source sentences by their cld2 language id
+                    labels and confidence score, e.g. en 0.9
 --trg_cld2 lang_id score
-                      Filter target sentences by their cld2 language id
-                      labels and confidence score, e.g. en 0.9
+                    Filter target sentences by their cld2 language id
+                    labels and confidence score, e.g. en 0.9
 --src_langid lang_id score
-                      Filter source sentences by their langid.py language id
-                      labels and confidence score, e.g. en 0.9
+                    Filter source sentences by their langid.py language id
+                    labels and confidence score, e.g. en 0.9
 --trg_langid lang_id score
-                      Filter target sentences by their langid.py language id
-                      labels and confidence score, e.g. en 0.9
--id file_name         Write sentence ids to a file.
--q                    Download necessary files without prompting "(y/n)"
--pi                   Preserve inline tags within sentences
+                    Filter target sentences by their langid.py language id
+                    labels and confidence score, e.g. en 0.9
+-id file_name, --write_ids file_name
+                    Write sentence ids to a file.
+-q, --suppress_prompts
+                    Download necessary files without prompting "(y/n)"
+-pi, --preserve_inline_tags
+                    Preserve inline tags within sentences
 ```
 
 
