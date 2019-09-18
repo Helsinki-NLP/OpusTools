@@ -2,15 +2,18 @@ import unittest
 import json
 import argparse
 import os
+import shutil
+import tempfile
 
 from opustools_pkg.opus_filter import OpusFilter
 from opustools_pkg.filter import lm
 
+
 class TestOpusFilter(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(self):
-        configuration = {'output_directory': 'filter_files',
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        configuration = {'output_directory': self.tempdir,
             'corpora': {'RF1': {'type': 'OPUS',
               'parameters': {'corpus_name': 'RF',
                'source_language': 'en',
@@ -82,6 +85,9 @@ class TestOpusFilter(unittest.TestCase):
         self.opus_filter.clean_data()
         self.opus_filter.train_models()
 
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
     def test_get_pairs(self):
         pair_gen = self.opus_filter.get_pairs('RF1_sents.en', 'RF1_sents.sv')
         pair = next(pair_gen)
@@ -92,13 +98,13 @@ class TestOpusFilter(unittest.TestCase):
                 'Så kan vi hålla samman Sverige .'))
 
     def test_clean_data(self):
-        with open('filter_files/RF1_filtered.en') as clean:
+        with open(os.path.join(self.tempdir, 'RF1_filtered.en')) as clean:
             self.assertEqual(
                     clean.readline(),
                     'Your Majesties , Your Royal Highnesses , Mr Speaker , '
                     'Members of the Swedish Parliament .\n'
                     )
-        with open('filter_files/RF1_filtered.sv') as clean:
+        with open(os.path.join(self.tempdir, 'RF1_filtered.sv')) as clean:
             self.assertEqual(
                     clean.readline(),
                     'Eders Majestäter , Eders Kungliga Högheter , herr '
@@ -106,14 +112,14 @@ class TestOpusFilter(unittest.TestCase):
                     )
 
     def test_train_models(self):
-        self.assertTrue(os.path.isfile('filter_files/RF1_align.priors'))
-        self.assertTrue(os.path.isfile('filter_files/RF1_en.arpa'))
-        self.assertTrue(os.path.isfile('filter_files/RF1_en.arpa'))
+        self.assertTrue(os.path.isfile(os.path.join(self.tempdir, 'RF1_align.priors')))
+        self.assertTrue(os.path.isfile(os.path.join(self.tempdir, 'RF1_en.arpa')))
+        self.assertTrue(os.path.isfile(os.path.join(self.tempdir, 'RF1_en.arpa')))
 
     def test_score_data(self):
         self.opus_filter.score_data()
 
-        with open('filter_files/RF1_scores.en-sv.jsonl') as scores_file:
+        with open(os.path.join(self.tempdir, 'RF1_scores.en-sv.jsonl')) as scores_file:
             score = json.loads(scores_file.readline())
             self.assertEqual(score['LanguageIDFilter'], [1.0, 0.98])
             self.assertEqual(score['CharacterScoreFilter'], [1.0, 1.0])
@@ -125,8 +131,8 @@ class TestOpusFilter(unittest.TestCase):
 
 
     def test_initial_files(self):
-        with open('filter_files/RF1_sents.en') as sents_file_en:
-            with open('filter_files/RF1_sents.sv') as sents_file_sv:
+        with open(os.path.join(self.tempdir, 'RF1_sents.en')) as sents_file_en:
+            with open(os.path.join(self.tempdir, 'RF1_sents.sv')) as sents_file_sv:
                 sents_en = sents_file_en.readlines()
                 sents_sv = sents_file_sv.readlines()
                 self.assertEqual(len(sents_en), 180)

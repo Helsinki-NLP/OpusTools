@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 
 from . import FilterABC
-
+from . import tokenization
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +17,12 @@ if EFLOMAL_PATH is None:
     EFLOMAL_PATH = '.'
 
 
-def create_align_input_file(sentence_pairs):
+def create_align_input_file(sentence_pairs, src_tokenizer=None, tgt_tokenizer=None):
+    src_tokenize = tokenization.get_tokenize(src_tokenizer)
+    tgt_tokenize = tokenization.get_tokenize(tgt_tokenizer)
     inputfile = tempfile.NamedTemporaryFile('w+')
     for sent1, sent2 in sentence_pairs:
-        inputfile.write('{} ||| {}\n'.format(sent1, sent2))
+        inputfile.write('{} ||| {}\n'.format(src_tokenize(sent1), tgt_tokenize(sent2)))
     inputfile.flush()
     return inputfile
 
@@ -68,15 +70,19 @@ def make_priors(sentence_pairs, priors_file, model=3):
 class WordAlignFilter(FilterABC):
     """Filtering based on eflomal word aligment scores"""
 
-    def __init__(self, src_threshold=0, tgt_threshold=0, priors=None, model=3, **kwargs):
+    def __init__(self, src_threshold=0, tgt_threshold=0, priors=None, model=3,
+                 src_tokenizer=None, tgt_tokenizer=None, **kwargs):
         self.src_threshold = src_threshold
         self.tgt_threshold = tgt_threshold
+        self.src_tokenizer = src_tokenizer
+        self.tgt_tokenizer = tgt_tokenizer
         self.priors = priors
         self.model = model
         super().__init__(**kwargs)
 
     def score(self, pairs):
-        input_file = create_align_input_file(pairs)
+        input_file = create_align_input_file(
+            pairs, src_tokenizer=self.src_tokenizer, tgt_tokenizer=self.tgt_tokenizer)
         scores_fwd_file = tempfile.NamedTemporaryFile('w+')
         scores_rev_file = tempfile.NamedTemporaryFile('w+')
         process = _run_eflomal_scoring(input_file.name, scores_fwd_file.name, scores_rev_file.name,
@@ -95,7 +101,8 @@ class WordAlignFilter(FilterABC):
         return src < self.src_threshold and tgt < self.tgt_threshold
 
     def filter(self, pairs):
-        input_file = create_align_input_file(pairs)
+        input_file = create_align_input_file(
+            pairs, src_tokenizer=self.src_tokenizer, tgt_tokenizer=self.tgt_tokenizer)
         scores_fwd_file = tempfile.NamedTemporaryFile('w+')
         scores_rev_file = tempfile.NamedTemporaryFile('w+')
         process = _run_eflomal_scoring(input_file.name, scores_fwd_file.name, scores_rev_file.name,

@@ -10,6 +10,7 @@ from . import OpusRead
 from .filter.pipeline import FilterPipeline
 from .filter import lm
 from .filter import word_alignment
+from .filter import tokenization
 
 
 class OpusFilter:
@@ -68,12 +69,14 @@ class OpusFilter:
                     tgt_lm_params['filename'] = '{}/{}'.format(
                             self.output_dir, tgt_lm_params['filename'])
 
-    def pair_generator(self, source_file_name, target_file_name):
+    def pair_generator(self, source_file_name, target_file_name, src_tokenizer=None, tgt_tokenizer=None):
+        src_tokenize = tokenization.get_tokenize(src_tokenizer)
+        tgt_tokenize = tokenization.get_tokenize(tgt_tokenizer)
         with open(source_file_name) as source_file, \
                 open(target_file_name) as target_file:
             for src_line in source_file:
                 tgt_line = target_file.readline()
-                yield (src_line.rstrip(), tgt_line.rstrip())
+                yield (src_tokenize(src_line.rstrip()), tgt_tokenize(tgt_line.rstrip()))
 
     def get_pairs(self, src_filename, tgt_filename):
         source_file_name = '{result_dir}/{src_filename}'.format(
@@ -123,7 +126,9 @@ class OpusFilter:
                 if model['type'] == 'alignment':
                     pair_gen = self.pair_generator(
                             '{}/{}'.format(self.output_dir, model['src_data']),
-                            '{}/{}'.format(self.output_dir, model['tgt_data']))
+                            '{}/{}'.format(self.output_dir, model['tgt_data']),
+                            src_tokenizer=model['parameters'].get('src_tokenizer', None),
+                            tgt_tokenizer=model['parameters'].get('tgt_tokenizer', None))
                     word_alignment.make_priors(
                             pair_gen,
                             '{}/{}'.format(self.output_dir, model['output']),

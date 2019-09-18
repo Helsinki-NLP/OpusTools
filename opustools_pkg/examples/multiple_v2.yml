@@ -113,7 +113,8 @@ steps:
       src_data: RF1_filtered.en
       tgt_data: RF1_filtered.sv
       parameters:
-        tokenizer: none
+        src_tokenizer: ~
+        tgt_tokenizer: ~
         model: 3
       output: RF1_align.priors
 
@@ -122,7 +123,8 @@ steps:
       src_data: RF2_filtered.es
       tgt_data: RF2_filtered.sv
       parameters:
-        tokenizer: none
+        src_tokenizer: ~
+        tgt_tokenizer: ~
         model: 3
       output: RF2_align.priors
 
@@ -151,7 +153,8 @@ steps:
             tgt_threshold: 1
 
         - WordAlignFilter:
-            tokenizer: none
+            src_tokenizer: ~
+            tgt_tokenizer: ~
             priors: RF1_align.priors
             model: 3
             src_threshold: 0
@@ -191,7 +194,8 @@ steps:
             tgt_threshold: 1
 
         - WordAlignFilter:
-            tokenizer: none
+            src_tokenizer: ~
+            tgt_tokenizer: ~
             priors: RF2_align.priors
             model: 3
             src_threshold: 0
