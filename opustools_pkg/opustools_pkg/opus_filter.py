@@ -11,6 +11,7 @@ from .filter.pipeline import FilterPipeline
 from .filter import lm
 from .filter import word_alignment
 from .filter import tokenization
+from .util import file_open
 
 
 class OpusFilter:
@@ -65,8 +66,8 @@ class OpusFilter:
     def pair_generator(self, source_file_name, target_file_name, src_tokenizer=None, tgt_tokenizer=None):
         src_tokenize = tokenization.get_tokenize(src_tokenizer)
         tgt_tokenize = tokenization.get_tokenize(tgt_tokenizer)
-        with open(source_file_name) as source_file, \
-                open(target_file_name) as target_file:
+        with file_open(source_file_name) as source_file, \
+                file_open(target_file_name) as target_file:
             for src_line in source_file:
                 tgt_line = target_file.readline()
                 yield (src_tokenize(src_line.rstrip()), tgt_tokenize(tgt_line.rstrip()))
@@ -92,8 +93,8 @@ class OpusFilter:
             result_dir=self.output_dir,
             tgt_filtered=parameters['tgt_output'])
 
-        with open(source_file_name, 'w') as source_file, \
-                open(target_file_name, 'w') as target_file:
+        with file_open(source_file_name, 'w') as source_file, \
+                file_open(target_file_name, 'w') as target_file:
             for pair in pairs:
                 source_file.write(pair[0]+'\n')
                 target_file.write(pair[1]+'\n')
@@ -102,8 +103,10 @@ class OpusFilter:
         data_name = parameters['data']
         seg_name = data_name + '.seg'
         tokenizer = lm.LMTokenizer(**parameters['parameters'])
-        with open(os.path.join(self.output_dir, data_name), 'r') as infile, \
-                open(os.path.join(self.output_dir, seg_name), 'w') as outfile:
+        with file_open(os.path.join(self.output_dir, data_name), 'r') as \
+                infile, \
+                file_open(os.path.join(self.output_dir, seg_name), 'w') as \
+                outfile:
             for line in infile:
                 tokens = tokenizer.tokenize(line.strip())
                 outfile.write(' '.join(tokens) + '\n')
@@ -145,6 +148,6 @@ class OpusFilter:
         score_file_name = ('{result_dir}/{scored_name}'.format(
             result_dir=self.output_dir,
             scored_name=parameters['output']))
-        with open(score_file_name, 'w') as score_file:
+        with file_open(score_file_name, 'w') as score_file:
             for score in scores_gen:
                 score_file.write(json.dumps(score, sort_keys=True)+'\n')
