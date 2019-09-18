@@ -5,87 +5,91 @@ import os
 import shutil
 import tempfile
 
+from opustools_pkg import OpusGet
 from opustools_pkg.opus_filter import OpusFilter
 from opustools_pkg.filter import lm
 
 
 class TestOpusFilter(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.tempdir = tempfile.mkdtemp()
-        configuration = {'output_directory': self.tempdir,
-            'corpora': {'RF1': {'type': 'OPUS',
-              'parameters': {'corpus_name': 'RF',
-               'source_language': 'en',
-               'target_language': 'sv',
-               'release': 'latest',
-               'preprocessing': 'xml',
-               'src_filename': 'RF1_sents.en',
-               'tgt_filename': 'RF1_sents.sv'}}},
-              'filtering': {'RF1': {'src_input': 'RF1_sents.en',
-              'tgt_input': 'RF1_sents.sv',
-              'src_output': 'RF1_filtered.en',
-              'tgt_output': 'RF1_filtered.sv',
-              'filters': [{'LanguageIDFilter': {'src_lang': 'en',
-                 'tgt_lang': 'sv',
-                 'src_threshold': 0,
-                 'tgt_threshold': 0}},
-               {'TerminalPunctuationFilter': {'threshold': -2}},
-               {'NonZeroNumeralsFilter': {'threshold': 0.5}},
-               {'CharacterScoreFilter': {'src_script': 'latin-1',
-                 'tgt_script': 'latin-1',
-                 'src_threshold': 1,
-                 'tgt_threshold': 1}}]}},
-            'models': [{'type': 'ngram',
-              'data': 'RF1_filtered.en',
-              'language': 'en',
-              'parameters': {'segmentation': {'type': 'char'},
-               'norder': 20,
-               'dscale': 0.001},
-              'model': 'RF1_en.arpa'},
-             {'type': 'ngram',
-              'data': 'RF1_filtered.sv',
-              'language': 'sv',
-              'parameters': {'segmentation': {'type': 'char'},
-               'norder': 20,
-               'dscale': 0.001},
-              'model': 'RF1_sv.arpa'},
-             {'type': 'alignment',
-              'src_data': 'RF1_filtered.en',
-              'tgt_data': 'RF1_filtered.sv',
-              'parameters': {'model': 3},
-              'output': 'RF1_align.priors'}],
-            'scoring': {'RF1': {'src_input': 'RF1_sents.en',
-              'tgt_input': 'RF1_sents.sv',
-              'output': 'RF1_scores.en-sv.jsonl',
-              'filters': [{'LanguageIDFilter': {'src_lang': 'en',
-                 'tgt_lang': 'sv',
-                 'src_threshold': 0,
-                 'tgt_threshold': 0}},
-               {'TerminalPunctuationFilter': {'threshold': -2}},
-               {'NonZeroNumeralsFilter': {'threshold': 0.5}},
-               {'CharacterScoreFilter': {'src_script': 'latin-1',
-                 'tgt_script': 'latin-1',
-                 'src_threshold': 1,
-                 'tgt_threshold': 1}},
-               {'WordAlignFilter': {'priors': 'RF1_align.priors',
-                 'model': 3,
-                 'src_threshold': 0,
-                 'tgt_threshold': 0}},
-               {'CrossEntropyFilter': {'src_lm_params':
-                   {'segmentation': {'type': 'char'},
-                  'filename': 'RF1_en.arpa'},
-                 'tgt_lm_params': {'segmentation': {'type': 'char'},
-                  'filename': 'RF1_sv.arpa'},
-                 'src_threshold': 50.0,
-                 'tgt_threshold': 50.0,
-                 'diff_threshold': 10.0}}]}}}
+        self.configuration = {'common': {'output_directory': self.tempdir},
+                'steps':
+                [{'type': 'opus_read',
+                    'parameters': {'corpus_name': 'RF',
+                        'source_language': 'en',
+                        'target_language': 'sv',
+                        'release': 'latest',
+                        'preprocessing': 'xml',
+                        'src_output': 'RF1_sents.en',
+                        'tgt_output': 'RF1_sents.sv'}},
+                {'type': 'filter',
+                    'parameters': {'src_input': 'RF1_sents.en',
+                        'tgt_input': 'RF1_sents.sv',
+                        'src_output': 'RF1_filtered.en',
+                        'tgt_output': 'RF1_filtered.sv',
+                        'filters': [{'LanguageIDFilter':
+                            {'src_lang': 'en',
+                                'tgt_lang': 'sv',
+                                'src_threshold': 0,
+                                'tgt_threshold': 0}},
+                            {'TerminalPunctuationFilter':
+                                {'threshold': -2}},
+                            {'NonZeroNumeralsFilter': {'threshold': 0.5}},
+                            {'CharacterScoreFilter':
+                                {'src_script': 'latin-1',
+                                    'tgt_script': 'latin-1',
+                                    'src_threshold': 1,
+                                    'tgt_threshold': 1}}]}},
+                {'type': 'train_ngram',
+                    'parameters': {'data': 'RF1_filtered.en',
+                        'parameters': {'norder': 20, 'dscale': 0.001},
+                        'model': 'RF1_en.arpa'}},
+                {'type': 'train_ngram',
+                    'parameters': {'data': 'RF1_filtered.sv',
+                        'parameters': {'norder': 20, 'dscale': 0.001},
+                        'model': 'RF1_sv.arpa'}},
+                {'type': 'train_alignment',
+                    'parameters': {'src_data': 'RF1_filtered.en',
+                        'tgt_data': 'RF1_filtered.sv',
+                        'parameters': {'tokenizer': 'none', 'model': 3},
+                        'output': 'RF1_align.priors'}},
+                {'type': 'score',
+                    'parameters': {'src_input': 'RF1_sents.en',
+                        'tgt_input': 'RF1_sents.sv',
+                        'output': 'RF1_scores.en-sv.jsonl',
+                        'filters': [{'LanguageIDFilter':
+                            {'src_lang': 'en',
+                                'tgt_lang': 'sv',
+                                'src_threshold': 0,
+                                'tgt_threshold': 0}},
+                            {'TerminalPunctuationFilter':
+                                {'threshold': -2}},
+                            {'NonZeroNumeralsFilter': {'threshold': 0.5}},
+                            {'CharacterScoreFilter':
+                                {'src_script': 'latin-1',
+                                    'tgt_script': 'latin-1',
+                                    'src_threshold': 1,
+                                    'tgt_threshold': 1}},
+                            {'WordAlignFilter': {'tokenizer': 'none',
+                                'priors': 'RF1_align.priors',
+                                'model': 3,
+                                'src_threshold': 0,
+                                'tgt_threshold': 0}},
+                            {'CrossEntropyFilter':
+                                {'src_lm_params': {'filename': 'RF1_en.arpa'},
+                                'tgt_lm_params': {'filename': 'RF1_sv.arpa'},
+                                'src_threshold': 50.0,
+                                'tgt_threshold': 50.0,
+                                'diff_threshold': 10.0}}]}}]}
 
-        self.opus_filter = OpusFilter(configuration)
-        self.opus_filter.clean_data()
-        self.opus_filter.train_models()
+        self.opus_filter = OpusFilter(self.configuration)
+        self.opus_filter.execute_steps()
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
         shutil.rmtree(self.tempdir)
 
     def test_get_pairs(self):
@@ -117,8 +121,6 @@ class TestOpusFilter(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(self.tempdir, 'RF1_en.arpa')))
 
     def test_score_data(self):
-        self.opus_filter.score_data()
-
         with open(os.path.join(self.tempdir, 'RF1_scores.en-sv.jsonl')) as scores_file:
             score = json.loads(scores_file.readline())
             self.assertEqual(score['LanguageIDFilter'], [1.0, 0.98])
