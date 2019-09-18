@@ -41,15 +41,15 @@ class AlignmentParser:
         self.args = args
 
         self.overThreshold = False
-        self.nonAlignments = self.args.ln
+        self.nonAlignments = self.args.leave_non_alignments_out
 
         self.result = result
         self.mosessrc = mosessrc
         self.mosestrg = mosestrg
 
-        self.slim = self.args.S.split('-')
+        self.slim = self.args.src_range.split('-')
         self.slim.sort()
-        self.tlim = self.args.T.split('-')
+        self.tlim = self.args.tgt_range.split('-')
         self.tlim.sort()
 
     def getZipFile(self, zipname, soutar, localfile):
@@ -64,14 +64,16 @@ class AlignmentParser:
         return openedzip
 
     def openZipFiles(self):
-        self.sourcezip = self.getZipFile((self.args.d+'_'+self.args.r+'_'+
-                        self.args.p+'_'+self.fromto[0]+'.zip'),
+        self.sourcezip = self.getZipFile((self.args.directory+'_'+
+                        self.args.release+'_'+
+                        self.args.preprocess+'_'+self.fromto[0]+'.zip'),
                         self.source,
-                        self.args.sz)
-        self.targetzip = self.getZipFile((self.args.d+'_'+self.args.r+'_'+
-                        self.args.p+'_'+self.fromto[1]+'.zip'),
+                        self.args.source_zip)
+        self.targetzip = self.getZipFile((self.args.directory+'_'+
+                        self.args.release+'_'+
+                        self.args.preprocess+'_'+self.fromto[1]+'.zip'),
                         self.target,
-                        self.args.tz)
+                        self.args.target_zip)
 
     def openSentenceParsers(self, attrs):
         try:
@@ -92,8 +94,8 @@ class AlignmentParser:
                     print('\nZip files are not found. The following '
                         'files are available for downloading:\n')
                     arguments = ['-s', self.fromto[0], '-t',
-                        self.fromto[1], '-d', self.args.d, '-r',
-                        self.args.r, '-p', self.args.p, '-l']
+                        self.fromto[1], '-d', self.args.directory, '-r',
+                        self.args.release, '-p', self.args.preprocess, '-l']
                     og = OpusGet(arguments)
                     og.get_files()
                     arguments.remove('-l')
@@ -103,54 +105,62 @@ class AlignmentParser:
                     self.openZipFiles()
                     self.zipFilesOpened = True
 
-            sourcefile = self.sourcezip.open(self.args.d+'/'+self.args.p+
-                '/'+attrs['fromDoc'][:-3], 'r')
-            targetfile = self.targetzip.open(self.args.d+'/'+self.args.p+
-                '/'+attrs['toDoc'][:-3], 'r')
+            sourcefile = self.sourcezip.open(self.args.directory+'/'+
+                self.args.preprocess+'/'+attrs['fromDoc'][:-3], 'r')
+            targetfile = self.targetzip.open(self.args.directory+'/'+
+                self.args.preprocess+'/'+attrs['toDoc'][:-3], 'r')
 
         if self.sPar and self.tPar:
             self.sPar.document.close()
             self.tPar.document.close()
 
-        pre = self.args.p
-        if pre == 'raw' and self.args.d == 'OpenSubtitles':
+        pre = self.args.preprocess
+        if pre == 'raw' and self.args.directory == 'OpenSubtitles':
             pre = 'rawos'
 
         st = ['src', 'trg']
-        langs = [self.args.s, self.args.t]
+        langs = [self.args.source, self.args.target]
         if self.switch_langs:
             st = ['trg', 'src']
-            langs = [self.args.t, self.args.s]
+            langs = [self.args.target, self.args.source]
 
-        if self.args.f:
+        if self.args.fast:
             self.sPar = SentenceParser(sourcefile, st[0], pre,
-                self.args.wm, langs[0], self.args.pa, self.args.sa,
-                self.args.ca, self.args.pi)
+                self.args.write_mode, langs[0], self.args.print_annotations,
+                self.args.source_annotations,
+                self.args.change_annotation_delimiter,
+                self.args.preserve_inline_tags)
             self.tPar = SentenceParser(targetfile, st[1], pre,
-                self.args.wm, langs[1], self.args.pa, self.args.ta,
-                self.args.ca, self.args.pi)
+                self.args.write_mode, langs[1], self.args.print_annotations,
+                self.args.target_annotations,
+                self.args.change_annotation_delimiter,
+                self.args.preserve_inline_tags)
         else:
             self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
-                self.args.wm, langs[0], self.args.pa, self.args.sa,
-                self.args.ca, self.args.pi)
+                self.args.write_mode, langs[0], self.args.print_annotations,
+                self.args.source_annotations,
+                self.args.change_annotation_delimiter,
+                self.args.preserve_inline_tags)
             self.sPar.storeSentences()
             self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
-                self.args.wm, langs[1], self.args.pa, self.args.ta,
-                self.args.ca, self.args.pi)
+                self.args.write_mode, langs[1], self.args.print_annotations,
+                self.args.target_annotations,
+                self.args.change_annotation_delimiter,
+                self.args.preserve_inline_tags)
             self.tPar.storeSentences()
 
     def initializeSentenceParsers(self, attrs):
-        if self.args.wm == 'normal':
+        if self.args.write_mode == 'normal':
             docnames = ('\n# ' + attrs['fromDoc'] + '\n# ' +
                 attrs['toDoc'] + '\n\n================================')
-            if self.args.w != None:
+            if self.args.write != None:
                 self.result.write(docnames + '\n')
             else:
                 print(docnames)
-        elif self.args.wm == 'moses' and self.args.pn:
+        elif self.args.write_mode == 'moses' and self.args.print_file_names:
             sourceDoc = '\n<fromDoc>{}</fromDoc>'.format(attrs['fromDoc'])
             targetDoc = '\n<toDoc>{}</toDoc>'.format(attrs['toDoc'])
-            if self.args.w != None:
+            if self.args.write != None:
                 if self.result:
                     self.result.write(sourceDoc + targetDoc + '\n\n')
                 else:
@@ -162,15 +172,15 @@ class AlignmentParser:
 
     def processLink(self, attrs):
         self.ascore = None
-        if self.args.a in attrs.keys():
-            self.ascore = attrs[self.args.a]
-            if self.args.tr != None:
-                if float(self.ascore) >= float(self.args.tr):
+        if self.args.attribute in attrs.keys():
+            self.ascore = attrs[self.args.attribute]
+            if self.args.threshold != None:
+                if float(self.ascore) >= float(self.args.threshold):
                     self.overThreshold = True
             else:
                 self.overThreshold = True
         else:
-            if self.args.tr == None:
+            if self.args.threshold == None:
                 self.overThreshold = True
         m = re.search('(.*);(.*)', attrs['xtargets'])
         self.toids = m.group(2).split(' ')
@@ -226,7 +236,7 @@ class AlignmentParser:
 
         srcAttrs, trgAttrs = {}, {}
         #no need to parse sentences in link printing mode
-        if self.args.wm != 'links':
+        if self.args.write_mode != 'links':
             sourceSen, srcAttrs = self.sPar.readSentence(self.fromids)
             targetSen, trgAttrs = self.tPar.readSentence(self.toids)
 
@@ -235,11 +245,12 @@ class AlignmentParser:
         #threshold, return -1, which skips printing of the alignment in 
         #PairPrinter.outputPair()
         if (self.sentencesOutsideLimit() or
-                (self.args.a != 'any' and self.overThreshold == False)):
+                (self.args.attribute != 'any' and
+                    self.overThreshold == False)):
             return -1
         elif (self.testConfidenceOn and
                 not self.langIdConfidence(srcAttrs, trgAttrs)
-                and self.args.wm != 'links'):
+                and self.args.write_mode != 'links'):
             return -1
         #if filtering non-alignments is set to True and either side of 
         #the alignment has no sentences:
@@ -249,7 +260,7 @@ class AlignmentParser:
             return -1
         else:
             self.overThreshold = False
-            if self.args.wm != 'links':
+            if self.args.write_mode != 'links':
                 return sourceSen, targetSen
             else:
                 return 1

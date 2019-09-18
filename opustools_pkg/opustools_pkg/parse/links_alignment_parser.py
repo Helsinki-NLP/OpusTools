@@ -47,7 +47,8 @@ class LinksAlignmentParser(AlignmentParser):
         #threshold, return -1, which skips printing of the alignment in 
         #PairPrinter.outputPair()
         if (self.sentencesOutsideLimit() or
-                (self.args.a != 'any' and self.overThreshold == False)):
+                (self.args.attribute != 'any' and
+                    self.overThreshold == False)):
             return -1
         elif (self.testConfidenceOn and
                 not self.langIdConfidence(srcAttrs, trgAttrs)):

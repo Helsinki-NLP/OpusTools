@@ -145,12 +145,12 @@ class TestOpusRead(unittest.TestCase):
         os.remove('sv.zip')
 
     def tearDown(self):
-        self.opr.par.args.wm='normal'
+        self.opr.par.args.write_mode='normal'
         self.opr.par.slim=['all']
         self.opr.par.tlim=['all']
-        self.opr.par.args.a = 'any'
-        self.opr.par.nonAlignments = self.opr.par.args.ln
-        self.opr.par.args.m = 'all'
+        self.opr.par.args.attribute = 'any'
+        self.opr.par.nonAlignments = self.opr.par.args.leave_non_alignments_out
+        self.opr.par.args.max = 'all'
         self.opr.par.alignParser = xml.parsers.expat.ParserCreate()
         self.opr.par.alignParser.StartElementHandler = \
             self.opr.par.start_element
@@ -160,13 +160,14 @@ class TestOpusRead(unittest.TestCase):
         self.opr.par.tPar.pre = 'xml'
         self.opr.par.sPar.annotations = False
         self.opr.par.tPar.annotations = False
-        self.opr.par.args.cm = '\t'
-        self.fastopr.par.args.wm='normal'
+        self.opr.par.args.change_moses_delimiter = '\t'
+        self.fastopr.par.args.write_mode='normal'
         self.fastopr.par.slim=['all']
         self.fastopr.par.tlim=['all']
-        self.fastopr.par.args.a = 'any'
-        self.fastopr.par.nonAlignments = self.fastopr.par.args.ln
-        self.fastopr.par.args.m = 'all'
+        self.fastopr.par.args.attribute = 'any'
+        self.fastopr.par.nonAlignments = \
+            self.fastopr.par.args.leave_non_alignments_out
+        self.fastopr.par.args.max = 'all'
         self.fastopr.par.alignParser = xml.parsers.expat.ParserCreate()
         self.fastopr.par.alignParser.StartElementHandler = \
             self.fastopr.par.start_element
@@ -316,8 +317,8 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(ret, -1)
 
     def test_AlignmentParser_readPair_returns_minus_1_if_attribute_values_is_not_over_threshold(self):
-        self.opr.par.args.a = 'certainty'
-        self.opr.par.args.tr = 0.6
+        self.opr.par.args.attribute = 'certainty'
+        self.opr.par.args.threshold = 0.6
         self.opr.par.parseLine('<s>')
         self.opr.par.parseLine(
             '<link xtargets="s1;s1" id="SL1" certainty="0.5"/> ')
@@ -339,7 +340,7 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(ret, -1)
 
     def test_AlignmentParser_readPair_returns_1_if_alignment_is_valid_and_write_mode_is_links(self):
-        self.opr.par.args.wm = 'links'
+        self.opr.par.args.write_mode = 'links'
         self.opr.par.parseLine('<s>')
         self.opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/> ')
         ret = self.opr.par.readPair()
@@ -353,7 +354,7 @@ class TestOpusRead(unittest.TestCase):
             'Sherlock Holmes .\n================================')
 
     def test_PairPrinter_printPair_tmx(self):
-        self.opr.par.args.wm = 'tmx'
+        self.opr.par.args.write_mode = 'tmx'
         sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
                 'Sherlock Holmes</seg></tuv>', '\t\t\t<tuv xml:lang="fi">'
                 '<seg>Herra Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
@@ -363,20 +364,20 @@ class TestOpusRead(unittest.TestCase):
             'Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
 
     def test_PairPrinter_printPair_moses(self):
-        self.opr.par.args.wm = 'moses'
+        self.opr.par.args.write_mode = 'moses'
         sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
         self.assertEqual(self.opr.printPair(sPair),
             """Chapter 1 Mr. Sherlock Holmes\tHerra Sherlock Holmes .""")
 
     def test_PairPrinter_printPair_moses_change_delimiter(self):
-        self.opr.par.args.wm = 'moses'
-        self.opr.args.cm = '@'
+        self.opr.par.args.write_mode = 'moses'
+        self.opr.args.change_moses_delimiter = '@'
         sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
         self.assertEqual(self.opr.printPair(sPair),
             """Chapter 1 Mr. Sherlock Holmes@Herra Sherlock Holmes .""")
 
     def test_PairPrinter_printPair_links(self):
-        self.opr.par.args.wm = 'links'
+        self.opr.par.args.write_mode = 'links'
         sPair = '<link xtargets="s4;s4" id="SL4"/>'
         self.assertEqual(self.opr.printPair(sPair),
             '<link xtargets="s4;s4" id="SL4"/>')
@@ -395,7 +396,7 @@ class TestOpusRead(unittest.TestCase):
             'Sherlock Holmes .\n================================\n', ''))
 
     def test_PairPrinter_writePair_tmx(self):
-        self.opr.par.args.wm = 'tmx'
+        self.opr.par.args.write_mode = 'tmx'
         sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
                 'Sherlock Holmes</seg></tuv>',
                 '\t\t\t<tuv xml:lang="fi"><seg>Herra Sherlock Holmes .'
@@ -406,14 +407,14 @@ class TestOpusRead(unittest.TestCase):
             'Sherlock Holmes .</seg></tuv>\n\t\t</tu>\n', ''))
 
     def test_PairPrinter_writePair_moses(self):
-        self.opr.par.args.wm = 'moses'
-        self.opr.par.args.w = 'test_files/test.src'
+        self.opr.par.args.write_mode = 'moses'
+        self.opr.par.args.write = 'test_files/test.src'
         sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
         self.assertEqual(self.opr.writePair(sPair),
             ('Chapter 1 Mr. Sherlock Holmes\nHerra Sherlock Holmes .\n', ''))
 
     def test_PairPrinter_writePair_links(self):
-        self.opr.par.args.wm = 'links'
+        self.opr.par.args.write_mode = 'links'
         sPair = '<link xtargets="s4;s4" id="SL4"/>'
         self.assertEqual(self.opr.writePair(sPair),
             ('<link xtargets="s4;s4" id="SL4"/>\n', ''))
@@ -1496,8 +1497,8 @@ class TestOpusRead(unittest.TestCase):
                 ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
                 '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
                 ' fromDoc="en/1988.xml.gz">\n'
-                '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10"'
-                ' />\n </linkGrp>\n</cesAlign>')
+                '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" '
+                'id="SL10" />\n </linkGrp>\n</cesAlign>')
 
     def test_links_print(self):
         var = pairPrinterToVariable(
@@ -2065,9 +2066,9 @@ class TestOpusRead(unittest.TestCase):
                 '.xml.gz\ts1.1\ts1.1\tNone\n')
 
     def test_pair_output_sending_with_single_output_file(self):
-        self.opr.args.wm = 'moses'
-        self.opr.args.w = ['test_files/moses.txt']
-        self.opr.resultfile = open(self.opr.args.w[0], 'w')
+        self.opr.args.write_mode = 'moses'
+        self.opr.args.write = ['test_files/moses.txt']
+        self.opr.resultfile = open(self.opr.args.write[0], 'w')
         wpair = ('sentence 1\tsentence 2\n', '')
         self.opr.sendPairOutput(wpair)
         self.opr.resultfile.close()
@@ -2075,10 +2076,10 @@ class TestOpusRead(unittest.TestCase):
             self.assertEqual(mosesf.read(), 'sentence 1\tsentence 2\n')
         
     def test_pair_output_sending_with_two_output_files(self):
-        self.opr.args.wm = 'moses'
-        self.opr.args.w = ['test_files/moses.src', 'test_files/moses.trg']
-        self.opr.mosessrc = open(self.opr.args.w[0], 'w')
-        self.opr.mosestrg = open(self.opr.args.w[1], 'w')
+        self.opr.args.write_mode = 'moses'
+        self.opr.args.write = ['test_files/moses.src', 'test_files/moses.trg']
+        self.opr.mosessrc = open(self.opr.args.write[0], 'w')
+        self.opr.mosestrg = open(self.opr.args.write[1], 'w')
         wpair = ('sentence 1\t', 'sentence 2\n')
         self.opr.sendPairOutput(wpair)
         self.opr.mosessrc.close()

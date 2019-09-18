@@ -135,56 +135,61 @@ class OpusRead:
         else:
             self.args = parser.parse_args(arguments)
 
-        self.fromto = sorted([self.args.s, self.args.t])
-        fromto_copy = [self.args.s, self.args.t]
+        self.fromto = sorted([self.args.source, self.args.target])
+        fromto_copy = [self.args.source, self.args.target]
         self.switch_langs = fromto_copy != self.fromto
 
         if self.switch_langs:
-            temp = self.args.S
-            self.args.S = self.args.T
-            self.args.T = temp
+            temp = self.args.src_range
+            self.args.src_range = self.args.tgt_range
+            self.args.tgt_range = temp
             temp = self.args.src_cld2
             self.args.src_cld2 = self.args.trg_cld2
             self.args.trg_cld2 = temp
             temp = self.args.src_langid
             self.args.src_langid = self.args.trg_langid
             self.args.trg_langid = temp
-            temp = self.args.sz
-            self.args.sz = self.args.tz
-            self.args.tz = temp
-            temp = self.args.sa.copy()
-            self.args.sa = self.args.ta.copy()
-            self.args.ta = temp.copy()
+            temp = self.args.source_zip
+            self.args.source_zip = self.args.target_zip
+            self.args.target_zip = temp
+            temp = self.args.source_annotations.copy()
+            self.args.source_annotations = self.args.target_annotations.copy()
+            self.args.target_annotations = temp.copy()
 
-        if self.args.af == -1:
-            self.alignment = (self.args.rd+self.args.d+'/'+self.args.r+
-                '/xml/'+self.fromto[0]+'-'+self.fromto[1]+'.xml.gz')
+        if self.args.alignment_file == -1:
+            self.alignment = (self.args.root_directory+self.args.directory+
+                '/'+self.args.release+'/xml/'+self.fromto[0]+'-'+
+                self.fromto[1]+'.xml.gz')
         else:
-            self.alignment = self.args.af
-        self.source = (self.args.rd+self.args.d+'/'+self.args.r+'/'+
-            self.args.p+'/'+self.fromto[0]+'.zip')
-        self.target = (self.args.rd+self.args.d+'/'+self.args.r+'/'+
-            self.args.p+'/'+self.fromto[1]+'.zip')
-        self.moses = (self.args.rd+self.args.d+'/'+self.args.r+
+            self.alignment = self.args.alignment_file
+        self.source = (self.args.root_directory+self.args.directory+'/'+
+            self.args.release+'/'+
+            self.args.preprocess+'/'+self.fromto[0]+'.zip')
+        self.target = (self.args.root_directory+self.args.directory+'/'+
+            self.args.release+'/'+
+            self.args.preprocess+'/'+self.fromto[1]+'.zip')
+        self.moses = (self.args.root_directory+self.args.directory+'/'+
+            self.args.release+
             '/moses/'+self.fromto[0]+'-'+self.fromto[1]+'.txt.zip')
 
         self.resultfile = None
         self.mosessrc = None
         self.mosestrg = None
-        if self.args.id != None:
-            self.id_file = open(self.args.id, 'w', encoding='utf-8')
+        if self.args.write_ids != None:
+            self.id_file = open(self.args.write_ids, 'w', encoding='utf-8')
 
-        if self.args.w != None:
-            if self.args.wm == 'moses' and len(self.args.w) == 2:
-                self.mosessrc = open(self.args.w[0], 'w', encoding='utf-8')
-                self.mosestrg = open(self.args.w[1], 'w', encoding='utf-8')
+        if self.args.write != None:
+            if self.args.write_mode == 'moses' and len(self.args.write) == 2:
+                self.mosessrc = open(self.args.write[0], 'w', encoding='utf-8')
+                self.mosestrg = open(self.args.write[1], 'w', encoding='utf-8')
             else:
-                self.resultfile = open(self.args.w[0], 'w', encoding='utf-8')
+                self.resultfile = open(self.args.write[0], 'w',
+                    encoding='utf-8')
 
-        if self.args.wm == 'links':
-            self.par = LinksAlignmentParser(self.source, self.target, self.args,
-                self.resultfile, self.mosessrc, self.mosestrg, self.fromto,
-                self.switch_langs)
+        if self.args.write_mode == 'links':
+            self.par = LinksAlignmentParser(self.source, self.target,
+                self.args, self.resultfile, self.mosessrc, self.mosestrg,
+                self.fromto, self.switch_langs)
         else:
             self.par = AlignmentParser(self.source, self.target, self.args,
                 self.resultfile, self.mosessrc, self.mosestrg, self.fromto,
@@ -192,35 +197,35 @@ class OpusRead:
 
     def printPair(self, sPair):
         ret = ''
-        if self.args.wm == 'links':
+        if self.args.write_mode == 'links':
             ret = sPair
         else:
-            if self.args.wm == 'moses':
-                ret = sPair[0] + self.args.cm + sPair[1]
+            if self.args.write_mode == 'moses':
+                ret = sPair[0] + self.args.change_moses_delimiter + sPair[1]
             else:
                 ret = sPair[0] + '\n' + sPair[1]
-            if self.args.wm == 'normal':
+            if self.args.write_mode == 'normal':
                 ret = ret + '\n================================'
         return ret
 
     def writePair(self, sPair):
         ret1, ret2 = '', ''
-        if self.args.wm == 'links':
+        if self.args.write_mode == 'links':
             ret1 = sPair+'\n'
         else:
-            if self.args.wm == 'moses' and len(self.args.w) == 2:
+            if self.args.write_mode == 'moses' and len(self.args.write) == 2:
                 ret1 = sPair[0]+'\n'
                 ret2 = sPair[1]+'\n'
-            elif self.args.wm == 'moses' and len(self.args.w) == 1:
-                ret1 = sPair[0] + self.args.cm + sPair[1] + '\n'
+            elif self.args.write_mode == 'moses' and len(self.args.write) == 1:
+                ret1 = sPair[0] + self.args.change_moses_delimiter + sPair[1] + '\n'
             else:
                 ret1 = sPair[0] + '\n' + sPair[1] + '\n'
-            if self.args.wm == 'normal':
+            if self.args.write_mode == 'normal':
                 ret1 = ret1 + '================================\n'
         return (ret1, ret2)
 
     def sendPairOutput(self, wpair):
-        if self.args.wm == 'moses' and len(self.args.w) == 2:
+        if self.args.write_mode == 'moses' and len(self.args.write) == 2:
             self.mosessrc.write(wpair[0])
             self.mosestrg.write(wpair[1])
         else:
@@ -263,13 +268,13 @@ class OpusRead:
             else:
                 sPair = line.rstrip()
 
-        if self.args.w != None:
+        if self.args.write != None:
             wpair = self.writePair(sPair)
             self.sendPairOutput(wpair)
         else:
             print(self.printPair(sPair))
 
-        if self.args.id != None:
+        if self.args.write_ids != None:
             self.sendIdOutput(id_details)
 
         #if the sentence pair is printed:
@@ -281,22 +286,22 @@ class OpusRead:
 
     def addTmxHeader(self):
         tmxheader = ('<?xml version="1.0" encoding="utf-8"?>\n<tmx '
-            'version="1.4.">\n<header srclang="' + self.args.s +
+            'version="1.4.">\n<header srclang="' + self.args.source +
             '"\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype='
             '"PlainText" />\n\t<body>')
-        if self.args.w != None:
+        if self.args.write != None:
             self.resultfile.write(tmxheader + '\n')
         else:
             print(tmxheader)
 
     def addTmxEnding(self):
-        if self.args.w != None:
+        if self.args.write != None:
             self.resultfile.write('\t</body>\n</tmx>')
         else:
             print('\t</body>\n</tmx>')
 
     def addLinkFileEnding(self):
-        if self.args.w != None:
+        if self.args.write != None:
             self.resultfile.write(' </linkGrp>\n</cesAlign>')
         else:
             print(' </linkGrp>\n</cesAlign>')
@@ -304,28 +309,28 @@ class OpusRead:
     def addLinkGrpEnding(self, line):
         if type(line) == bytes:
             line = line.decode('utf-8')
-        if (self.args.wm == 'links' and self.par.end == 'linkGrp' 
+        if (self.args.write_mode == 'links' and self.par.end == 'linkGrp' 
             and line.strip() != '</linkGrp>'):
-            if self.args.w != None:
+            if self.args.write != None:
                 self.resultfile.write(' </linkGrp>')
             else:
                 print(' </linkGrp>')
             self.par.end = ''
 
     def closeResultFiles(self):
-        if self.args.wm == 'moses' and len(self.args.w) == 2:    
+        if self.args.write_mode == 'moses' and len(self.args.write) == 2:    
             self.mosessrc.close()
             self.mosestrg.close()
         else:
             self.resultfile.close()
 
     def readAlignment(self, align):
-        if self.args.m == 'all':
+        if self.args.max == 'all':
             for line in align:
                 lastline = self.outputPair(self.par, line)[1]
                 self.addLinkGrpEnding(line)
         else:
-            pairs = int(self.args.m)
+            pairs = int(self.args.max)
             while True:
                 line = align.readline()
                 if len(line) == 0:
@@ -338,30 +343,33 @@ class OpusRead:
         return lastline
 
     def printPairs(self):
-        if self.args.wm == 'tmx':
+        if self.args.write_mode == 'tmx':
             self.addTmxHeader()
 
         if self.alignment[-3:] == '.gz':
             try:
                 try:
-                    gzipAlign = gzip.open((self.args.d+'_'+self.args.r+
-                        '_xml_'+self.fromto[0]+'-'+self.fromto[1]+'.xml.gz'))
+                    gzipAlign = gzip.open((self.args.directory+'_'+
+                        self.args.release+'_xml_'+self.fromto[0]+'-'+
+                        self.fromto[1]+'.xml.gz'))
                 except FileNotFoundError:
                     gzipAlign = gzip.open(self.alignment)
             except FileNotFoundError:
                 print(('\nAlignment file ' + self.alignment + ' not found. '
                     'The following files are available for downloading:\n'))
                 arguments = ['-s', self.fromto[0], '-t', self.fromto[1], '-d', 
-                    self.args.d, '-r', self.args.r, '-p', self.args.p, '-l']
+                    self.args.directory, '-r', self.args.release, '-p',
+                    self.args.preprocess, '-l']
                 og = OpusGet(arguments)
                 og.get_files()
                 arguments.remove('-l')
-                if self.args.q:
+                if self.args.suppress_prompts:
                     arguments.append('-q')
                 og = OpusGet(arguments)
                 og.get_files()
                 try:
-                    gzipAlign = gzip.open((self.args.d+'_'+self.args.r+'_xml_'+
+                    gzipAlign = gzip.open((self.args.directory+'_'+
+                        self.args.release+'_xml_'+
                         self.fromto[0]+'-'+self.fromto[1]+'.xml.gz'))
                 except FileNotFoundError:
                     return
@@ -372,30 +380,30 @@ class OpusRead:
             with open(self.alignment) as xmlAlign:
                 lastline = self.readAlignment(xmlAlign)
         
-        if self.args.wm == 'links' and lastline != '</cesAlign>':
+        if self.args.write_mode == 'links' and lastline != '</cesAlign>':
             self.addLinkFileEnding()
 
-        if self.args.wm == 'tmx':
+        if self.args.write_mode == 'tmx':
             self.addTmxEnding()
             
         self.par.closeFiles()
 
-        if self.args.w != None:
+        if self.args.write != None:
             self.closeResultFiles()
 
-        if self.args.id != None:
+        if self.args.write_ids != None:
             self.id_file.close()
 
 '''
     def printPairsMoses(self):
-        mread = MosesRead(self.moses, self.args.d, self.fromto[0], 
+        mread = MosesRead(self.moses, self.args.directory, self.fromto[0], 
             self.fromto[1])
-        if self.args.m == 'all':
+        if self.args.max == 'all':
             mread.printAll()
         else:
             print('\n# ' + self.moses + '\n\n================================')
     
-            for i in range(int(self.args.m)):
+            for i in range(int(self.args.max)):
                 print(mread.readPair())
 
             mread.closeFiles()
