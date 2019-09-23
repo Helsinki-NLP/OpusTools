@@ -2304,7 +2304,7 @@ class TestOpusGet(unittest.TestCase):
 
     def test_remove_data_with_no_alignment_if_needed(self):
         opg = OpusGet('-s en -t sv -l'.split())
-        self.assertEqual(opg.get_corpora_data()[2], '101 GB')
+        self.assertEqual(opg.get_corpora_data()[2], '76 GB')
 
     def test_get_files_invalid_url(self):
         opg = OpusGet('-d RF -s en -t sv -l'.split())
