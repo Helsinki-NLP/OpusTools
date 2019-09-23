@@ -312,7 +312,7 @@ class OpusRead:
         if (self.args.write_mode == 'links' and self.par.end == 'linkGrp' 
             and line.strip() != '</linkGrp>'):
             if self.args.write != None:
-                self.resultfile.write(' </linkGrp>')
+                self.resultfile.write(' </linkGrp>\n')
             else:
                 print(' </linkGrp>')
             self.par.end = ''

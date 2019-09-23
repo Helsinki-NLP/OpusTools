@@ -349,6 +349,20 @@ class TestOpusRead(unittest.TestCase):
         ret = opr.par.readPair()
         self.assertEqual(ret, 1)
 
+    def test_AlignmentParser_readPair_returns_minus_1_if_nonAlignments_is_on_and_source_or_target_is_empty_and_write_mode_is_links(self):
+        opr = OpusRead('-d RF -s en -t sv -wm links'.split())
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
+
+        self.opr.par.parseLine('<s>')
+        self.opr.par.parseLine('<link xtargets="s1;" id="SL1"/> ')
+        ret = self.opr.par.readPair()
+        self.assertEqual(type(ret[0]), str)
+        self.opr.par.nonAlignments = True
+        self.opr.par.parseLine('<link xtargets="s1;" id="SL1"/> ')
+        ret = self.opr.par.readPair()
+        self.assertEqual(ret, -1)
+
     def test_PairPrinter_printPair_normal(self):
         sPair = ('(src)="s4">Chapter 1 Mr. Sherlock Holmes',
                 '(trg)="s4">Herra Sherlock Holmes .')
@@ -1491,7 +1505,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_links_write_unalphabetical(self):
         OpusRead(
-            '-d RF -s sv -t en -m 1 -w test_files/test_result '
+            '-d RF -s sv -t en -w test_files/test_result '
             '-wm links -S 1 -T 2'.split()).printPairs()
         with open('test_files/test_result', 'r') as f:
             self.assertEqual(f.read(),
@@ -1501,7 +1515,9 @@ class TestOpusRead(unittest.TestCase):
                 '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
                 ' fromDoc="en/1988.xml.gz">\n'
                 '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" '
-                'id="SL10" />\n </linkGrp>\n</cesAlign>')
+                'id="SL10" />\n </linkGrp>\n <linkGrp targType="s" '
+                'toDoc="sv/1996.xml.gz" fromDoc="en/1996.xml.gz">\n '
+                '</linkGrp>\n</cesAlign>\n')
 
     def test_links_print(self):
         var = pairPrinterToVariable(
@@ -1517,7 +1533,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_links_print_unalphabetical(self):
         var = pairPrinterToVariable(
-            '-d RF -s sv -t en -m 1 -wm links -S 1 -T 2'.split())
+            '-d RF -s sv -t en -wm links -S 1 -T 2'.split())
         self.assertEqual(var,
             '<?xml version="1.0" encoding="utf-8"?>\n'
             '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
@@ -1525,7 +1541,8 @@ class TestOpusRead(unittest.TestCase):
             '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
             ' fromDoc="en/1988.xml.gz">\n'
             '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10"'
-            ' />\n </linkGrp>\n</cesAlign>\n')
+            ' />\n </linkGrp>\n <linkGrp targType="s" toDoc="sv/1996.xml.gz"'
+            ' fromDoc="en/1996.xml.gz">\n </linkGrp>\n</cesAlign>\n')
 
     def test_iteration_stops_at_the_end_of_the_document_even_if_max_is_not_filled(self):
         var = pairPrinterToVariable(
@@ -2143,7 +2160,7 @@ class TestOpusRead(unittest.TestCase):
         
     def test_writing_time_tags_raw_fast(self):
         var = pairPrinterToVariable(
-            '-d OpenSubtitles -s eo -t kk -m 1 -pi -p raw'.split())
+            '-d OpenSubtitles -s eo -t kk -m 1 -pi -p raw -f'.split())
         self.assertEqual(var,
             '\n# eo/2001/245429/5818397.xml.gz\n'
             '# kk/2001/245429/6899218.xml.gz\n\n'
