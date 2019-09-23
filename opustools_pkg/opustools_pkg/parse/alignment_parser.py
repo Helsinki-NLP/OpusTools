@@ -235,10 +235,9 @@ class AlignmentParser:
             return -1
 
         srcAttrs, trgAttrs = {}, {}
-        #no need to parse sentences in link printing mode
-        if self.args.write_mode != 'links':
-            sourceSen, srcAttrs = self.sPar.readSentence(self.fromids)
-            targetSen, trgAttrs = self.tPar.readSentence(self.toids)
+            
+        sourceSen, srcAttrs = self.sPar.readSentence(self.fromids)
+        targetSen, trgAttrs = self.tPar.readSentence(self.toids)
 
         #if either side of the alignment is outside of the sentence limit, 
         #or the attribute value is under the given attribute
@@ -249,8 +248,7 @@ class AlignmentParser:
                     self.overThreshold == False)):
             return -1
         elif (self.testConfidenceOn and
-                not self.langIdConfidence(srcAttrs, trgAttrs)
-                and self.args.write_mode != 'links'):
+                not self.langIdConfidence(srcAttrs, trgAttrs)):
             return -1
         #if filtering non-alignments is set to True and either side of 
         #the alignment has no sentences:
@@ -260,10 +258,7 @@ class AlignmentParser:
             return -1
         else:
             self.overThreshold = False
-            if self.args.write_mode != 'links':
-                return sourceSen, targetSen
-            else:
-                return 1
+            return sourceSen, targetSen
         
     def closeFiles(self):
         if self.zipFilesOpened:

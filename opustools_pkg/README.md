@@ -28,7 +28,7 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
 arguments:
 
 ```
--h, --help            show this help message and exit
+-h, --help          show this help message and exit
 -d corpus_name, --directory corpus_name
                     Corpus name
 -s langid, --source langid
@@ -39,7 +39,7 @@ arguments:
                     Release (default=latest)
 -p {raw,xml,parsed}, --preprocess {raw,xml,parsed}
                     Preprocess-type (raw, xml or parsed, default=xml)
--m MAX, --max MAX     Maximum number of alignments
+-m MAX, --max MAX   Maximum number of alignments
 -S SRC_RANGE, --src_range SRC_RANGE
                     Number of source sentences in alignments (range is
                     allowed, eg. -S 1-2)
