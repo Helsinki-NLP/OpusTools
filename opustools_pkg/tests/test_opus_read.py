@@ -350,17 +350,13 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(ret, 1)
 
     def test_AlignmentParser_readPair_returns_minus_1_if_nonAlignments_is_on_and_source_or_target_is_empty_and_write_mode_is_links(self):
-        opr = OpusRead('-d RF -s en -t sv -wm links'.split())
+        opr = OpusRead('-d RF -s en -t sv -ln -wm links'.split())
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
 
-        self.opr.par.parseLine('<s>')
-        self.opr.par.parseLine('<link xtargets="s1;" id="SL1"/> ')
-        ret = self.opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-        self.opr.par.nonAlignments = True
-        self.opr.par.parseLine('<link xtargets="s1;" id="SL1"/> ')
-        ret = self.opr.par.readPair()
+        opr.par.parseLine('<s>')
+        opr.par.parseLine('<link xtargets="s1;" id="SL1"/> ')
+        ret = opr.par.readPair()
         self.assertEqual(ret, -1)
 
     def test_PairPrinter_printPair_normal(self):
