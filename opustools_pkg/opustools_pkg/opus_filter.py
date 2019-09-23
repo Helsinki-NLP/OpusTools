@@ -18,13 +18,15 @@ class OpusFilter:
 
     def __init__(self, configuration):
         self.configuration = configuration
-        self.common = configuration['common']
-        if 'output_directory' in self.common.keys():
+        self.common = None
+        if 'common' in configuration.keys():
+            self.common = configuration['common']
+        if self.common and 'output_directory' in self.common.keys():
             self.output_dir = self.common['output_directory']
             if not os.path.isdir(self.output_dir):
                 logging.warning(
-                    'Directory "{}" does not exist. Writing files to current '
-                    'directory.'.format(self.output_dir))
+                    'Directory "{}" does not exist. Writing files to '
+                    'current directory.'.format(self.output_dir))
                 self.output_dir = '.'
         else:
             logging.warning(

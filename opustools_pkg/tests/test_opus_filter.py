@@ -114,6 +114,7 @@ class TestOpusFilter(unittest.TestCase):
                     clean.readline(),
                     'Eders Majestäter , Eders Kungliga Högheter , herr '
                     'talman , ledamöter av Sveriges riksdag !\n'
+
                     )
 
     def test_train_models(self):
@@ -149,4 +150,24 @@ class TestOpusFilter(unittest.TestCase):
                         )
                 self.assertEqual(sents_sv[0], 'REGERINGSFÖRKLARING .\n')
 
+    def test_write_to_current_dir_if_common_not_specified(self):
+        step = self.configuration['steps'][0]
+        test_config = {'steps': [step]}
+        test_filter = OpusFilter(test_config)
+        test_filter.execute_steps()
+        self.assertTrue(os.path.isfile('RF1_sents.en'))
+        self.assertTrue(os.path.isfile('RF1_sents.sv'))
+        os.remove('RF1_sents.en')
+        os.remove('RF1_sents.sv')
+
+    def test_write_to_current_dir_if_output_dir_not_specified(self):
+        common = {'test': 'test'}
+        step = self.configuration['steps'][0]
+        test_config = {'common': common, 'steps': [step]}
+        test_filter = OpusFilter(test_config)
+        test_filter.execute_steps()
+        self.assertTrue(os.path.isfile('RF1_sents.en'))
+        self.assertTrue(os.path.isfile('RF1_sents.sv'))
+        os.remove('RF1_sents.en')
+        os.remove('RF1_sents.sv')
 
