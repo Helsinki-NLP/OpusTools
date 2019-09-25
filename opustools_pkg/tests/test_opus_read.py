@@ -8,6 +8,7 @@ import gzip
 import shutil
 import zipfile
 import tempfile
+import bz2
 
 from opustools import OpusRead, OpusCat, OpusGet
 from opustools.opus_read import AlignmentParserError

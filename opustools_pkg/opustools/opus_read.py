@@ -7,6 +7,7 @@ from .parse.alignment_parser import AlignmentParser
 from .parse.links_alignment_parser import LinksAlignmentParser
 #from .parse.moses_read import MosesRead
 from .opus_get import OpusGet
+from .util import file_open
 
 class AlignmentParserError(Exception):
 
@@ -127,10 +128,11 @@ class OpusRead:
 
         if write != None:
             if write_mode == 'moses' and len(write) == 2:
-                self.mosessrc = open(write[0], 'w', encoding='utf-8')
-                self.mosestrg = open(write[1], 'w', encoding='utf-8')
+                self.mosessrc = file_open(write[0], mode='w', encoding='utf-8')
+                self.mosestrg = file_open(write[1], mode='w', encoding='utf-8')
             else:
-                self.resultfile = open(write[0], 'w', encoding='utf-8')
+                self.resultfile = file_open(write[0], mode='w',
+                    encoding='utf-8')
 
         if write_mode == 'links':
             self.par = LinksAlignmentParser(source=source_file,
