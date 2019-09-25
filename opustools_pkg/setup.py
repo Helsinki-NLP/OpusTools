@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/Helsinki-NLP/OpusTools",
     packages=setuptools.find_packages(),
     scripts=["bin/opus_read", "bin/opus_cat", "bin/opus_get",
-        "bin/opus_langid", "bin/opus_express"],
+        "bin/opus_langid", "bin/opus_express", "bin/opus_filter"],
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
