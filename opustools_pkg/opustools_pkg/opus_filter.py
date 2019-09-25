@@ -15,19 +15,19 @@ from .util import file_open
 
 
 class OpusFilter:
+    """Apply filters to language data"""
 
     def __init__(self, configuration):
         self.configuration = configuration
-        self.common = None
-        if 'common' in configuration.keys():
-            self.common = configuration['common']
-        if self.common and 'output_directory' in self.common.keys():
-            self.output_dir = self.common['output_directory']
+        if ('common' in configuration.keys() and
+                'output_directory' in configuration['common'].keys()):
+            common = configuration['common']
+            self.output_dir = common['output_directory']
             if not os.path.isdir(self.output_dir):
                 logging.warning(
-                    'Directory "{}" does not exist. Writing files to '
-                    'current directory.'.format(self.output_dir))
-                self.output_dir = '.'
+                    'Directory "{}" does not exist. It will be '
+                    'created.'.format(self.output_dir))
+                os.mkdir(self.output_dir)
         else:
             logging.warning(
                 'Output directory not specified. Writing files to current '
@@ -43,10 +43,12 @@ class OpusFilter:
             }
 
     def execute_steps(self):
+        """Execute steps in the same order as they are in the configuration"""
         for step in self.configuration['steps']:
             self.step_functions[step['type']](step['parameters'])
 
     def read_from_opus(self, parameters):
+        """Download and read a corpus from OPUS"""
         fromto = sorted([parameters['source_language'],
             parameters['target_language']])
         src_lan = fromto[0]
@@ -66,6 +68,7 @@ class OpusFilter:
         opus_reader.printPairs()
 
     def pair_generator(self, source_file_name, target_file_name, src_tokenizer=None, tgt_tokenizer=None):
+        """Create a generator from given sentence files"""
         src_tokenize = tokenization.get_tokenize(src_tokenizer)
         tgt_tokenize = tokenization.get_tokenize(tgt_tokenizer)
         with file_open(source_file_name) as source_file, \
@@ -75,6 +78,7 @@ class OpusFilter:
                 yield (src_tokenize(src_line.rstrip()), tgt_tokenize(tgt_line.rstrip()))
 
     def get_pairs(self, src_filename, tgt_filename):
+        """Return a generator for given sentence files"""
         source_file_name = '{result_dir}/{src_filename}'.format(
             result_dir=self.output_dir, src_filename=src_filename)
         target_file_name = '{result_dir}/{tgt_filename}'.format(
@@ -83,6 +87,7 @@ class OpusFilter:
         return self.pair_generator(source_file_name, target_file_name)
 
     def clean_data(self, parameters):
+        """Write sentences to file if they pass given filters"""
         filter_pipe = FilterPipeline.from_config(parameters['filters'])
         pairs_gen = self.get_pairs(parameters['src_input'],
                 parameters['tgt_input'])
@@ -102,6 +107,7 @@ class OpusFilter:
                 target_file.write(pair[1]+'\n')
 
     def train_ngram(self, parameters):
+        """Train an n-gram language model"""
         data_name = parameters['data']
         seg_name = data_name + '.seg'
         tokenizer = lm.LMTokenizer(**parameters['parameters'])
@@ -117,6 +123,7 @@ class OpusFilter:
                  **parameters['parameters'])
 
     def train_alignment(self, parameters):
+        """Train eflomal alignment priors"""
         pair_gen = self.pair_generator(
                 os.path.join(self.output_dir, parameters['src_data']),
                 os.path.join(self.output_dir, parameters['tgt_data']),
@@ -128,6 +135,7 @@ class OpusFilter:
                 model=parameters['parameters']['model'])
 
     def score_data(self, parameters):
+        """Score language data based on given filters"""
         for f in parameters['filters']:
             filter_name = next(iter(f.items()))[0]
             if filter_name == 'WordAlignFilter':

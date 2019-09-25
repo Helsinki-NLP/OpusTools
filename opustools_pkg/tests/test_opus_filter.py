@@ -171,3 +171,13 @@ class TestOpusFilter(unittest.TestCase):
         os.remove('RF1_sents.en')
         os.remove('RF1_sents.sv')
 
+    def test_create_output_dir_if_it_does_not_exist(self):
+        common = {'output_directory': 'test_creating_dir'}
+        step = self.configuration['steps'][0]
+        test_config = {'common': common, 'steps': [step]}
+        test_filter = OpusFilter(test_config)
+        test_filter.execute_steps()
+        self.assertTrue(os.path.isfile('test_creating_dir/RF1_sents.en'))
+        self.assertTrue(os.path.isfile('test_creating_dir/RF1_sents.sv'))
+        shutil.rmtree('test_creating_dir')
+
