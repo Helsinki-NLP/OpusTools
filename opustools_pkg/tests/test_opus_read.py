@@ -7,6 +7,7 @@ import xml.parsers.expat
 import gzip
 import shutil
 import zipfile
+import tempfile
 
 from opustools_pkg import OpusRead, OpusCat, OpusGet
 
@@ -24,12 +25,12 @@ class TestOpusRead(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        os.mkdir('test_files')
+        self.tempdir1 = tempfile.mkdtemp()
+        os.mkdir(os.path.join(self.tempdir1, 'test_files'))
 
-        os.mkdir('RF')
-        os.mkdir('RF/xml')
-        os.mkdir('RF/xml/en')
-        with open('RF/xml/en/1996.xml', 'w') as f:
+        os.makedirs(os.path.join(self.tempdir1, 'RF', 'xml', 'en'))
+        with open(os.path.join(self.tempdir1, 'RF', 'xml', 'en', '1996.xml'),
+                'w') as f:
             f.write('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text>'
             '<head>\n<meta id="1"> \n <w id="w1.1">The</w> \n <w id="'
             'w1.2">Hound</w> \n <w id="w1.3">of</w> \n <w id="w1.4">the'
@@ -77,11 +78,14 @@ class TestOpusRead(unittest.TestCase):
             '3" lem="!" pos="." tree="SENT">!</w>\n</s>\n \n\n\n</p>\n '
             '</body>\n</text>\n')
 
-        with zipfile.ZipFile('RF_v1_xml_en.zip', 'w') as zf:
-            zf.write('RF/xml/en/1996.xml')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'RF_v1_xml_en.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'RF', 'xml', 'en',
+                '1996.xml'))
 
-        os.mkdir('RF/xml/sv')
-        with open('RF/xml/sv/1996.xml', 'w') as f:
+        os.mkdir(os.path.join(self.tempdir1, 'RF', 'xml', 'sv'))
+        with open(os.path.join(self.tempdir1, 'RF', 'xml', 'sv', '1996.xml'),
+                'w') as f:
             f.write('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<text'
             '>\n <head>\n  <meta> The Hound of the Baskervilles \n by '
             'Sir Arthur Conan Doyle \n Aligned by: András Farkas (fully '
@@ -103,13 +107,17 @@ class TestOpusRead(unittest.TestCase):
             '<w id="w167.0.2">Erinomaista</w>\n <w id="w167.0.3">.</w>\n'
             '</s></p>\n </body>\n</text>\n')
 
-        with zipfile.ZipFile('RF_v1_xml_sv.zip', 'w') as zf:
-            zf.write('RF/xml/sv/1996.xml')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'RF', 'xml', 'sv',
+                '1996.xml'))
 
-        shutil.copyfile('RF_v1_xml_en.zip', 'en.zip')
-        shutil.copyfile('RF_v1_xml_sv.zip', 'sv.zip')
+        shutil.copyfile(os.path.join(self.tempdir1, 'RF_v1_xml_en.zip'),
+            os.path.join(self.tempdir1, 'en.zip'))
+        shutil.copyfile(os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'),
+            os.path.join(self.tempdir1, 'sv.zip'))
 
-        with open('books_alignment.xml', 'w') as f:
+        with open(os.path.join(self.tempdir1, 'books_alignment.xml'), 'w') as f:
             f.write('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE '
             'cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
             'version="1.0">\n<linkGrp targType="s" fromDoc="en/'
@@ -120,7 +128,37 @@ class TestOpusRead(unittest.TestCase):
             'xtargets="s8.1;s8.1" id="SL8.1"/>\n<link xtargets="s167.0'
             ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n')
 
-        self.opr = OpusRead('-d RF -s en -t sv'.split())
+        self.root_directory = tempfile.mkdtemp()
+        os.makedirs(os.path.join(self.root_directory, 'RF', 'latest', 'xml',
+            'en'))
+        os.makedirs(os.path.join(self.root_directory, 'RF', 'latest', 'xml',
+            'sv'))
+
+        arguments = '-d RF -s en -t sv -q -dl'.split()
+        arguments.append(self.root_directory)
+        OpusGet(arguments).get_files()
+
+        os.rename(
+            os.path.join(self.root_directory,
+                'RF_latest_xml_en.zip'),
+            os.path.join(self.root_directory,
+                'RF', 'latest', 'xml', 'en.zip'))
+
+        os.rename(
+            os.path.join(self.root_directory,
+                'RF_latest_xml_sv.zip'),
+            os.path.join(self.root_directory,
+                'RF', 'latest', 'xml', 'sv.zip'))
+
+        os.rename(
+            os.path.join(self.root_directory,
+                'RF_latest_xml_en-sv.xml.gz'),
+            os.path.join(self.root_directory,
+                'RF', 'latest', 'xml', 'sv.zip'))
+
+        arguments = '-d RF -s en -t sv -rd'.split()
+        arguments.append(self.root_directory)
+        self.opr = OpusRead(arguments)
         self.opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.fastopr = OpusRead('-d RF -s en -t sv -f'.split())
@@ -128,6 +166,7 @@ class TestOpusRead(unittest.TestCase):
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
 
         self.maxDiff= None
+
     @classmethod
     def tearDownClass(self):
         self.opr.par.sPar.document.close()
@@ -136,13 +175,8 @@ class TestOpusRead(unittest.TestCase):
         self.fastopr.par.sPar.document.close()
         self.fastopr.par.tPar.document.close()
         self.fastopr.par.closeFiles()
-        shutil.rmtree('test_files')
-        shutil.rmtree('RF')
-        os.remove('books_alignment.xml')
-        os.remove('RF_v1_xml_en.zip')
-        os.remove('RF_v1_xml_sv.zip')
-        os.remove('en.zip')
-        os.remove('sv.zip')
+        shutil.rmtree(self.tempdir1)
+        shutil.rmtree(self.root_directory)
 
     def tearDown(self):
         self.opr.par.args.write_mode='normal'
