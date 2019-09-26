@@ -2,6 +2,7 @@ import zipfile
 import gzip
 import xml.parsers.expat
 import re
+import os
 
 from .sentence_parser import SentenceParser
 from .exhaustive_sentence_parser import ExhaustiveSentenceParser
@@ -64,16 +65,16 @@ class AlignmentParser:
         return openedzip
 
     def openZipFiles(self):
-        self.sourcezip = self.getZipFile((self.args.directory+'_'+
-                        self.args.release+'_'+
-                        self.args.preprocess+'_'+self.fromto[0]+'.zip'),
-                        self.source,
-                        self.args.source_zip)
-        self.targetzip = self.getZipFile((self.args.directory+'_'+
-                        self.args.release+'_'+
-                        self.args.preprocess+'_'+self.fromto[1]+'.zip'),
-                        self.target,
-                        self.args.target_zip)
+        self.sourcezip = self.getZipFile(os.path.join(self.args.download_dir,
+            self.args.directory+'_'+self.args.release+'_'+
+            self.args.preprocess+'_'+self.fromto[0]+'.zip'),
+            self.source,
+            self.args.source_zip)
+        self.targetzip = self.getZipFile(os.path.join(self.args.download_dir,
+            self.args.directory+'_'+self.args.release+'_'+
+            self.args.preprocess+'_'+self.fromto[1]+'.zip'),
+            self.target,
+            self.args.target_zip)
 
     def openSentenceParsers(self, attrs):
         try:
@@ -95,7 +96,10 @@ class AlignmentParser:
                         'files are available for downloading:\n')
                     arguments = ['-s', self.fromto[0], '-t',
                         self.fromto[1], '-d', self.args.directory, '-r',
-                        self.args.release, '-p', self.args.preprocess, '-l']
+                        self.args.release, '-p', self.args.preprocess,
+                        '-dl', self.args.download_dir, '-l']
+                    if self.args.suppress_prompts:
+                        arguments.append('-q')
                     og = OpusGet(arguments)
                     og.get_files()
                     arguments.remove('-l')
@@ -239,7 +243,7 @@ class AlignmentParser:
             return -1
 
         srcAttrs, trgAttrs = {}, {}
-            
+
         sourceSen, srcAttrs = self.sPar.readSentence(self.fromids)
         targetSen, trgAttrs = self.tPar.readSentence(self.toids)
 
@@ -263,7 +267,7 @@ class AlignmentParser:
         else:
             self.overThreshold = False
             return sourceSen, targetSen
-        
+
     def closeFiles(self):
         if self.zipFilesOpened:
             self.sourcezip.close()

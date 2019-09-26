@@ -173,7 +173,7 @@ class OpusRead:
             self.args.directory, self.args.release, self.args.preprocess,
             self.fromto[1]+'.zip')
         self.moses = os.path.join(self.args.root_directory,
-            self.args.directory, self.args.release, 'moses', 
+            self.args.directory, self.args.release, 'moses',
             self.fromto[0]+'-'+self.fromto[1]+'.txt.zip')
 
         self.resultfile = None
@@ -309,11 +309,11 @@ class OpusRead:
             self.resultfile.write(' </linkGrp>\n</cesAlign>')
         else:
             print(' </linkGrp>\n</cesAlign>')
-    
+
     def addLinkGrpEnding(self, line):
         if type(line) == bytes:
             line = line.decode('utf-8')
-        if (self.args.write_mode == 'links' and self.par.end == 'linkGrp' 
+        if (self.args.write_mode == 'links' and self.par.end == 'linkGrp'
             and line.strip() != '</linkGrp>'):
             if self.args.write != None:
                 self.resultfile.write(' </linkGrp>\n')
@@ -322,7 +322,7 @@ class OpusRead:
             self.par.end = ''
 
     def closeResultFiles(self):
-        if self.args.write_mode == 'moses' and len(self.args.write) == 2:    
+        if self.args.write_mode == 'moses' and len(self.args.write) == 2:
             self.mosessrc.close()
             self.mosestrg.close()
         else:
@@ -353,7 +353,8 @@ class OpusRead:
         if self.alignment[-3:] == '.gz':
             try:
                 try:
-                    gzipAlign = gzip.open((self.args.directory+'_'+
+                    gzipAlign = gzip.open(os.path.join(self.args.download_dir,
+                        self.args.directory+'_'+
                         self.args.release+'_xml_'+self.fromto[0]+'-'+
                         self.fromto[1]+'.xml.gz'))
                 except FileNotFoundError:
@@ -373,8 +374,8 @@ class OpusRead:
                 og = OpusGet(arguments)
                 og.get_files()
                 try:
-                    gzipAlign = gzip.open((self.args.directory+'_'+
-                        self.args.release+'_xml_'+
+                    gzipAlign = gzip.open(os.path.join(self.args.download_dir,
+                        self.args.directory+'_'+self.args.release+'_xml_'+
                         self.fromto[0]+'-'+self.fromto[1]+'.xml.gz'))
                 except FileNotFoundError:
                     return
@@ -401,13 +402,13 @@ class OpusRead:
 
 '''
     def printPairsMoses(self):
-        mread = MosesRead(self.moses, self.args.directory, self.fromto[0], 
+        mread = MosesRead(self.moses, self.args.directory, self.fromto[0],
             self.fromto[1])
         if self.args.max == 'all':
             mread.printAll()
         else:
             print('\n# ' + self.moses + '\n\n================================')
-    
+
             for i in range(int(self.args.max)):
                 print(mread.readPair())
 
