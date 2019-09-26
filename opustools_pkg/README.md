@@ -318,15 +318,17 @@ opus-get [-h] -s S [-t T] [-d D] [-r R] [-p {raw,xml,parsed}] [-l]
 arguments:
 
 ```
--h, --help           show this help message and exit
--s S                 Source language
--t T                 Target language
--d D                 Corpus name
--r R                 Release
--p {raw,xml,parsed}  Pre-process type
--l                   List resources
--dl DL               Set download directory (default=current directory)
--q                   Download necessary files without prompting "(y/n)"
+-h, --help            show this help message and exit
+-s S, --source S      Source language
+-t T, --target T      Target language
+-d D, --directory D   Corpus name
+-r R, --release R     Release
+-p {raw,xml,parsed}, --preprocess {raw,xml,parsed}
+                      Preprocess type
+-l, --list            List resources
+-dl DL, --download_dir DL
+                      Set download directory (default=current directory)
+-q, --supress         Download necessary files without prompting "(y/n)"
 ```
 
 

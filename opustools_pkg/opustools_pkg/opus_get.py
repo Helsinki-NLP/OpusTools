@@ -10,17 +10,21 @@ class OpusGet:
     def __init__(self, arguments):
         parser = argparse.ArgumentParser(prog='opus-get',
             description='Download files from OPUS')
-        parser.add_argument('-s', help='Source language', required=True)
-        parser.add_argument('-t', help='Target language')
-        parser.add_argument('-d', help='Corpus name')
-        parser.add_argument('-r', help='Release', default='latest')
-        parser.add_argument('-p', help='Pre-process type',
-            default='xml', choices=['raw', 'xml', 'parsed'])
-        parser.add_argument('-l', help='List resources', action='store_true')
-        parser.add_argument('-dl',
+        parser.add_argument('-s', '--source', dest='s', help='Source language',
+                required=True)
+        parser.add_argument('-t', '--target', dest='t', help='Target language')
+        parser.add_argument('-d', '--directory', dest='d', help='Corpus name')
+        parser.add_argument('-r', '--release', dest='r', help='Release',
+                default='latest')
+        parser.add_argument('-p', '--preprocess', dest='p',
+                help='Preprocess type', default='xml',
+                choices=['raw', 'xml', 'parsed'])
+        parser.add_argument('-l', '--list', dest='l', help='List resources',
+                action='store_true')
+        parser.add_argument('-dl', '--download_dir', dest='dl',
             help='Set download directory (default=current directory)',
-            default='')
-        parser.add_argument('-q',
+            default='.')
+        parser.add_argument('-q', '--supress', dest='q',
             help='Download necessary files without prompting "(y/n)"',
             action='store_true')
 
@@ -101,7 +105,7 @@ class OpusGet:
         if self.args.r == 'latest':
             filename = filename.replace(
                 '_'+c['version']+'_', '_latest_')
-        return filename
+        return os.path.join(self.args.dl, filename)
 
     def get_corpora_data(self):
         file_n = 0
@@ -142,13 +146,12 @@ class OpusGet:
         else:
             answer = 'y'
 
-        if answer == 'y':
+        if answer in ['y', '']:
             for c in corpora:
                 self.filename = self.make_file_name(c)
                 self.filesize = self.format_size(c['size'])
                 try:
-                    urllib.request.urlretrieve(c['url'],
-                        self.args.dl + self.filename,
+                    urllib.request.urlretrieve(c['url'], self.filename,
                         reporthook=self.progress_status)
                     print('')
                 except urllib.error.URLError as e:

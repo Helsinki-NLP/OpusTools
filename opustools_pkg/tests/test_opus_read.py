@@ -2353,9 +2353,9 @@ class TestOpusGet(unittest.TestCase):
         os.remove('RF_latest_xml_sv.zip')
 
         self.assertEqual(printout.getvalue(),
-            '        RF_latest_xml_en-sv.xml.gz already exists\n        '
-            'RF_latest_xml_en.zip already exists\n        '
-            'RF_latest_xml_sv.zip already exists\n\n   0 KB Total size\n')
+            '        ./RF_latest_xml_en-sv.xml.gz already exists\n        '
+            './RF_latest_xml_en.zip already exists\n        '
+            './RF_latest_xml_sv.zip already exists\n\n   0 KB Total size\n')
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_dont_download_files_that_are_already_in_path(self, mocked_input):
