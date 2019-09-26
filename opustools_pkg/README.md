@@ -22,7 +22,7 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [-ta attribute [attribute ...]] [-ca delimiter]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
-                 [-id file_name] [-q] [-pi]
+                 [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi]
 ```
 
 arguments:
@@ -101,6 +101,8 @@ arguments:
                     Write sentence ids to a file.
 -q, --suppress_prompts
                     Download necessary files without prompting "(y/n)"
+-dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
+                    Set download directory (default=current directory)
 -pi, --preserve_inline_tags
                     Preserve inline tags within sentences
 ```
@@ -328,7 +330,8 @@ arguments:
 -l, --list            List resources
 -dl DL, --download_dir DL
                       Set download directory (default=current directory)
--q, --supress         Download necessary files without prompting "(y/n)"
+-q, --supress_prompts
+                      Download necessary files without prompting "(y/n)"
 ```
 
 

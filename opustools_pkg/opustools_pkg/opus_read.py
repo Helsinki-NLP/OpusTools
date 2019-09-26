@@ -126,6 +126,9 @@ class OpusRead:
         parser.add_argument('-q', '--suppress_prompts',
             help='Download necessary files without prompting "(y/n)"',
             action='store_true')
+        parser.add_argument('-dl', '--download_dir',
+            help='Set download directory (default=current directory)',
+            default='.')
         parser.add_argument('-pi', '--preserve_inline_tags',
             help='Preserve inline tags within sentences',
             action='store_true')
@@ -359,7 +362,8 @@ class OpusRead:
                     'The following files are available for downloading:\n'))
                 arguments = ['-s', self.fromto[0], '-t', self.fromto[1], '-d',
                     self.args.directory, '-r', self.args.release, '-p',
-                    self.args.preprocess, '-l']
+                    self.args.preprocess, '-dl', self.args.download_dir,
+                    '-l']
                 og = OpusGet(arguments)
                 og.get_files()
                 arguments.remove('-l')

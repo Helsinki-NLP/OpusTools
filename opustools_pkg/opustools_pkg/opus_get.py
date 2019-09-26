@@ -24,7 +24,7 @@ class OpusGet:
         parser.add_argument('-dl', '--download_dir', dest='dl',
             help='Set download directory (default=current directory)',
             default='.')
-        parser.add_argument('-q', '--supress', dest='q',
+        parser.add_argument('-q', '--supress_prompts', dest='q',
             help='Download necessary files without prompting "(y/n)"',
             action='store_true')
 
@@ -47,6 +47,9 @@ class OpusGet:
                     self.url += urlparts[a] + '=&'
                 else:
                     self.url += urlparts[a] + '=' + self.args.__dict__[a] + '&'
+
+        if not os.path.exists(self.args.dl):
+            os.makedirs(self.args.dl)
 
     def round_size(self, size, length, unit):
         last_n = str(size)[-length]
