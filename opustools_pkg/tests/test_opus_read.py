@@ -1927,7 +1927,7 @@ class TestOpusRead(unittest.TestCase):
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
-            'RF_v1_xml_en.zip')
+            './RF_v1_xml_en.zip')
         self.assertEqual(opr.par.targetzip.filename,
             'sv.zip')
 
@@ -1938,7 +1938,7 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(opr.par.sourcezip.filename,
             'en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'RF_v1_xml_sv.zip')
+            './RF_v1_xml_sv.zip')
 
     def test_source_zip_given_and_target_local(self):
         opr = OpusRead('-d RF -s en -t sv -r v1 -sz en.zip'.split())
@@ -1947,14 +1947,14 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(opr.par.sourcezip.filename,
             'en.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'RF_v1_xml_sv.zip')
+            './RF_v1_xml_sv.zip')
 
     def test_source_zip_local_and_target_automatic(self):
         opr = OpusRead('-d RF -s en -t es -r v1'.split())
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'es/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
-            'RF_v1_xml_en.zip')
+            './RF_v1_xml_en.zip')
         self.assertEqual(opr.par.targetzip.filename,
             '/proj/nlpl/data/OPUS/RF/v1/xml/es.zip')
 
@@ -1965,7 +1965,7 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(opr.par.sourcezip.filename,
             '/proj/nlpl/data/OPUS/RF/v1/xml/es.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'RF_v1_xml_sv.zip')
+            './RF_v1_xml_sv.zip')
 
     def test_target_zip_local_and_source_automatic(self):
         opr = OpusRead('-d RF -s es -t sv -r v1'.split())
@@ -1974,7 +1974,7 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(opr.par.sourcezip.filename,
             '/proj/nlpl/data/OPUS/RF/v1/xml/es.zip')
         self.assertEqual(opr.par.targetzip.filename,
-            'RF_v1_xml_sv.zip')
+            './RF_v1_xml_sv.zip')
 
     def test_empty_argument_list(self):
         temp_args = sys.argv.copy()
