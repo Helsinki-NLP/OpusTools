@@ -1,5 +1,6 @@
 import argparse
 import gzip
+import os
 
 from .parse.alignment_parser import AlignmentParser
 from .parse.links_alignment_parser import LinksAlignmentParser
@@ -160,20 +161,20 @@ class OpusRead:
             self.args.target_annotations = temp.copy()
 
         if self.args.alignment_file == -1:
-            self.alignment = (self.args.root_directory+self.args.directory+
-                '/'+self.args.release+'/xml/'+self.fromto[0]+'-'+
-                self.fromto[1]+'.xml.gz')
+            self.alignment = os.path.join(self.args.root_directory,
+                self.args.directory, self.args.release, 'xml',
+                self.fromto[0]+'-'+self.fromto[1]+'.xml.gz')
         else:
             self.alignment = self.args.alignment_file
-        self.source = (self.args.root_directory+self.args.directory+'/'+
-            self.args.release+'/'+
-            self.args.preprocess+'/'+self.fromto[0]+'.zip')
-        self.target = (self.args.root_directory+self.args.directory+'/'+
-            self.args.release+'/'+
-            self.args.preprocess+'/'+self.fromto[1]+'.zip')
-        self.moses = (self.args.root_directory+self.args.directory+'/'+
-            self.args.release+
-            '/moses/'+self.fromto[0]+'-'+self.fromto[1]+'.txt.zip')
+        self.source = os.path.join(self.args.root_directory,
+            self.args.directory, self.args.release, self.args.preprocess,
+            self.fromto[0]+'.zip')
+        self.target = os.path.join(self.args.root_directory,
+            self.args.directory, self.args.release, self.args.preprocess,
+            self.fromto[1]+'.zip')
+        self.moses = os.path.join(self.args.root_directory,
+            self.args.directory, self.args.release, 'moses', 
+            self.fromto[0]+'-'+self.fromto[1]+'.txt.zip')
 
         self.resultfile = None
         self.mosessrc = None
