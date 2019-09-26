@@ -105,10 +105,14 @@ class AlignmentParser:
                     self.openZipFiles()
                     self.zipFilesOpened = True
 
-            sourcefile = self.sourcezip.open(self.args.directory+'/'+
-                self.args.preprocess+'/'+attrs['fromDoc'][:-3], 'r')
-            targetfile = self.targetzip.open(self.args.directory+'/'+
-                self.args.preprocess+'/'+attrs['toDoc'][:-3], 'r')
+            try:
+                sourcefile = self.sourcezip.open(self.args.directory+'/'+
+                    self.args.preprocess+'/'+attrs['fromDoc'][:-3], 'r')
+                targetfile = self.targetzip.open(self.args.directory+'/'+
+                    self.args.preprocess+'/'+attrs['toDoc'][:-3], 'r')
+            except KeyError:
+                sourcefile = self.sourcezip.open(attrs['fromDoc'], 'r')
+                targetfile = self.targetzip.open(attrs['toDoc'], 'r')
 
         if self.sPar and self.tPar:
             self.sPar.document.close()
