@@ -127,7 +127,6 @@ for collection in collections:
   
   if not os.path.isfile(archive_path):
     print('Skipping %s (no %s-%s)...' % (collection, src_lang, tgt_lang))
-    continue
   
   print('Checking out %s...' % collection)
   
