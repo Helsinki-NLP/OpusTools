@@ -79,13 +79,17 @@ class AlignmentParser:
     def openSentenceParsers(self, attrs):
         try:
             if attrs['fromDoc'][-3:] == '.gz':
-                sourcefile = gzip.open(attrs['fromDoc'], 'rb')
+                sourcefile = gzip.open(os.path.join(self.args.download_dir,
+                    attrs['fromDoc']), 'rb')
             else:
-                sourcefile = open(attrs['fromDoc'], 'r')
+                sourcefile = open(os.path.join(self.args.download_dir,
+                    attrs['fromDoc']), 'r')
             if attrs['toDoc'][-3:] == '.gz':
-                targetfile = gzip.open(attrs['toDoc'], 'rb')
+                targetfile = gzip.open(os.path.join(self.args.download_dir,
+                    attrs['toDoc']), 'rb')
             else:
-                targetfile = open(attrs['toDoc'], 'r')
+                targetfile = open(os.path.join(self.args.download_dir,
+                    attrs['toDoc']), 'r')
         except FileNotFoundError:
             if self.zipFilesOpened == False:
                 try:
