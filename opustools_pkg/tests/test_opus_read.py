@@ -51,9 +51,9 @@ class TestOpusRead(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        if ('OPUS_TEST_TEMPDIR' in os.environ.keys() and
-            os.path.exists(os.environ['OPUS_TEST_TEMPDIR'])):
-                self.tempdir1 = os.environ['OPUS_TEST_TEMPDIR']
+        if ('OPUSREAD_TEST_TEMPDIR' in os.environ.keys() and
+            os.path.exists(os.environ['OPUSREAD_TEST_TEMPDIR'])):
+                self.tempdir1 = os.environ['OPUSREAD_TEST_TEMPDIR']
         else:
             self.tempdir1 = tempfile.mkdtemp()
             os.mkdir(os.path.join(self.tempdir1, 'test_files'))
@@ -159,9 +159,9 @@ class TestOpusRead(unittest.TestCase):
                 'xtargets="s8.1;s8.1" id="SL8.1"/>\n<link xtargets="s167.0'
                 ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n')
 
-        if ('OPUS_TEST_ROOTDIR' in os.environ.keys() and
-            os.path.exists(os.environ['OPUS_TEST_ROOTDIR'])):
-            self.root_directory = os.environ['OPUS_TEST_ROOTDIR']
+        if ('OPUSREAD_TEST_ROOTDIR' in os.environ.keys() and
+            os.path.exists(os.environ['OPUSREAD_TEST_ROOTDIR'])):
+            self.root_directory = os.environ['OPUSREAD_TEST_ROOTDIR']
         else:
             self.root_directory = tempfile.mkdtemp()
 
@@ -231,8 +231,8 @@ class TestOpusRead(unittest.TestCase):
         self.fastopr.par.sPar.document.close()
         self.fastopr.par.tPar.document.close()
         self.fastopr.par.closeFiles()
-        if ('OPUS_TEST_SAVE' in os.environ.keys() and
-                os.environ['OPUS_TEST_SAVE'] == 'true'):
+        if ('OPUSREAD_TEST_SAVE' in os.environ.keys() and
+                os.environ['OPUSREAD_TEST_SAVE'] == 'true'):
             print('\nTEMPDIR:', self.tempdir1)
             print('ROOTDIR:', self.root_directory)
         else:
@@ -2624,6 +2624,35 @@ class TestOpusCat(unittest.TestCase):
     def setUpClass(self):
         self.maxDiff = None
 
+        if ('OPUSCAT_TEST_TEMPDIR' in os.environ.keys() and
+            os.path.exists(os.environ['OPUSCAT_TEST_TEMPDIR'])):
+                self.tempdir1 = os.environ['OPUSCAT_TEST_TEMPDIR']
+        else:
+            self.tempdir1 = tempfile.mkdtemp()
+            os.mkdir(os.path.join(self.tempdir1, 'test_files'))
+
+        if ('OPUSCAT_TEST_ROOTDIR' in os.environ.keys() and
+            os.path.exists(os.environ['OPUSCAT_TEST_ROOTDIR'])):
+            self.root_directory = os.environ['OPUSCAT_TEST_ROOTDIR']
+        else:
+            self.root_directory = tempfile.mkdtemp()
+
+            os.makedirs(os.path.join(self.root_directory, 'RF', 'latest',
+                'xml'))
+
+            add_to_root_dir(corpus='RF', source='en', target='sv',
+                preprocess='xml', root_dir=self.root_directory)
+
+    @classmethod
+    def tearDownClass(self):
+        if ('OPUSCAT_TEST_SAVE' in os.environ.keys() and
+                os.environ['OPUSCAT_TEST_SAVE'] == 'true'):
+            print('\nTEMPDIR:', self.tempdir1)
+            print('ROOTDIR:', self.root_directory)
+        else:
+            shutil.rmtree(self.tempdir1)
+            shutil.rmtree(self.root_directory)
+
     def printSentencesToVariable(self, arguments):
         old_stdout = sys.stdout
         printout = io.StringIO()
@@ -2634,7 +2663,9 @@ class TestOpusCat(unittest.TestCase):
         return printout.getvalue()
 
     def test_printing_sentences(self):
-        var  = self.printSentencesToVariable('-d RF -l en -p'.split())
+        var  = self.printSentencesToVariable(
+            '-d RF -l en -p -rd {rootdir}'.format(
+                rootdir=self.root_directory).split())
         self.assertEqual(var[-183:],
             """("s72.1")>It is the Government 's resposibility and ai"""
             """m to put to use all good initiatives , to work for bro"""
@@ -2642,21 +2673,25 @@ class TestOpusCat(unittest.TestCase):
             """f the whole nation .\n""")
 
     def test_printing_sentences_with_limit(self):
-        var = self.printSentencesToVariable('-d RF -l en -m 1 -p'.split())
+        var = self.printSentencesToVariable(
+            '-d RF -l en -m 1 -p -rd {rootdir}'.format(
+                rootdir=self.root_directory).split())
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN'
             ' AFFAIRS Press Section Check against delivery\n')
 
     def test_printing_sentences_without_ids(self):
         var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -i -p'.split())
+            '-d RF -l en -m 1 -i -p -rd {rootdir}'.format(
+                rootdir=self.root_directory).split())
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY FOR FOREIGN'
             ' AFFAIRS Press Section Check against delivery\n')
 
     def test_print_annotations(self):
         var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -i -p -pa'.split())
+            '-d RF -l en -m 1 -i -p -pa -rd {rootdir}'.format(
+                rootdir=self.root_directory).split())
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY|NNP|ministry FOR|NNP'
             '|for FOREIGN|NNP|FOREIGN AFFAIRS|NNP Press|NNP|Press Sec'
@@ -2665,7 +2700,8 @@ class TestOpusCat(unittest.TestCase):
 
     def test_print_annotations_all_attributes(self):
         var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -i -p -pa -sa all_attrs'.split())
+            '-d RF -l en -m 1 -i -p -pa -sa all_attrs -rd {rootdir}'.format(
+                rootdir=self.root_directory).split())
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY|null|0|NN|w1.1.1|mini'
             'stry|NNP|NN FOR|prep|1|IN|w1.1.2|for|NNP|IN FOREIGN|nn|7'
@@ -2676,13 +2712,16 @@ class TestOpusCat(unittest.TestCase):
             'N|w1.1.9|delivery|NN|NN\n')
 
     def test_print_xml(self):
-        var = self.printSentencesToVariable('-d RF -l en -m 1'.split())
+        var = self.printSentencesToVariable(
+            '-d RF -l en -m 1 -rd {rootdir}'.format(
+                rootdir=self.root_directory).split())
         self.assertEqual(var[-38:],
             '<w id="w2.10">1996</w>\n</p><p id="3">\n')
 
     def test_printing_specific_file(self):
         var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -i -p -f RF/xml/en/1988.xml'.split())
+            '-d RF -l en -m 1 -i -p -f RF/xml/en/1988.xml '
+            '-rd {rootdir}'.format(rootdir=self.root_directory).split())
         self.assertEqual(var,
             '\n# RF/xml/en/1988.xml\n\nStatement of Government Policy'
             ' by the Prime Minister , Mr Ingvar Carlsson , at the Open'
@@ -2691,7 +2730,8 @@ class TestOpusCat(unittest.TestCase):
 
     def test_empty_argument_list(self):
         temp_args = sys.argv.copy()
-        sys.argv = [temp_args[0]] + '-d RF -l en -m 1 -p'.split()
+        sys.argv = [temp_args[0]] + '-d RF -l en -m 1 -p -rd {rootdir}'.format(
+            rootdir=self.root_directory).split()
         var = self.printSentencesToVariable([])
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN '
@@ -2701,33 +2741,40 @@ class TestOpusCat(unittest.TestCase):
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y']
-        var = self.printSentencesToVariable('-d RFOSIAJ -l en -m 1 -p'.split())
+        var = self.printSentencesToVariable(
+            '-d RFOSIAJ -l en -m 1 -p -rd {rootdir}'.format(
+                rootdir=self.root_directory).split())
 
         self.assertEqual(var[-28:],
             '\nNecessary files not found.\n')
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_download_necessary_files(self, mocked_input):
-        mocked_input.side_effect = ['y', 'n']
+        mocked_input.side_effect = ['y', 'n', 'n']
 
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
-        OpusCat.openFiles(OpusCat('-d RF -l en'.split()),
-            'RF_latest_xml_en.zip', '')
-        os.remove('RF_latest_xml_en.zip')
-        OpusCat.openFiles(OpusCat('-d RF -l en'.split()),
-            'RF_latest_xml_en.zip', '')
+        OpusCat.openFiles(OpusCat('-d RF -l en -dl {tempdir}'.format(
+            tempdir=self.tempdir1).split()),
+            os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'), '')
+        os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
+        OpusCat.openFiles(OpusCat('-d RF -l en -dl {tempdir}'.format(
+            tempdir=self.tempdir1).split()),
+            os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'), '')
         sys.stdout = old_stdout
-
-        self.assertEqual(printout.getvalue()[-161:-132],
-           'No file found with parameters')
+        self.assertTrue('No file found with parameters' in printout.getvalue())
 
 class TestOpusGet(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
+        self.tempdir = tempfile.mkdtemp()
         self.maxDiff = None
+
+    @classmethod
+    def tearDownClass(self):
+        shutil.rmtree(self.tempdir)
 
     def test_empty_argument_list(self):
         temp_args = sys.argv.copy()
@@ -2752,7 +2799,7 @@ class TestOpusGet(unittest.TestCase):
     def test_remove_data_with_no_alignment_if_needed(self):
         #TODO: fix test
         opg = OpusGet('-s en -t sv -l'.split())
-        self.assertEqual(opg.get_corpora_data()[2], '76 GB')
+        self.assertEqual(opg.get_corpora_data()[2], '101 GB')
 
     def test_get_files_invalid_url(self):
         opg = OpusGet('-d RF -s en -t sv -l'.split())
@@ -2782,33 +2829,38 @@ class TestOpusGet(unittest.TestCase):
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_dont_list_files_that_are_already_in_path(self, mocked_input):
         mocked_input.side_effect = ['y']
-        OpusGet('-d RF -s en -t sv -p xml'.split()).get_files()
+        OpusGet('-d RF -s en -t sv -p xml -dl {tempdir}'.format(
+            tempdir=self.tempdir).split()).get_files()
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
-        OpusGet('-d RF -s en -t sv -p xml -l'.split()).get_files()
+        OpusGet('-d RF -s en -t sv -p xml -dl {tempdir} -l'.format(
+            tempdir=self.tempdir).split()).get_files()
         sys.stdout = old_stdout
-        os.remove('RF_latest_xml_en-sv.xml.gz')
-        os.remove('RF_latest_xml_en.zip')
-        os.remove('RF_latest_xml_sv.zip')
+        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en-sv.xml.gz'))
+        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en.zip'))
+        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_sv.zip'))
 
         self.assertEqual(printout.getvalue(),
-            '        ./RF_latest_xml_en-sv.xml.gz already exists\n        '
-            './RF_latest_xml_en.zip already exists\n        '
-            './RF_latest_xml_sv.zip already exists\n\n   0 KB Total size\n')
+            '        {tempdir}/RF_latest_xml_en-sv.xml.gz already exi'
+            'sts\n        {tempdir}/RF_latest_xml_en.zip already exis'
+            'ts\n        {tempdir}/RF_latest_xml_sv.zip already exist'
+            's\n\n   0 KB Total size\n'.format(tempdir=self.tempdir))
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_dont_download_files_that_are_already_in_path(self, mocked_input):
         mocked_input.side_effect = ['y', 'y']
-        OpusGet('-d RF -s en -t sv -p xml'.split()).get_files()
+        OpusGet('-d RF -s en -t sv -p xml -dl {tempdir}'.format(
+            tempdir=self.tempdir).split()).get_files()
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
-        OpusGet('-d RF -s en -t sv -p xml'.split()).get_files()
+        OpusGet('-d RF -s en -t sv -p xml -dl {tempdir}'.format(
+            tempdir=self.tempdir).split()).get_files()
         sys.stdout = old_stdout
-        os.remove('RF_latest_xml_en-sv.xml.gz')
-        os.remove('RF_latest_xml_en.zip')
-        os.remove('RF_latest_xml_sv.zip')
+        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en-sv.xml.gz'))
+        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en.zip'))
+        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_sv.zip'))
 
         self.assertEqual(printout.getvalue(), '')
 

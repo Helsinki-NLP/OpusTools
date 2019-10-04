@@ -1,10 +1,12 @@
 import argparse
 import zipfile
+import os
+
 from .opus_get import OpusGet
 from .parse.sentence_parser import SentenceParser
 
 class SentenceParser(SentenceParser):
-    
+
     def __init__(self, document, args):
         super().__init__(document, '', '', '', '', args.pa, args.sa, args.ca,
             False)
@@ -14,7 +16,7 @@ class SentenceParser(SentenceParser):
 
         self.parser.StartElementHandler = self.start_element_opuscat
         self.parser.EndElementHandler = self.end_element_opuscat
-        
+
     def start_element_opuscat(self, name, attrs):
         self.start_element(name, attrs)
         if name == 's':
@@ -62,42 +64,50 @@ class SentenceParser(SentenceParser):
 class OpusCat:
 
     def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='opus_cat', 
+        parser = argparse.ArgumentParser(prog='opus_cat',
             description='Read a document from OPUS and print to STDOUT')
 
         parser.add_argument('-d', help='Corpus name', required=True)
         parser.add_argument('-l', help='Language', required=True)
-        parser.add_argument('-i', help='Print without ids when using -p', 
+        parser.add_argument('-i', help='Print without ids when using -p',
             action='store_true')
-        parser.add_argument('-m', help='Maximum number of sentences', 
+        parser.add_argument('-m', help='Maximum number of sentences',
             default='all')
-        parser.add_argument('-p', help='Print in plain txt', 
+        parser.add_argument('-p', help='Print in plain txt',
             action='store_true')
-        parser.add_argument('-f', 
+        parser.add_argument('-f',
             help='File name (if not given, prints all files)')
-        parser.add_argument('-r', help='Release (default=latest)', 
+        parser.add_argument('-r', help='Release (default=latest)',
             default='latest')
-        parser.add_argument('-pa', help='Print annotations, if they exist', 
+        parser.add_argument('-pa', help='Print annotations, if they exist',
             action='store_true')
-        parser.add_argument('-sa', 
+        parser.add_argument('-sa',
             help='Set sentence annotation attributes to be printed'
                 ', e.g. -sa pos lem. To print all available attributes '
-                'use -sa all_attrs (default=pos,lem)', 
+                'use -sa all_attrs (default=pos,lem)',
             nargs='+',
             default=['pos', 'lem'])
-        parser.add_argument('-ca', 
-            help='Change annotation delimiter (default=|)', 
+        parser.add_argument('-ca',
+            help='Change annotation delimiter (default=|)',
             default='|')
+        parser.add_argument('-rd',
+            help='Change root directory (default=/proj/nlpl/data/OPUS/)',
+            metavar='path_to_dir',
+            default='/proj/nlpl/data/OPUS/')
+        parser.add_argument('-dl',
+            help='Set download directory (default=current directory)',
+            default='.')
 
         if len(arguments) == 0:
             self.args = parser.parse_args()
         else:
             self.args = parser.parse_args(arguments)
-            
+
         self.openFiles(
-            self.args.d+'_'+self.args.r+'_xml_'+self.args.l+'.zip',
-            '/proj/nlpl/data/OPUS/'+self.args.d+'/latest/xml/'+self.args.l
-            +'.zip')
+            os.path.join(self.args.dl, self.args.d+'_'+self.args.r+'_xml_'+
+                self.args.l+'.zip'),
+            os.path.join(self.args.rd, self.args.d, 'latest', 'xml',
+                self.args.l+'.zip'))
 
         if self.args.m == 'all':
             self.maximum = -2
@@ -113,8 +123,8 @@ class OpusCat:
         except FileNotFoundError:
             print('\nRequested file not found. The following files are '
                 'availble for downloading:\n')
-            arguments = ['-d', self.args.d, '-s', self.args.l, '-t', ' ', 
-                '-p', 'xml', '-l', '-r', self.args.r]
+            arguments = ['-d', self.args.d, '-s', self.args.l, '-t', ' ',
+                '-p', 'xml', '-l', '-r', self.args.r, '-dl', self.args.dl]
             og = OpusGet(arguments)
             og.get_files()
             arguments.remove('-l')
@@ -149,7 +159,6 @@ class OpusCat:
                 print(line, end='')
         return xml_break
 
-            
     def printSentences(self):
         try:
             if self.args.f:
