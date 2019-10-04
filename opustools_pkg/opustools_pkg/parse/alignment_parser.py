@@ -10,15 +10,46 @@ from ..opus_get import OpusGet
 
 class AlignmentParser:
 
-    def __init__(self, source, target, args, result, mosessrc, mosestrg,
-            fromto, switch_langs):
+    def __init__(self, source=None, target=None, result=None, mosessrc=None,
+            mosestrg=None, fromto=None, switch_langs=None, src_cld2=None,
+            trg_cld2=None, src_langid=None, trg_langid=None,
+            leave_non_alignments_out=None, src_range=None, tgt_range=None,
+            download_dir=None, directory=None, release=None, preprocess=None,
+            source_zip=None, target_zip=None, suppress_prompts=None,
+            fast=None, write_mode=None, print_file_names=None, write=None,
+            attribute=None, print_annotations=None, target_annotations=None,
+            source_annotations=None, change_annotation_delimiter=None,
+            preserve_inline_tags=None, threshold=None):
+
         self.source = source
         self.target = target
         self.fromto = fromto
         self.switch_langs = switch_langs
         self.testConfidenceOn = False
-        for item in [args.src_cld2, args.trg_cld2,
-                args.src_langid, args.trg_langid]:
+        self.download_dir = download_dir
+        self.directory = directory
+        self.release = release
+        self.preprocess = preprocess
+        self.source_zip = source_zip
+        self.target_zip = target_zip
+        self.suppress_prompts = suppress_prompts
+        self.fast = fast
+        self.write_mode = write_mode
+        self.print_file_names = print_file_names
+        self.write = write
+        self.attribute = attribute
+        self.print_annotations = print_annotations
+        self.target_annotations = target_annotations
+        self.source_annotations = source_annotations
+        self.change_annotation_delimiter = change_annotation_delimiter
+        self.preserve_inline_tags = preserve_inline_tags
+        self.threshold = threshold
+        self.src_cld2 = src_cld2
+        self.trg_cld2 = trg_cld2
+        self.src_langid = src_langid
+        self.trg_langid = trg_langid
+
+        for item in [src_cld2, trg_cld2, src_langid, trg_langid]:
             if item:
                 self.testConfidenceOn = True
 
@@ -39,18 +70,16 @@ class AlignmentParser:
         self.sPar = None
         self.tPar = None
 
-        self.args = args
-
         self.overThreshold = False
-        self.nonAlignments = self.args.leave_non_alignments_out
+        self.nonAlignments = leave_non_alignments_out
 
         self.result = result
         self.mosessrc = mosessrc
         self.mosestrg = mosestrg
 
-        self.slim = self.args.src_range.split('-')
+        self.slim = src_range.split('-')
         self.slim.sort()
-        self.tlim = self.args.tgt_range.split('-')
+        self.tlim = tgt_range.split('-')
         self.tlim.sort()
 
     def getZipFile(self, zipname, soutar, localfile):
@@ -65,30 +94,30 @@ class AlignmentParser:
         return openedzip
 
     def openZipFiles(self):
-        self.sourcezip = self.getZipFile(os.path.join(self.args.download_dir,
-            self.args.directory+'_'+self.args.release+'_'+
-            self.args.preprocess+'_'+self.fromto[0]+'.zip'),
+        self.sourcezip = self.getZipFile(os.path.join(self.download_dir,
+            self.directory+'_'+self.release+'_'+
+            self.preprocess+'_'+self.fromto[0]+'.zip'),
             self.source,
-            self.args.source_zip)
-        self.targetzip = self.getZipFile(os.path.join(self.args.download_dir,
-            self.args.directory+'_'+self.args.release+'_'+
-            self.args.preprocess+'_'+self.fromto[1]+'.zip'),
+            self.source_zip)
+        self.targetzip = self.getZipFile(os.path.join(self.download_dir,
+            self.directory+'_'+self.release+'_'+
+            self.preprocess+'_'+self.fromto[1]+'.zip'),
             self.target,
-            self.args.target_zip)
+            self.target_zip)
 
     def openSentenceParsers(self, attrs):
         try:
             if attrs['fromDoc'][-3:] == '.gz':
-                sourcefile = gzip.open(os.path.join(self.args.download_dir,
+                sourcefile = gzip.open(os.path.join(self.download_dir,
                     attrs['fromDoc']), 'rb')
             else:
-                sourcefile = open(os.path.join(self.args.download_dir,
+                sourcefile = open(os.path.join(self.download_dir,
                     attrs['fromDoc']), 'r')
             if attrs['toDoc'][-3:] == '.gz':
-                targetfile = gzip.open(os.path.join(self.args.download_dir,
+                targetfile = gzip.open(os.path.join(self.download_dir,
                     attrs['toDoc']), 'rb')
             else:
-                targetfile = open(os.path.join(self.args.download_dir,
+                targetfile = open(os.path.join(self.download_dir,
                     attrs['toDoc']), 'r')
         except FileNotFoundError:
             if self.zipFilesOpened == False:
@@ -99,10 +128,10 @@ class AlignmentParser:
                     print('\nZip files are not found. The following '
                         'files are available for downloading:\n')
                     arguments = ['-s', self.fromto[0], '-t',
-                        self.fromto[1], '-d', self.args.directory, '-r',
-                        self.args.release, '-p', self.args.preprocess,
-                        '-dl', self.args.download_dir, '-l']
-                    if self.args.suppress_prompts:
+                        self.fromto[1], '-d', self.directory, '-r',
+                        self.release, '-p', self.preprocess,
+                        '-dl', self.download_dir, '-l']
+                    if self.suppress_prompts:
                         arguments.append('-q')
                     og = OpusGet(arguments)
                     og.get_files()
@@ -114,10 +143,10 @@ class AlignmentParser:
                     self.zipFilesOpened = True
 
             try:
-                sourcefile = self.sourcezip.open(self.args.directory+'/'+
-                    self.args.preprocess+'/'+attrs['fromDoc'][:-3], 'r')
-                targetfile = self.targetzip.open(self.args.directory+'/'+
-                    self.args.preprocess+'/'+attrs['toDoc'][:-3], 'r')
+                sourcefile = self.sourcezip.open(self.directory+'/'+
+                    self.preprocess+'/'+attrs['fromDoc'][:-3], 'r')
+                targetfile = self.targetzip.open(self.directory+'/'+
+                    self.preprocess+'/'+attrs['toDoc'][:-3], 'r')
             except KeyError:
                 sourcefile = self.sourcezip.open(attrs['fromDoc'], 'r')
                 targetfile = self.targetzip.open(attrs['toDoc'], 'r')
@@ -126,53 +155,53 @@ class AlignmentParser:
             self.sPar.document.close()
             self.tPar.document.close()
 
-        pre = self.args.preprocess
-        if pre == 'raw' and self.args.directory == 'OpenSubtitles':
+        pre = self.preprocess
+        if pre == 'raw' and self.directory == 'OpenSubtitles':
             pre = 'rawos'
 
         st = ['src', 'trg']
-        langs = [self.args.source, self.args.target]
+        langs = [self.source, self.target]
         if self.switch_langs:
             st = ['trg', 'src']
-            langs = [self.args.target, self.args.source]
+            langs = [self.target, self.source]
 
-        if self.args.fast:
+        if self.fast:
             self.sPar = SentenceParser(sourcefile, st[0], pre,
-                self.args.write_mode, langs[0], self.args.print_annotations,
-                self.args.source_annotations,
-                self.args.change_annotation_delimiter,
-                self.args.preserve_inline_tags)
+                self.write_mode, langs[0], self.print_annotations,
+                self.source_annotations,
+                self.change_annotation_delimiter,
+                self.preserve_inline_tags)
             self.tPar = SentenceParser(targetfile, st[1], pre,
-                self.args.write_mode, langs[1], self.args.print_annotations,
-                self.args.target_annotations,
-                self.args.change_annotation_delimiter,
-                self.args.preserve_inline_tags)
+                self.write_mode, langs[1], self.print_annotations,
+                self.target_annotations,
+                self.change_annotation_delimiter,
+                self.preserve_inline_tags)
         else:
             self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
-                self.args.write_mode, langs[0], self.args.print_annotations,
-                self.args.source_annotations,
-                self.args.change_annotation_delimiter,
-                self.args.preserve_inline_tags)
+                self.write_mode, langs[0], self.print_annotations,
+                self.source_annotations,
+                self.change_annotation_delimiter,
+                self.preserve_inline_tags)
             self.sPar.storeSentences()
             self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
-                self.args.write_mode, langs[1], self.args.print_annotations,
-                self.args.target_annotations,
-                self.args.change_annotation_delimiter,
-                self.args.preserve_inline_tags)
+                self.write_mode, langs[1], self.print_annotations,
+                self.target_annotations,
+                self.change_annotation_delimiter,
+                self.preserve_inline_tags)
             self.tPar.storeSentences()
 
     def initializeSentenceParsers(self, attrs):
-        if self.args.write_mode == 'normal':
+        if self.write_mode == 'normal':
             docnames = ('\n# ' + attrs['fromDoc'] + '\n# ' +
                 attrs['toDoc'] + '\n\n================================')
-            if self.args.write != None:
+            if self.write != None:
                 self.result.write(docnames + '\n')
             else:
                 print(docnames)
-        elif self.args.write_mode == 'moses' and self.args.print_file_names:
+        elif self.write_mode == 'moses' and self.print_file_names:
             sourceDoc = '\n<fromDoc>{}</fromDoc>'.format(attrs['fromDoc'])
             targetDoc = '\n<toDoc>{}</toDoc>'.format(attrs['toDoc'])
-            if self.args.write != None:
+            if self.write != None:
                 if self.result:
                     self.result.write(sourceDoc + targetDoc + '\n\n')
                 else:
@@ -184,15 +213,15 @@ class AlignmentParser:
 
     def processLink(self, attrs):
         self.ascore = None
-        if self.args.attribute in attrs.keys():
-            self.ascore = attrs[self.args.attribute]
-            if self.args.threshold != None:
-                if float(self.ascore) >= float(self.args.threshold):
+        if self.attribute in attrs.keys():
+            self.ascore = attrs[self.attribute]
+            if self.threshold != None:
+                if float(self.ascore) >= float(self.threshold):
                     self.overThreshold = True
             else:
                 self.overThreshold = True
         else:
-            if self.args.threshold == None:
+            if self.threshold == None:
                 self.overThreshold = True
         m = re.search('(.*);(.*)', attrs['xtargets'])
         self.toids = m.group(2).split(' ')
@@ -235,10 +264,10 @@ class AlignmentParser:
         return True
 
     def langIdConfidence(self, srcAttrs, trgAttrs):
-        return (self.testConfidence(self.args.src_cld2, srcAttrs, 'cld2')
-            and self.testConfidence(self.args.trg_cld2, trgAttrs, 'cld2')
-            and self.testConfidence(self.args.src_langid, srcAttrs, 'langid')
-            and self.testConfidence(self.args.trg_langid, trgAttrs, 'langid'))
+        return (self.testConfidence(self.src_cld2, srcAttrs, 'cld2')
+            and self.testConfidence(self.trg_cld2, trgAttrs, 'cld2')
+            and self.testConfidence(self.src_langid, srcAttrs, 'langid')
+            and self.testConfidence(self.trg_langid, trgAttrs, 'langid'))
 
     def readPair(self):
         #tags other than link are printed in link printing mode, 
@@ -256,7 +285,7 @@ class AlignmentParser:
         #threshold, return -1, which skips printing of the alignment in 
         #PairPrinter.outputPair()
         if (self.sentencesOutsideLimit() or
-                (self.args.attribute != 'any' and
+                (self.attribute != 'any' and
                     self.overThreshold == False)):
             return -1
         elif (self.testConfidenceOn and

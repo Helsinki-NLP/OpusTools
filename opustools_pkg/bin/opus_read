@@ -1,4 +1,133 @@
 #!/usr/bin/env python3
 from opustools_pkg import OpusRead
 
+parser = argparse.ArgumentParser(prog='opus_read',
+    description='Read sentence alignment in XCES align format')
+
+parser.add_argument('-d', '--directory', help='Corpus name',
+    metavar='corpus_name',
+    required=True)
+parser.add_argument('-s', '--source', help='Source language',
+    metavar='langid',
+    required=True)
+parser.add_argument('-t', '--target', help='Target language',
+    metavar='langid',
+    required=True)
+parser.add_argument('-r', '--release', help='Release (default=latest)',
+    metavar='version',
+    default='latest')
+parser.add_argument('-p', '--preprocess',
+    help='Preprocess-type (raw, xml or parsed, default=xml)',
+    default='xml', choices=['raw', 'xml', 'parsed'])
+parser.add_argument('-m', '--max', help='Maximum number of alignments',
+    default='all')
+parser.add_argument('-S', '--src_range',
+    help='Number of source sentences in alignments (range is '
+        'allowed, eg. -S 1-2)',
+    default='all')
+parser.add_argument('-T', '--tgt_range',
+    help='Number of target sentences in alignments (range is '
+        'allowed, eg. -T 1-2)',
+    default='all')
+parser.add_argument('-a', '--attribute',
+    help='Set attribute for filttering',
+    metavar='attribute',
+    default='any')
+parser.add_argument('-tr', '--threshold',
+    help='Set threshold for an attribute')
+parser.add_argument('-ln', '--leave_non_alignments_out',
+    help='Leave non-alignments out',
+    action='store_true')
+parser.add_argument('-w', '--write',
+    metavar='file_name',
+    help='Write to file. To print moses format in separate files, '
+        'enter two file names. Otherwise enter one file name.',
+    nargs='+')
+parser.add_argument('-wm', '--write_mode',
+    help='Set write mode',
+    default='normal', choices=['normal', 'moses', 'tmx', 'links'])
+parser.add_argument('-pn', '--print_file_names',
+    help='Print file names when using moses format',
+    action='store_true')
+parser.add_argument('-f', '--fast',
+    help='Fast parsing. Faster than normal parsing, if you print '
+        'a small part of the whole corpus, but requires the sentence '
+        'ids in alignment files to be in sequence.',
+    action='store_true')
+parser.add_argument('-rd', '--root_directory',
+    help='Change root directory (default=/proj/nlpl/data/OPUS/)',
+    metavar='path_to_dir',
+    default='/proj/nlpl/data/OPUS/')
+parser.add_argument('-af', '--alignment_file',
+    help='Use given alignment file',
+    metavar='path_to_file', default=-1)
+parser.add_argument('-sz', '--source_zip',
+    help='Use given source zip file',
+    metavar='path_to_zip')
+parser.add_argument('-tz', '--target_zip',
+    help='Use given target zip file',
+    metavar='path_to_zip')
+parser.add_argument('-cm', '--change_moses_delimiter',
+    help='Change moses delimiter (default=tab)',
+    metavar='delimiter',
+    default='\t')
+parser.add_argument('-pa', '--print_annotations',
+    help='Print annotations, if they exist',
+    action='store_true')
+parser.add_argument('-sa', '--source_annotations',
+    help='Set source sentence annotation attributes to be printed'
+        ', e.g. -sa pos lem. To print all available attributes use '
+        '-sa all_attrs (default=pos,lem)',
+    metavar='attribute',
+    nargs='+',
+    default=['pos', 'lem'])
+parser.add_argument('-ta', '--target_annotations',
+    help='Set target sentence annotation attributes to be printed'
+        ', e.g. -ta pos lem. To print all available attributes use '
+        '-ta all_attrs (default=pos,lem)',
+    metavar='attribute',
+    nargs='+',
+    default=['pos', 'lem'])
+parser.add_argument('-ca', '--change_annotation_delimiter',
+    help='Change annotation delimiter (default=|)',
+    metavar='delimiter',
+    default='|')
+parser.add_argument('--src_cld2',
+    help='Filter source sentences by their cld2 language id labels '
+        'and confidence score, e.g. en 0.9',
+    metavar=('lang_id', 'score'),
+    nargs=2)
+parser.add_argument('--trg_cld2',
+    help='Filter target sentences by their cld2 language id labels '
+        'and confidence score, e.g. en 0.9',
+    metavar=('lang_id', 'score'),
+    nargs=2)
+parser.add_argument('--src_langid',
+    help='Filter source sentences by their langid.py language id '
+        'labels and confidence score, e.g. en 0.9',
+    metavar=('lang_id', 'score'),
+    nargs=2)
+parser.add_argument('--trg_langid',
+    help='Filter target sentences by their langid.py language id '
+        'labels and confidence score, e.g. en 0.9',
+    metavar=('lang_id', 'score'),
+    nargs=2)
+parser.add_argument('-id', '--write_ids',
+    metavar='file_name',
+    help='Write sentence ids to a file.')
+parser.add_argument('-q', '--suppress_prompts',
+    help='Download necessary files without prompting "(y/n)"',
+    action='store_true')
+parser.add_argument('-dl', '--download_dir',
+    help='Set download directory (default=current directory)',
+    default='.')
+parser.add_argument('-pi', '--preserve_inline_tags',
+    help='Preserve inline tags within sentences',
+    action='store_true')
+
+if len(arguments) == 0:
+    self.args = parser.parse_args()
+else:
+    self.args = parser.parse_args(arguments)
+
 OpusRead([]).printPairs()

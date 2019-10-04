@@ -10,11 +10,29 @@ from ..opus_get import OpusGet
 
 class LinksAlignmentParser(AlignmentParser):
 
-    def __init__(self, source, target, args, result, mosessrc, mosestrg,
-            fromto, switch_langs):
-        super().__init__(source, target, args, result, mosessrc,
-            mosestrg, fromto, switch_langs)
+    def __init__(self, source=None, target=None, result=None, mosessrc=None,
+            mosestrg=None, fromto=None, switch_langs=None, src_cld2=None,
+            trg_cld2=None, src_langid=None, trg_langid=None,
+            leave_non_alignments_out=None, src_range=None, tgt_range=None,
+            download_dir=None, directory=None, release=None, preprocess=None,
+            source_zip=None, target_zip=None, suppress_prompts=None,
+            fast=None, write_mode=None, print_file_names=None, write=None,
+            attribute=None, print_annotations=None, target_annotations=None,
+            source_annotations=None, change_annotation_delimiter=None,
+            preserve_inline_tags=None, threshold=None):
 
+        super().__init__(self, source=None, target=None, result=None,
+            mosessrc=None, mosestrg=None, fromto=None, switch_langs=None,
+            src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
+            leave_non_alignments_out=None, src_range=None, tgt_range=None,
+            download_dir=None, directory=None, release=None, preprocess=None,
+            source_zip=None, target_zip=None, suppress_prompts=None,
+            fast=None, write_mode=None, print_file_names=None, write=None,
+            attribute=None, print_annotations=None, target_annotations=None,
+            source_annotations=None, change_annotation_delimiter=None,
+            preserve_inline_tags=None, threshold=None)
+
+        self.attribute = attribute
         self.end = ''
 
         self.alignParser.EndElementHandler = self.end_element
@@ -47,7 +65,7 @@ class LinksAlignmentParser(AlignmentParser):
         #threshold, return -1, which skips printing of the alignment in 
         #PairPrinter.outputPair()
         if (self.sentencesOutsideLimit() or
-                (self.args.attribute != 'any' and
+                (self.attribute != 'any' and
                     self.overThreshold == False)):
             return -1
         elif (self.testConfidenceOn and
