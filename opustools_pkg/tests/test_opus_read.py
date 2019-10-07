@@ -15,7 +15,7 @@ def pairPrinterToVariable(**kwargs):
     old_stdout = sys.stdout
     printout = io.StringIO()
     sys.stdout = printout
-    oprinter = OpusRead(kwargs)
+    oprinter = OpusRead(**kwargs)
     oprinter.printPairs()
     oprinter.par.closeFiles()
     sys.stdout = old_stdout
@@ -248,13 +248,14 @@ class TestOpusRead(unittest.TestCase):
         self.opr.par.alignParser = xml.parsers.expat.ParserCreate()
         self.opr.par.alignParser.StartElementHandler = \
             self.opr.par.start_element
+        self.opr.write_mode='normal'
         self.opr.par.sPar.wmode = 'normal'
         self.opr.par.sPar.pre = 'xml'
         self.opr.par.tPar.wmode = 'normal'
         self.opr.par.tPar.pre = 'xml'
         self.opr.par.sPar.annotations = False
         self.opr.par.tPar.annotations = False
-        self.opr.par.change_moses_delimiter = '\t'
+        self.opr.change_moses_delimiter = '\t'
         self.fastopr.par.write_mode='normal'
         self.fastopr.par.slim=['all']
         self.fastopr.par.tlim=['all']
@@ -465,7 +466,7 @@ class TestOpusRead(unittest.TestCase):
             'Sherlock Holmes .\n================================')
 
     def test_PairPrinter_printPair_tmx(self):
-        self.opr.par.write_mode = 'tmx'
+        self.opr.write_mode = 'tmx'
         sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
                 'Sherlock Holmes</seg></tuv>', '\t\t\t<tuv xml:lang="fi">'
                 '<seg>Herra Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
@@ -475,22 +476,25 @@ class TestOpusRead(unittest.TestCase):
             'Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
 
     def test_PairPrinter_printPair_moses(self):
-        self.opr.par.write_mode = 'moses'
+        self.opr.write_mode = 'moses'
         sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
         self.assertEqual(self.opr.printPair(sPair),
             """Chapter 1 Mr. Sherlock Holmes\tHerra Sherlock Holmes .""")
 
     def test_PairPrinter_printPair_moses_change_delimiter(self):
-        self.opr.par.write_mode = 'moses'
+        self.opr.write_mode = 'moses'
         self.opr.change_moses_delimiter = '@'
         sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
         self.assertEqual(self.opr.printPair(sPair),
             """Chapter 1 Mr. Sherlock Holmes@Herra Sherlock Holmes .""")
 
     def test_PairPrinter_printPair_links(self):
-        self.opr.par.write_mode = 'links'
+        opr = OpusRead(directory='RF', source='en', target='sv',
+            root_directory=self.root_directory, write_mode='links')
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         sPair = '<link xtargets="s4;s4" id="SL4"/>'
-        self.assertEqual(self.opr.printPair(sPair),
+        self.assertEqual(opr.printPair(sPair),
             '<link xtargets="s4;s4" id="SL4"/>')
 
     def test_PairPrinter_printPair_empty(self):
@@ -507,7 +511,7 @@ class TestOpusRead(unittest.TestCase):
             'Sherlock Holmes .\n================================\n', ''))
 
     def test_PairPrinter_writePair_tmx(self):
-        self.opr.par.write_mode = 'tmx'
+        self.opr.write_mode = 'tmx'
         sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
                 'Sherlock Holmes</seg></tuv>',
                 '\t\t\t<tuv xml:lang="fi"><seg>Herra Sherlock Holmes .'
@@ -518,17 +522,20 @@ class TestOpusRead(unittest.TestCase):
             'Sherlock Holmes .</seg></tuv>\n\t\t</tu>\n', ''))
 
     def test_PairPrinter_writePair_moses(self):
-        self.opr.par.write_mode = 'moses'
-        self.opr.par.write = os.path.join(self.tempdir1, 'test_files',
+        self.opr.write_mode = 'moses'
+        self.opr.write = os.path.join(self.tempdir1, 'test_files',
             'test.src')
         sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
         self.assertEqual(self.opr.writePair(sPair),
             ('Chapter 1 Mr. Sherlock Holmes\nHerra Sherlock Holmes .\n', ''))
 
     def test_PairPrinter_writePair_links(self):
-        self.opr.par.write_mode = 'links'
+        opr = OpusRead(directory='RF', source='en', target='sv',
+            root_directory=self.root_directory, write_mode='links')
+        opr.par.initializeSentenceParsers(
+            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         sPair = '<link xtargets="s4;s4" id="SL4"/>'
-        self.assertEqual(self.opr.writePair(sPair),
+        self.assertEqual(opr.writePair(sPair),
             ('<link xtargets="s4;s4" id="SL4"/>\n', ''))
 
     def test_PairPrinter_writePair_empty(self):
@@ -549,9 +556,6 @@ class TestOpusRead(unittest.TestCase):
             '(src)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
 
         opr.par.closeFiles()
-        arguments = '-d RF -s sv -t en -f -rd'.split()
-        arguments.append(self.root_directory)
-        fastopr = OpusRead(arguments)
         fastopr = OpusRead(directory='RF', source='sv', target='en',
             fast=True, root_directory=self.root_directory)
         fastopr.par.initializeSentenceParsers(
@@ -564,14 +568,14 @@ class TestOpusRead(unittest.TestCase):
 
     def test_ExhaustiveSentenceParser_readSentence_annotations(self):
         opr = OpusRead(directory='RF', source='en', target='sv',
-            print_annotations=True, root_directory=self.root_direcotory)
+            print_annotations=True, root_directory=self.root_directory)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
             '(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
             'n|NN|translation )|)|)')
         opr.par.closeFiles()
-        opr = OpusRead(direcotory='RF', source='en', target='sv',
+        opr = OpusRead(directory='RF', source='en', target='sv',
             print_annotations=True, change_annotation_delimiter='@',
             root_directory=self.root_directory)
         opr.par.initializeSentenceParsers(
@@ -744,7 +748,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_normal_xml_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_file', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -760,7 +764,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_normal_xml_write_fast(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             fast=True, root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -802,7 +806,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_normal_raw_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             preprocess='raw', root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -818,8 +822,8 @@ class TestOpusRead(unittest.TestCase):
 
     def test_normal_raw_write_fast(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
-            preprocess='raw', fast=True, root_directory=_self.root_directory
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
+            preprocess='raw', fast=True, root_directory=self.root_directory
             ).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -888,7 +892,7 @@ class TestOpusRead(unittest.TestCase):
             preprocess='parsed', print_annotations=True,
             source_annotations=['upos', 'feats', 'lemma'],
             target_annotations=['upos', 'feats', 'lemma'],
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -918,7 +922,7 @@ class TestOpusRead(unittest.TestCase):
             preprocess='parsed', print_annotations=True,
             source_annotations=['upos', 'feats', 'lemma'],
             target_annotations=['upos', 'feats', 'lemma'],
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             fast=True, root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -972,7 +976,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_normal_parsed_print_unalphabetical(self):
         var = pairPrinterToVariable(directory='RF', source='sv', target='en',
-            maximum=1, preprocess='parsed',
+            maximum=1, preprocess='parsed', print_annotations=True,
             source_annotations=['upos', 'feats', 'lemma'],
             target_annotations=['upos', 'feats', 'lemma'],
             root_directory=self.root_directory)
@@ -1027,7 +1031,7 @@ class TestOpusRead(unittest.TestCase):
     def test_normal_parsed_print_all_attributes(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, preprocess='parsed', print_annotations=True,
-            source_annotations='all_attrs', traget_annotations='all_attrs',
+            source_annotations=['all_attrs'], target_annotations=['all_attrs'],
             root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
@@ -1068,7 +1072,7 @@ class TestOpusRead(unittest.TestCase):
     def test_normal_parsed_print_all_attributes_fast(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, preprocess='parsed', print_annotations=True,
-            source_annotations='all_attrs', target_annotations='all_attrs',
+            source_annotations=['all_attrs'], target_annotations=['all_attrs'],
             fast=True, root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
@@ -1108,7 +1112,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_tmx_xml_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             write_mode='tmx', root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -1125,7 +1129,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_tmx_xml_write_unalphabetical(self):
         OpusRead(directory='RF', source='sv', target='en', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             write_mode='tmx', root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -1143,7 +1147,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_tmx_xml_write_fast(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             write_mode='tmx', fast=True, root_directory=self.root_directory
             ).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
@@ -1205,7 +1209,8 @@ class TestOpusRead(unittest.TestCase):
 
     def test_tmx_raw_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write_mode='tmx',
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             preprocess='raw', root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -1222,7 +1227,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_tmx_raw_write_fast(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             write_mode='tmx', preprocess='raw', fast=True,
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
@@ -1270,7 +1275,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_tmx_parsed_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_result'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             write_mode='tmx', preprocess='parsed', print_annotations=True,
             source_annotations=['upos', 'feats', 'lemma'],
             target_annotations=['upos', 'feats', 'lemma'],
@@ -1301,9 +1306,9 @@ class TestOpusRead(unittest.TestCase):
                 '\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_parsed_write_fast(self):
-        OpusRead(directoty='RF', source='en', target='sv', maximum=1,
-            write=os.path.join(self.tempdir1, 'test_files', 'test_results'),
-            write=mode='tmx', preprocess='parsed', print_annotations=True,
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_results')],
+            write_mode='tmx', preprocess='parsed', print_annotations=True,
             source_annotations=['upos', 'feats', 'lemma'],
             target_annotations=['upos', 'feats', 'lemma'], fast=True,
             root_directory=self.root_directory).printPairs()
@@ -1396,7 +1401,7 @@ class TestOpusRead(unittest.TestCase):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
             write=[os.path.join(self.tempdir1, 'test_files', 'test.src'),
                 os.path.join(self.tempdir1, 'test_files', 'test.trg')],
-            wrote_mode='moses', root_directory=self.root_directory).printPairs()
+            write_mode='moses', root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test.src'),
                 'r') as f:
             self.assertEqual(f.read(),
@@ -1425,7 +1430,7 @@ class TestOpusRead(unittest.TestCase):
     def test_moses_xml_write_with_file_names(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
             write=[os.path.join(self.tempdir1, 'test_files', 'test.src'),
-                os.path.join(self.tempdir1, 'test_files', 'test.src')],
+                os.path.join(self.tempdir1, 'test_files', 'test.trg')],
             write_mode='moses', print_file_names=True,
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test.src'),
@@ -1496,15 +1501,9 @@ class TestOpusRead(unittest.TestCase):
                 'nt on Tuesday , 4 October , 1988 .\n')
 
     def test_moses_xml_write_fast(self):
-        arguments = ('-d RF -s en -t sv -m 1 -w {source} '
-            '{target} -wm moses -f -rd').format(source=os.path.join(
-                self.tempdir1, 'test_files', 'test.src'),
-                target=os.path.join(self.tempdir1,
-                    'test_files', 'test.trg')).split()
-        arguments.append(self.root_directory)
-        OpusRead(arguments).printPairs()
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test.src')],
+            write=[os.path.join(self.tempdir1, 'test_files', 'test.src'),
+                os.path.join(self.tempdir1, 'test_files', 'test.trg')],
             write_mode='moses', fast=True, root_directory=self.root_directory
             ).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test.src'),
@@ -1513,8 +1512,7 @@ class TestOpusRead(unittest.TestCase):
             'Statement of Government Policy by the Prime Minister , '
             'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
             'ament on Tuesday , 4 October , 1988 .\n')
-        with open(os.path.join(self.tempdir1,
-            'test_files', 'test.trg'),
+        with open(os.path.join(self.tempdir1, 'test_files', 'test.trg'),
                 'r') as f:
             self.assertEqual(f.read(), 'REGERINGSFÖRKLARING .\n')
 
@@ -1558,6 +1556,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_moses_raw_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
+            write_mode='moses',
             write=[os.path.join(self.tempdir1, 'test_files', 'test.src'),
                 os.path.join(self.tempdir1, 'test_files', 'test.trg')],
             preprocess='raw', root_directory=self.root_directory).printPairs()
@@ -1695,7 +1694,7 @@ class TestOpusRead(unittest.TestCase):
             maximum=1, write_mode='moses', preprocess='parsed',
             print_annotations=True,
             source_annotations=['upos', 'feats', 'lemma'],
-            target_annotations=['upos', 'feats', 'leamm'], fast=True,
+            target_annotations=['upos', 'feats', 'lemma'], fast=True,
             root_directory=self.root_directory)
         self.assertEqual(var,
             'Statement|NOUN|Number=Sing|st'
@@ -1796,10 +1795,10 @@ class TestOpusRead(unittest.TestCase):
             write=[os.path.join(self.tempdir1, 'test_files', 'testlinks')],
             root_directory=self.root_directory).printPairs()
         var = pairPrinterToVariable(
-            '-d Books -s eo -t pt -af {filename} -rd {rootdir}'.format(
-            filename=os.path.join(self.tempdir1, 'test_files', 'testlinks'),
-            rootdir=self.root_directory
-            ).split())
+            directory='Books', source='eo', target='pt',
+            alignment_file=os.path.join(self.tempdir1, 'test_files',
+                'testlinks'),
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# eo/Carroll_Lewis-Alice_in_wonderland.xml.gz\n'
             '# pt/Carroll_Lewis-Alice_in_wonderland.xml.gz\n\n======='
@@ -1830,11 +1829,9 @@ class TestOpusRead(unittest.TestCase):
             tgt_range='1', write_mode='links',
             write=[os.path.join(self.tempdir1, 'test_files', 'testlinks')],
             root_directory=self.root_directory).printPairs()
-        var = pairPrinterToVariable(
-            '-d RF -s en -t sv -af {filename} -rd {rootdir}'.format(
-            filename=os.path.join(self.tempdir1, 'test_files', 'testlinks'),
-            rootdir=self.root_directory
-            ).split())
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            alignment_file=os.path.join(self.tempdir1, 'test_files',
+                'testlinks'), root_directory=self.root_directory)
         self.assertEqual(var,
             """\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n=============="""
             """==================\n(src)="s4.4">The army will be reor"""
@@ -1869,12 +1866,11 @@ class TestOpusRead(unittest.TestCase):
             write_mode='links',
             write=[os.path.join(self.tempdir1, 'test_files', 'testlinks')],
             root_directory=self.root_directory).printPairs()
-        OpusRead(
-            directory='RF', source='en', target='sv', write_mode='links',
+        OpusRead(directory='RF', source='en', target='sv', write_mode='links',
             alignment_file=os.path.join(self.tempdir1, 'test_files',
-                'testresult'),
-            write=[os.path.join(self.tempdir1, 'test_files', 'testlinks')],
-            root_directory=self.root_directory)
+                'testlinks'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'testresult')],
+            root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'testresult'),
                 'r') as f:
             self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>'
@@ -1891,7 +1887,7 @@ class TestOpusRead(unittest.TestCase):
             root_directory=self.root_directory).printPairs()
         var = pairPrinterToVariable(directory='Books', source='eo',
             target='pt', write_mode='links',
-            alignments_file=os.path.join(self.tempdir1, 'test_files',
+            alignment_file=os.path.join(self.tempdir1, 'test_files',
                 'testlinks'),
             root_directory=self.root_directory)
         self.assertEqual(var, '<?xml version="1.0" encoding="utf-8"?>'
@@ -1909,6 +1905,7 @@ class TestOpusRead(unittest.TestCase):
         OpusRead(directory='Books', source='eo', target='pt',
             write_mode='links', alignment_file=os.path.join(self.tempdir1,
                 'test_files', 'testlinks'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'testresult')],
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'testresult'),
                 'r') as f:
@@ -1944,7 +1941,7 @@ class TestOpusRead(unittest.TestCase):
         var = pairPrinterToVariable(directory='Books', source='en',
             target='fi', alignment_file=os.path.join(self.tempdir1,
                 'test_files', 'testlinks'),
-            root_directory=self.root_directory)
+            download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# test_files/test_en\n# test_files/test_fi\n\n'
             '================================\n(src)="s1">test_en1 test_en2\n'
@@ -1984,7 +1981,7 @@ class TestOpusRead(unittest.TestCase):
                 shutil.copyfileobj(f, gf)
 
         var = pairPrinterToVariable(directory='Books', source='eo',
-            target='pt', alignment_file=os.path.join(self.tempfile1,
+            target='pt', alignment_file=os.path.join(self.tempdir1,
                 'test_files', 'testlinks'), download_dir=self.tempdir1,
             root_directory=self.root_directory)
         self.assertEqual(var,
@@ -1996,7 +1993,7 @@ class TestOpusRead(unittest.TestCase):
     def test_filtering_by_src_cld2(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             release='v1', maximum=1, src_cld2=['en', '0.98'],
-            alignment_file=os.path.join(self.tempdir1, 'bools_alignments.xml'),
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# en/1996.xml.gz\n'
@@ -2008,7 +2005,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_trg_cld2(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum=1, trg_src2=['ia', '0'],
+            release='v1', maximum=1, trg_cld2=['ia', '0'],
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             download_dir=self.tempdir1)
         self.assertEqual(var,
@@ -2076,12 +2073,12 @@ class TestOpusRead(unittest.TestCase):
             '\n================================\n')
 
     def test_filtering_by_lang_labels_nonalphabetical_lang_order(self):
-        arguments = ('-d RF -s sv -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
-            'fi 0.97 --trg_langid en 0.17 --src_langid fi 1'
-            ' -af {filename} -dl').format(filename=os.path.join(self.tempdir1,
-                'books_alignment.xml')).split()
-        arguments.append(self.tempdir1)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='RF', source='sv', target='en',
+            release='v1', maximum='1', trg_cld2=['un', '0'],
+            src_cld2=['fi', '0.97'], trg_langid=['en', '0.17'],
+            src_langid=['fi', '1'],
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# en/1996.xml.gz\n'
             '# sv/1996.xml.gz\n'
@@ -2091,12 +2088,12 @@ class TestOpusRead(unittest.TestCase):
             '\n================================\n')
 
     def test_filtering_by_lang_labels_nonalphabetical_lang_order_fast(self):
-        arguments = ('-d RF -s sv -t en -r v1 -m 1 --trg_cld2 un 0 --src_cld2 '
-            'fi 0.97 --trg_langid en 0.17 --src_langid fi 1 -f'
-            ' -af {filename} -dl').format(filename=os.path.join(self.tempdir1,
-                'books_alignment.xml')).split()
-        arguments.append(self.tempdir1)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='RF', source='sv', target='en',
+            release='v1', maximum='1', trg_cld2=['un', '0'],
+            src_cld2=['fi', '0.97'], trg_langid=['en', '0.17'],
+            src_langid=['fi', '1'], fast=True,
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# en/1996.xml.gz\n'
             '# sv/1996.xml.gz\n'
@@ -2106,33 +2103,30 @@ class TestOpusRead(unittest.TestCase):
             '\n================================\n')
 
     def test_filtering_by_lang_labels_no_matches_found(self):
-        arguments = ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 fi 2'
-            ' -af {filename} -dl').format(filename=os.path.join(self.tempdir1,
-                'books_alignment.xml')).split()
-        arguments.append(self.tempdir1)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            release='v1', maximum='1', src_cld2=['fi', '2'],
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# en/1996.xml.gz\n'
             '# sv/1996.xml.gz\n'
             '\n================================\n')
 
     def test_filtering_by_lang_labels_no_matches_found_fast(self):
-        arguments = ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 fi 2'
-            ' -af {filename} -f -dl').format(filename=os.path.join(
-                self.tempdir1, 'books_alignment.xml')).split()
-        arguments.append(self.tempdir1)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            release='v1', maximum='1', src_cld2=['fi', '2'], fast=True,
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# en/1996.xml.gz\n'
             '# sv/1996.xml.gz\n'
             '\n================================\n')
 
     def test_filtering_by_src_cld2_print_links(self):
-        arguments = ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 en 0.98'
-            ' -af {filename} -wm links -dl').format(filename=os.path.join(
-                self.tempdir1, 'books_alignment.xml')).split()
-        arguments.append(self.tempdir1)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            release='v1', maximum='1', src_cld2=['en', '0.98'],
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            write_mode='links', download_dir=self.tempdir1)
         self.assertEqual(var,
             '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
             'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
@@ -2142,12 +2136,12 @@ class TestOpusRead(unittest.TestCase):
             '\n </linkGrp>\n</cesAlign>\n')
 
     def test_filtering_by_lang_labels_print_links(self):
-        arguments = ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
-            'fi 0.97 --src_langid en 0.17 --trg_langid fi 1'
-            ' -af {filename} -wm links -dl').format(filename=os.path.join(
-                self.tempdir1, 'books_alignment.xml')).split()
-        arguments.append(self.tempdir1)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            release='v1', maximum='1', src_cld2=['un', '0'],
+            trg_cld2=['fi', '0.97'], src_langid=['en', '0.17'],
+            trg_langid=['fi', '1'],
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            write_mode='links', download_dir=self.tempdir1)
         self.assertEqual(var,
             '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
             'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
@@ -2157,14 +2151,13 @@ class TestOpusRead(unittest.TestCase):
             '\n </linkGrp>\n</cesAlign>\n')
 
     def test_filtering_by_lang_labels_write_links(self):
-        arguments = ('-d RF -s en -t sv -r v1 -m 1 --src_cld2 un 0 --trg_cld2 '
-            'fi 0.97 --src_langid en 0.17 --trg_langid fi 1'
-            ' -af {alignment} -wm links '
-            '-w {result} -dl').format(alignment=os.path.join(
-                self.tempdir1, 'books_alignment.xml'), result=os.path.join(
-                    self.tempdir1, 'test_files/result')).split()
-        arguments.append(self.tempdir1)
-        OpusRead(arguments).printPairs()
+        OpusRead(directory='RF', source='en', target='sv',
+            release='v1', maximum='1', src_cld2=['un', '0'],
+            trg_cld2=['fi', '0.97'], src_langid=['en', '0.17'],
+            trg_langid=['fi', '1'],
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            write=[os.path.join(self.tempdir1, 'test_files', 'result')],
+            write_mode='links', download_dir=self.tempdir1).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'result'),
                 'r') as f:
             self.assertEqual(f.read(),
@@ -2176,14 +2169,11 @@ class TestOpusRead(unittest.TestCase):
                 '\n </linkGrp>\n</cesAlign>')
 
     def test_use_given_zip_files(self):
-        arguments = ('-d RF -s en -t sv -m1 -sz {sourcez} -tz {targetz}'
-            ' -af {filename} -rd').format(
-                    sourcez=os.path.join(self.tempdir1, 'en.zip'),
-                    targetz=os.path.join(self.tempdir1, 'sv.zip'),
-                    filename=os.path.join(self.tempdir1,
-                        'books_alignment.xml')).split()
-        arguments.append(self.root_directory)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            maximum='1', source_zip=os.path.join(self.tempdir1, 'en.zip'),
+            target_zip=os.path.join(self.tempdir1, 'sv.zip'),
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1996.xml.gz'
             '\n# sv/1996.xml.gz'
@@ -2193,14 +2183,11 @@ class TestOpusRead(unittest.TestCase):
             '\n================================\n')
 
     def test_use_given_zip_files_unalphabetical(self):
-        arguments = ('-d RF -s sv -t en -m1 -sz {sourcez} -tz {targetz}'
-            ' -af {alignment} -rd').format(
-                sourcez=os.path.join(self.tempdir1, 'sv.zip'),
-                targetz=os.path.join(self.tempdir1, 'en.zip'),
-                alignment=os.path.join(self.tempdir1, 'books_alignment.xml')
-                ).split()
-        arguments.append(self.root_directory)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='RF', target='en', source='sv',
+            maximum='1', target_zip=os.path.join(self.tempdir1, 'en.zip'),
+            source_zip=os.path.join(self.tempdir1, 'sv.zip'),
+            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1996.xml.gz'
             '\n# sv/1996.xml.gz'
@@ -2210,10 +2197,9 @@ class TestOpusRead(unittest.TestCase):
             '\n================================\n')
 
     def test_source_zip_given_and_target_automatic(self):
-        arguments = '-d RF -s en -t sv -sz {sourcez} -rd'.format(
-                sourcez=os.path.join(self.tempdir1, 'en.zip')).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='en', target='sv',
+            source_zip=os.path.join(self.tempdir1, 'en.zip'),
+            root_directory=self.root_directory)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2222,10 +2208,9 @@ class TestOpusRead(unittest.TestCase):
             os.path.join(self.root_directory, 'RF', 'latest', 'xml', 'sv.zip'))
 
     def test_source_zip_given_and_target_automatic_unalphabetical(self):
-        arguments = '-d RF -s sv -t en -sz {sourcez} -rd'.format(
-            sourcez=os.path.join(self.tempdir1, 'sv.zip')).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', target='en', source='sv',
+            source_zip=os.path.join(self.tempdir1, 'sv.zip'),
+            root_directory=self.root_directory)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2234,10 +2219,9 @@ class TestOpusRead(unittest.TestCase):
             os.path.join(self.tempdir1, 'sv.zip'))
 
     def test_target_zip_given_and_source_automatic(self):
-        arguments = '-d RF -s en -t sv -tz {sourcez} -rd'.format(
-            sourcez=os.path.join(self.tempdir1, 'sv.zip')).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='en', target='sv',
+            target_zip=os.path.join(self.tempdir1, 'sv.zip'),
+            root_directory=self.root_directory)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2246,12 +2230,9 @@ class TestOpusRead(unittest.TestCase):
             os.path.join(self.tempdir1, 'sv.zip'))
 
     def test_target_zip_given_and_source_local(self):
-        arguments = ('-d RF -s en -t sv -r v1 -tz {targetz} -dl {tempdir} '
-            '-rd').format(
-            targetz=os.path.join(self.tempdir1, 'sv.zip'),
-            tempdir=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='en', target='sv', release='v1',
+            target_zip=os.path.join(self.tempdir1, 'sv.zip'),
+            download_dir=self.tempdir1)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2260,12 +2241,9 @@ class TestOpusRead(unittest.TestCase):
             os.path.join(self.tempdir1, 'sv.zip'))
 
     def test_target_zip_given_and_source_local_unalphabetical(self):
-        arguments = ('-d RF -s sv -t en -r v1 -tz {targetz} -dl {tempdir} '
-            '-rd').format(
-            targetz=os.path.join(self.tempdir1, 'en.zip'),
-            tempdir=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', target='en', source='sv', release='v1',
+            target_zip=os.path.join(self.tempdir1, 'en.zip'),
+            download_dir=self.tempdir1)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2274,12 +2252,9 @@ class TestOpusRead(unittest.TestCase):
             os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
 
     def test_source_zip_given_and_target_local(self):
-        arguments = ('-d RF -s en -t sv -r v1 -sz {sourcez} -dl {tempdir} '
-            '-rd').format(
-            sourcez=os.path.join(self.tempdir1, 'en.zip'),
-            tempdir=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='en', target='sv', release='v1',
+            source_zip=os.path.join(self.tempdir1, 'en.zip'),
+            download_dir=self.tempdir1)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2288,11 +2263,8 @@ class TestOpusRead(unittest.TestCase):
             os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
 
     def test_source_zip_local_and_target_automatic(self):
-        arguments = ('-d RF -s en -t es -r v1 -dl {tempdir} '
-            '-rd').format(
-            tempdir=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='en', target='es', release='v1',
+            download_dir=self.tempdir1, root_directory=self.root_directory)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'es/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2301,11 +2273,8 @@ class TestOpusRead(unittest.TestCase):
             os.path.join(self.root_directory, 'RF', 'v1', 'xml', 'es.zip'))
 
     def test_source_zip_local_and_target_automatic_unalphabetical(self):
-        arguments = ('-d RF -s sv -t es -r v1 -dl {tempdir} '
-            '-rd').format(
-            tempdir=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='sv', target='es', release='v1',
+            download_dir=self.tempdir1, root_directory=self.root_directory)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'es/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2314,10 +2283,8 @@ class TestOpusRead(unittest.TestCase):
             os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
 
     def test_target_zip_local_and_source_automatic(self):
-        arguments = '-d RF -s es -t sv -r v1 -dl {tempdir} -rd'.format(
-            tempdir=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='es', target='sv', release='v1',
+            download_dir=self.tempdir1, root_directory=self.root_directory)
         opr.par.initializeSentenceParsers(
             {'fromDoc': 'es/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
         self.assertEqual(opr.par.sourcezip.filename,
@@ -2325,6 +2292,7 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(opr.par.targetzip.filename,
             os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
 
+    '''
     def test_empty_argument_list(self):
         temp_args = sys.argv.copy()
         arguments = '-d RF -s en -t sv -m 1 -f -rd'.split()
@@ -2339,32 +2307,28 @@ class TestOpusRead(unittest.TestCase):
             'er , 1988 .\n(trg)="s1.1">REGERINGSFÖRKLARING .\n======='
             '=========================\n')
         sys.argv = temp_args.copy()
+    '''
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_alignment_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y', 'n']
-        arguments = ('-d RF -s en -t sv -m 1 -af {unfound} -dl {tempdir1} '
-            '-rd').format(
-            unfound=os.path.join(self.tempdir1, 'unfound.xml.gz'),
-            tempdir1=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
+            alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'),
+            download_dir=self.tempdir1, root_directory=self.root_directory)
         opr.printPairs()
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en-sv.xml.gz'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
-        var = pairPrinterToVariable(
-            '-d RF -s en -t sv -m 1 -af {unfound}'.format(
-            unfound=os.path.join(self.tempdir1, 'unfound.xml.gz')).split())
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            maximum='1',
+            alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'))
         self.assertEqual(var[-18:], '128 KB Total size\n')
 
     def test_alignment_file_not_found_no_prompt(self):
-        arguments = ('-d RF -s en -t sv -m 1 -af {unfound} -q -dl {tempdir1} '
-            '-rd').format(
-            unfound=os.path.join(self.tempdir1, 'unfound.xml.gz'),
-            tempdir1=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='en', target='sv', maximum='1',
+            alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'),
+            suppress_prompts=True, download_dir=self.tempdir1,
+            root_directory=self.root_directory)
         opr.printPairs()
         self.assertTrue(os.path.isfile(os.path.join(self.tempdir1,
             'RF_latest_xml_en-sv.xml.gz')))
@@ -2379,10 +2343,8 @@ class TestOpusRead(unittest.TestCase):
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_zip_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y']
-        arguments = '-d RF -s en -t sv -m 1 -dl {tempdir} -rd'.format(
-            tempdir=self.tempdir1).split()
-        arguments.append(self.root_directory)
-        opr = OpusRead(arguments)
+        opr = OpusRead(directory='RF', source='en', target='sv', maximum='1',
+            download_dir=self.tempdir1, root_directory=self.root_directory)
         opr.par.source = ''
 
         old_stdout = sys.stdout
@@ -2406,65 +2368,60 @@ class TestOpusRead(unittest.TestCase):
         self.assertFalse(self.opr.par.testConfidence('', [], ''))
 
     def test_id_file_printing(self):
-        arguments = ('-d RF -s en -t sv -m 1 -a certainty -tr 1 -id '
-            '{filename} -rd').format(filename=os.path.join(
-                self.tempdir1, 'test_files/test.id')).split()
-        arguments.append(self.root_directory)
-        OpusRead(arguments).printPairs()
+        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+            attribute='certainty', threshold='1',
+            write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
+            root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1,
                 'test_files', 'test.id')) as id_file:
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
                 '.xml.gz\ts3.2\ts3.2\t1.14214\n')
 
     def test_id_file_printing_unalphabetical(self):
-        arguments = ('-d RF -s sv -t en -m 1 -S 1 -T 2 -a certainty -tr 0.1 '
-            '-id {filename} -rd').format(filename=os.path.join(
-                self.tempdir1, 'test_files/test.id')).split()
-        arguments.append(self.root_directory)
-        OpusRead(arguments).printPairs()
+        OpusRead(directory='RF', source='sv', target='en', maximum='1',
+            src_range='1', tgt_range='2', attribute='certainty',
+            threshold='0.1',
+            write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
+            root_directory=self.root_directory).printPairs()
         with open(os.path.join(
                 self.tempdir1, 'test_files', 'test.id')) as id_file:
             self.assertEqual(id_file.read(), 'sv/1988.xml.gz\ten/1988'
                 '.xml.gz\ts4.4\ts4.4 s4.5\t0.188136\n')
 
     def test_id_file_printing_with_no_attribute(self):
-        arguments = '-d RF -s en -t sv -m 1 -id {filename} -rd'.format(
-            filename=os.path.join(self.tempdir1, 'test_files/test.id')).split()
-        arguments.append(self.root_directory)
-        OpusRead(arguments).printPairs()
+        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+            write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
+            root_directory=self.root_directory).printPairs()
         with open(os.path.join(
                 self.tempdir1, 'test_files/test.id')) as id_file:
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
                 '.xml.gz\ts1.1\ts1.1\tNone\n')
 
     def test_id_file_printing_with_attribute_no_threshold(self):
-        arguments = ('-d RF -s en -t sv -m 1 -a certainty -id '
-            '{filename} -rd').format(filename=os.path.join(
-                self.tempdir1, 'test_files/test.id')).split()
-        arguments.append(self.root_directory)
-        OpusRead(arguments).printPairs()
+        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+            attribute='certainty',
+            write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
+            root_directory=self.root_directory).printPairs()
         with open(os.path.join(
                 self.tempdir1, 'test_files/test.id')) as id_file:
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
                 '.xml.gz\ts1.1\ts1.1\t-0.0636364\n')
 
     def test_id_file_printing_with_invalid_attribute(self):
-        arguments = ('-d RF -s en -t sv -m 1 -a asfg -id {filename} '
-            '-rd').format(filename=os.path.join(
-                self.tempdir1, 'test_files/test.id')).split()
-        arguments.append(self.root_directory)
-        OpusRead(arguments).printPairs()
+        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+            attribute='asfg',
+            write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
+            root_directory=self.root_directory).printPairs()
         with open(os.path.join(
             self.tempdir1, 'test_files/test.id')) as id_file:
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
                 '.xml.gz\ts1.1\ts1.1\tNone\n')
 
     def test_id_file_printing_with_only_threshold(self):
-        arguments = ('-d RF -s en -t sv -m 1 -tr 0 -id {filename} '
-            '-rd').format(filename=os.path.join(
-                self.tempdir1, 'test_files/test.id')).split()
-        arguments.append(self.root_directory)
-        OpusRead(arguments).printPairs()
+        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+            threshold='0',
+            write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
+            root_directory=self.root_directory).printPairs()
         with open(os.path.join(
             self.tempdir1, 'test_files/test.id')) as id_file:
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
@@ -2513,9 +2470,9 @@ class TestOpusRead(unittest.TestCase):
                 'file_name1\tfile_name2\tid1 id2\tid1\tvalue\n')
 
     def test_writing_time_tags_xml(self):
-        arguments = '-d OpenSubtitles -s eo -t tl -m 1 -pi -rd'.split()
-        arguments.append(self.root_directory)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
+            target='tl', maximum='1', preserve_inline_tags=True,
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# eo/2009/1187043/6483790.xml.gz\n'
             '# tl/2009/1187043/6934998.xml.gz\n\n'
@@ -2525,9 +2482,9 @@ class TestOpusRead(unittest.TestCase):
             '========================\n')
 
     def test_writing_time_tags_xml_fast(self):
-        arguments = '-d OpenSubtitles -s eo -t tl -m 1 -pi -f -rd'.split()
-        arguments.append(self.root_directory)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
+            target='tl', maximum='1', preserve_inline_tags=True, fast=True,
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# eo/2009/1187043/6483790.xml.gz\n'
             '# tl/2009/1187043/6934998.xml.gz\n\n'
@@ -2537,9 +2494,9 @@ class TestOpusRead(unittest.TestCase):
             '========================\n')
 
     def test_writing_time_tags_raw(self):
-        arguments = '-d OpenSubtitles -s eo -t tl -m 1 -pi -p raw -rd'.split()
-        arguments.append(self.root_directory)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
+            target='tl', maximum='1', preserve_inline_tags=True, preprocess='raw',
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# eo/2009/1187043/6483790.xml.gz\n'
             '# tl/2009/1187043/6934998.xml.gz\n\n'
@@ -2549,10 +2506,9 @@ class TestOpusRead(unittest.TestCase):
             '========================\n')
 
     def test_writing_time_tags_raw_fast(self):
-        arguments = ('-d OpenSubtitles -s eo -t tl -m 1 -pi -p raw -f '
-            '-rd').split()
-        arguments.append(self.root_directory)
-        var = pairPrinterToVariable(arguments)
+        var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
+            target='tl', maximum='1', preserve_inline_tags=True, preprocess='raw',
+            fast=True, root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# eo/2009/1187043/6483790.xml.gz\n'
             '# tl/2009/1187043/6934998.xml.gz\n\n'

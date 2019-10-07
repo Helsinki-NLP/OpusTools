@@ -71,8 +71,7 @@ class OpusRead:
                 self.mosessrc = open(write[0], 'w', encoding='utf-8')
                 self.mosestrg = open(write[1], 'w', encoding='utf-8')
             else:
-                self.resultfile = open(write[0], 'w',
-                    encoding='utf-8')
+                self.resultfile = open(write[0], 'w', encoding='utf-8')
 
         if write_mode == 'links':
             self.par = LinksAlignmentParser(source=source_file,
@@ -116,13 +115,14 @@ class OpusRead:
         self.write_mode = write_mode
         self.change_moses_delimiter = change_moses_delimiter
         self.write = write
-        self.source = source
+        self.source_lang = source
         self.maximum = maximum
         self.download_dir = download_dir
         self.directory = directory
         self.release = release
         self.preprocess = preprocess
         self.suppress_prompts = suppress_prompts
+        self.write_ids=write_ids
 
     def printPair(self, sPair):
         ret = ''
@@ -215,7 +215,7 @@ class OpusRead:
 
     def addTmxHeader(self):
         tmxheader = ('<?xml version="1.0" encoding="utf-8"?>\n<tmx '
-            'version="1.4.">\n<header srclang="' + self.source +
+            'version="1.4.">\n<header srclang="' + self.source_lang +
             '"\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype='
             '"PlainText" />\n\t<body>')
         if self.write != None:
@@ -239,7 +239,7 @@ class OpusRead:
         if type(line) == bytes:
             line = line.decode('utf-8')
         if (self.write_mode == 'links' and self.par.end == 'linkGrp'
-            and line.strip() != '</linkGrp>'):
+                and line.strip() != '</linkGrp>'):
             if self.write != None:
                 self.resultfile.write(' </linkGrp>\n')
             else:

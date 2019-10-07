@@ -160,31 +160,31 @@ class AlignmentParser:
             pre = 'rawos'
 
         st = ['src', 'trg']
-        langs = [self.source, self.target]
+        #langs = [self.source, self.target]
         if self.switch_langs:
             st = ['trg', 'src']
-            langs = [self.target, self.source]
+            #langs = [self.target, self.source]
 
         if self.fast:
             self.sPar = SentenceParser(sourcefile, st[0], pre,
-                self.write_mode, langs[0], self.print_annotations,
+                self.write_mode, self.fromto[0], self.print_annotations,
                 self.source_annotations,
                 self.change_annotation_delimiter,
                 self.preserve_inline_tags)
             self.tPar = SentenceParser(targetfile, st[1], pre,
-                self.write_mode, langs[1], self.print_annotations,
+                self.write_mode, self.fromto[1], self.print_annotations,
                 self.target_annotations,
                 self.change_annotation_delimiter,
                 self.preserve_inline_tags)
         else:
             self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
-                self.write_mode, langs[0], self.print_annotations,
+                self.write_mode, self.fromto[0], self.print_annotations,
                 self.source_annotations,
                 self.change_annotation_delimiter,
                 self.preserve_inline_tags)
             self.sPar.storeSentences()
             self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
-                self.write_mode, langs[1], self.print_annotations,
+                self.write_mode, self.fromto[1], self.print_annotations,
                 self.target_annotations,
                 self.change_annotation_delimiter,
                 self.preserve_inline_tags)

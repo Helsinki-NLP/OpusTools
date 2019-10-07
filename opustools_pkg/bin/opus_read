@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import argparse
+
 from opustools_pkg import OpusRead
 
 parser = argparse.ArgumentParser(prog='opus_read',
@@ -19,7 +21,7 @@ parser.add_argument('-r', '--release', help='Release (default=latest)',
 parser.add_argument('-p', '--preprocess',
     help='Preprocess-type (raw, xml or parsed, default=xml)',
     default='xml', choices=['raw', 'xml', 'parsed'])
-parser.add_argument('-m', '--max', help='Maximum number of alignments',
+parser.add_argument('-m', '--maximum', help='Maximum number of alignments',
     default='all')
 parser.add_argument('-S', '--src_range',
     help='Number of source sentences in alignments (range is '
@@ -125,9 +127,5 @@ parser.add_argument('-pi', '--preserve_inline_tags',
     help='Preserve inline tags within sentences',
     action='store_true')
 
-if len(arguments) == 0:
-    self.args = parser.parse_args()
-else:
-    self.args = parser.parse_args(arguments)
-
-OpusRead([]).printPairs()
+args = parser.parse_args()
+OpusRead(**vars(args)).printPairs()

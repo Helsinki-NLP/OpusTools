@@ -7,34 +7,12 @@ import os.path
 
 class OpusGet:
 
-    def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='opus-get',
-            description='Download files from OPUS')
-        parser.add_argument('-s', '--source', dest='s', help='Source language',
-                required=True)
-        parser.add_argument('-t', '--target', dest='t', help='Target language')
-        parser.add_argument('-d', '--directory', dest='d', help='Corpus name')
-        parser.add_argument('-r', '--release', dest='r', help='Release',
-                default='latest')
-        parser.add_argument('-p', '--preprocess', dest='p',
-                help='Preprocess type', default='xml',
-                choices=['raw', 'xml', 'parsed'])
-        parser.add_argument('-l', '--list', dest='l', help='List resources',
-                action='store_true')
-        parser.add_argument('-dl', '--download_dir', dest='dl',
-            help='Set download directory (default=current directory)',
-            default='.')
-        parser.add_argument('-q', '--supress_prompts', dest='q',
-            help='Download necessary files without prompting "(y/n)"',
-            action='store_true')
+    def __init__(self, source=None, target=None, directory=None,
+            release='latest', preprocess='xml', list_resources=False,
+            download_dir='.', suppress_prompts=False):
 
-        if len(arguments) == 0:
-            self.args = parser.parse_args()
-        else:
-            self.args = parser.parse_args(arguments)
-
-        if self.args.t != None:
-            self.fromto = [self.args.s, self.args.t]
+        if target != None:
+            self.fromto = [source, target]
             self.fromto.sort()
 
         self.url = 'http://opus.nlpl.eu/opusapi/?'
@@ -48,8 +26,8 @@ class OpusGet:
                 else:
                     self.url += urlparts[a] + '=' + self.args.__dict__[a] + '&'
 
-        if not os.path.exists(self.args.dl):
-            os.makedirs(self.args.dl)
+        if not os.path.exists(download_dir):
+            os.makedirs(download_dir)
 
     def round_size(self, size, length, unit):
         last_n = str(size)[-length]

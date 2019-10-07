@@ -21,16 +21,22 @@ class LinksAlignmentParser(AlignmentParser):
             source_annotations=None, change_annotation_delimiter=None,
             preserve_inline_tags=None, threshold=None):
 
-        super().__init__(self, source=None, target=None, result=None,
-            mosessrc=None, mosestrg=None, fromto=None, switch_langs=None,
-            src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
-            leave_non_alignments_out=None, src_range=None, tgt_range=None,
-            download_dir=None, directory=None, release=None, preprocess=None,
-            source_zip=None, target_zip=None, suppress_prompts=None,
-            fast=None, write_mode=None, print_file_names=None, write=None,
-            attribute=None, print_annotations=None, target_annotations=None,
-            source_annotations=None, change_annotation_delimiter=None,
-            preserve_inline_tags=None, threshold=None)
+        super().__init__(source=source, target=target, result=result,
+            mosessrc=mosessrc, mosestrg=mosestrg, fromto=fromto,
+            switch_langs=switch_langs, src_cld2=src_cld2, trg_cld2=trg_cld2,
+            src_langid=src_langid, trg_langid=trg_langid,
+            leave_non_alignments_out=leave_non_alignments_out,
+            src_range=src_range, tgt_range=tgt_range,
+            download_dir=download_dir, directory=directory, release=release,
+            preprocess=preprocess, source_zip=source_zip, target_zip=target_zip,
+            suppress_prompts=suppress_prompts, fast=fast,
+            write_mode=write_mode, print_file_names=print_file_names,
+            write=write, attribute=attribute,
+            print_annotations=print_annotations,
+            target_annotations=target_annotations,
+            source_annotations=source_annotations,
+            change_annotation_delimiter=change_annotation_delimiter,
+            preserve_inline_tags=preserve_inline_tags, threshold=threshold)
 
         self.attribute = attribute
         self.end = ''
