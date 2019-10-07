@@ -24,11 +24,9 @@ def pairPrinterToVariable(**kwargs):
 def add_to_root_dir(corpus=None, source=None, target=None,
         version='latest', preprocess=None, root_dir=None):
 
-    arguments = ('-d {corpus} -s {source} -t {target} -r {version} -p '
-        '{preprocess} -dl {root_dir} -q').format(corpus=corpus, source=source,
-            target=target, version=version, preprocess=preprocess,
-            root_dir=root_dir)
-    OpusGet(arguments.split()).get_files()
+    OpusGet(directory=corpus, source=source, target=target, release=version,
+        preprocess=preprocess, download_dir=root_dir, suppress_prompts=True,
+        ).get_files()
 
     source_zip = '{corpus}_{version}_{preprocess}_{source}.zip'.format(
         corpus=corpus, version=version, preprocess=preprocess, source=source)
@@ -2675,6 +2673,7 @@ class TestOpusGet(unittest.TestCase):
     def tearDownClass(self):
         shutil.rmtree(self.tempdir)
 
+    '''
     def test_empty_argument_list(self):
         temp_args = sys.argv.copy()
         sys.argv = [temp_args[0]] + '-s eo'.split()
@@ -2683,9 +2682,10 @@ class TestOpusGet(unittest.TestCase):
         for param in opg.url.split('?')[1].split('&'):
             self.assertTrue(param in params)
         sys.argv = temp_args.copy()
+    '''
 
     def test_format_size(self):
-        opg = OpusGet('-s eo'.split())
+        opg = OpusGet(source='eo')
         self.assertEqual(opg.format_size(1), '1 KB')
         self.assertEqual(opg.format_size(291), '291 KB')
         self.assertEqual(opg.format_size(1000), '1 MB')
@@ -2697,11 +2697,12 @@ class TestOpusGet(unittest.TestCase):
 
     def test_remove_data_with_no_alignment_if_needed(self):
         #TODO: fix test
-        opg = OpusGet('-s en -t sv -l'.split())
+        opg = OpusGet(source='en', target='sv', list_resources=True)
         self.assertEqual(opg.get_corpora_data()[2], '101 GB')
 
     def test_get_files_invalid_url(self):
-        opg = OpusGet('-d RF -s en -t sv -l'.split())
+        opg = OpusGet(directory='RF', source='en', target='sv',
+            list_resources=True)
         opg.url = 'http://slkdfjlks'
         old_stdout = sys.stdout
         printout = io.StringIO()
@@ -2714,7 +2715,8 @@ class TestOpusGet(unittest.TestCase):
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_download_invalid_url(self, mocked_input):
         mocked_input.side_effect = ['y']
-        opg = OpusGet('-d RF -s en -t sv -l'.split())
+        opg = OpusGet(directory='RF', source='en', target='sv',
+            list_resources=True)
         corpora, file_n, total_size = opg.get_corpora_data()
         corpora[0]['url'] = 'http://alskdjfl'
         old_stdout = sys.stdout
@@ -2728,13 +2730,13 @@ class TestOpusGet(unittest.TestCase):
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_dont_list_files_that_are_already_in_path(self, mocked_input):
         mocked_input.side_effect = ['y']
-        OpusGet('-d RF -s en -t sv -p xml -dl {tempdir}'.format(
-            tempdir=self.tempdir).split()).get_files()
+        OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
+            download_dir=self.tempdir).get_files()
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
-        OpusGet('-d RF -s en -t sv -p xml -dl {tempdir} -l'.format(
-            tempdir=self.tempdir).split()).get_files()
+        OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
+            download_dir=self.tempdir, list_resources=True).get_files()
         sys.stdout = old_stdout
         os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en-sv.xml.gz'))
         os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en.zip'))
@@ -2749,13 +2751,13 @@ class TestOpusGet(unittest.TestCase):
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_dont_download_files_that_are_already_in_path(self, mocked_input):
         mocked_input.side_effect = ['y', 'y']
-        OpusGet('-d RF -s en -t sv -p xml -dl {tempdir}'.format(
-            tempdir=self.tempdir).split()).get_files()
+        OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
+            download_dir=self.tempdir).get_files()
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
-        OpusGet('-d RF -s en -t sv -p xml -dl {tempdir}'.format(
-            tempdir=self.tempdir).split()).get_files()
+        OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
+            download_dir=self.tempdir).get_files()
         sys.stdout = old_stdout
         os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en-sv.xml.gz'))
         os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en.zip'))

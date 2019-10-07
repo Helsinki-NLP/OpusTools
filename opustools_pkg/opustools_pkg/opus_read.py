@@ -287,16 +287,16 @@ class OpusRead:
             except FileNotFoundError:
                 print(('\nAlignment file ' + self.alignment + ' not found. '
                     'The following files are available for downloading:\n'))
-                arguments = ['-s', self.fromto[0], '-t', self.fromto[1], '-d',
-                    self.directory, '-r', self.release, '-p',
-                    self.preprocess, '-dl', self.download_dir,
-                    '-l']
-                og = OpusGet(arguments)
+                arguments = {'source': self.fromto[0],
+                    'target': self.fromto[1], 'directory': self.directory,
+                    'release': self.release, 'preprocess': self.preprocess,
+                    'download_dir': self.download_dir, 'list_resources': True}
+                og = OpusGet(**arguments)
                 og.get_files()
-                arguments.remove('-l')
+                arguments['list_resources'] = False
                 if self.suppress_prompts:
-                    arguments.append('-q')
-                og = OpusGet(arguments)
+                    arguments['suppress_prompts'] = True
+                og = OpusGet(**arguments)
                 og.get_files()
                 try:
                     gzipAlign = gzip.open(os.path.join(self.download_dir,

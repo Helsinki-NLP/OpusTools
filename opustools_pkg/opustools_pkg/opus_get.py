@@ -1,4 +1,3 @@
-
 import urllib.request
 import json
 import argparse
@@ -16,18 +15,26 @@ class OpusGet:
             self.fromto.sort()
 
         self.url = 'http://opus.nlpl.eu/opusapi/?'
-        urlparts = {'s': 'source', 't': 'target', 'd': 'corpus',
-            'r': 'version', 'p': 'preprocessing'}
 
-        for a in urlparts.keys():
-            if self.args.__dict__[a]:
-                if self.args.__dict__[a] == ' ':
-                    self.url += urlparts[a] + '=&'
+        urlparts = [(source, 'source'), (target, 'target'),
+            (directory, 'corpus'), (release, 'version'),
+            (preprocess, 'preprocessing')]
+
+        for a in urlparts:
+            if a[0]:
+                if a[0] == ' ':
+                    self.url += a[1] + '=&'
                 else:
-                    self.url += urlparts[a] + '=' + self.args.__dict__[a] + '&'
+                    self.url += a[1] + '=' + a[0] + '&'
 
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
+
+        self.release = release
+        self.download_dir = download_dir
+        self.target = target
+        self.list_resources = list_resources
+        self.suppress_prompts = suppress_prompts
 
     def round_size(self, size, length, unit):
         last_n = str(size)[-length]
@@ -47,7 +54,6 @@ class OpusGet:
         else:
             size = str(size) + ' KB'
         return(size)
-
 
     def get_response(self, url):
         response = urllib.request.urlopen(url[:-1])
@@ -83,17 +89,17 @@ class OpusGet:
     def make_file_name(self, c):
         filename = c['url'].replace('/', '_').replace(
             'https:__object.pouta.csc.fi_OPUS-', '')
-        if self.args.r == 'latest':
+        if self.release == 'latest':
             filename = filename.replace(
                 '_'+c['version']+'_', '_latest_')
-        return os.path.join(self.args.dl, filename)
+        return os.path.join(self.download_dir, filename)
 
     def get_corpora_data(self):
         file_n = 0
         total_size = 0
         data = self.get_response(self.url)
 
-        if self.args.t and self.args.t != ' ':
+        if self.target and self.target != ' ':
             corpora = self.remove_data_with_no_alignment(data)
         else:
             corpora = data['corpora']
@@ -102,7 +108,7 @@ class OpusGet:
         for c in corpora:
             filename = self.make_file_name(c)
             if os.path.isfile(filename):
-                if self.args.l:
+                if self.list_resources:
                     print('        {} already exists'.format(filename))
             else:
                 ret_corpora.append(c)
@@ -121,7 +127,7 @@ class OpusGet:
             self.filesize), end='', flush=True)
 
     def download(self, corpora, file_n, total_size):
-        if self.args.q == False:
+        if self.suppress_prompts == False:
             answer = input(('Downloading ' + str(file_n) + ' file(s) with the '
                 'total size of ' + total_size + '. Continue? (y/n) '))
         else:
@@ -152,7 +158,7 @@ class OpusGet:
             print('Unable to retrieve the data.')
             return
 
-        if not self.args.l:
+        if not self.list_resources:
             self.download(corpora, file_n, total_size)
         else:
             self.print_files(corpora, file_n, total_size)

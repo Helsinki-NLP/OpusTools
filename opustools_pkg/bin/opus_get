@@ -5,21 +5,18 @@ from opustools_pkg import OpusGet
 
 parser = argparse.ArgumentParser(prog='opus-get',
     description='Download files from OPUS')
-parser.add_argument('-s', '--source', dest='s', help='Source language',
-        required=True)
-parser.add_argument('-t', '--target', dest='t', help='Target language')
-parser.add_argument('-d', '--directory', dest='d', help='Corpus name')
-parser.add_argument('-r', '--release', dest='r', help='Release',
-        default='latest')
-parser.add_argument('-p', '--preprocess', dest='p',
-        help='Preprocess type', default='xml',
-        choices=['raw', 'xml', 'parsed'])
-parser.add_argument('-l', '--list', dest='l', help='List resources',
-        action='store_true')
-parser.add_argument('-dl', '--download_dir', dest='dl',
-    help='Set download directory (default=current directory)',
-    default='.')
-parser.add_argument('-q', '--supress_prompts', dest='q',
+parser.add_argument('-s', '--source', help='Source language', required=True)
+parser.add_argument('-t', '--target', help='Target language')
+parser.add_argument('-d', '--directory', help='Corpus name')
+parser.add_argument('-r', '--release', help='Release', default='latest')
+parser.add_argument('-p', '--preprocess',
+    help='Preprocess type', default='xml',
+    choices=['raw', 'xml', 'parsed'])
+parser.add_argument('-l', '--list_resources', help='List resources',
+    action='store_true')
+parser.add_argument('-dl', '--download_dir',
+    help='Set download directory (default=current directory)', default='.')
+parser.add_argument('-q', '--suppress_prompts',
     help='Download necessary files without prompting "(y/n)"',
     action='store_true')
 

@@ -127,16 +127,18 @@ class AlignmentParser:
                 except FileNotFoundError:
                     print('\nZip files are not found. The following '
                         'files are available for downloading:\n')
-                    arguments = ['-s', self.fromto[0], '-t',
-                        self.fromto[1], '-d', self.directory, '-r',
-                        self.release, '-p', self.preprocess,
-                        '-dl', self.download_dir, '-l']
-                    if self.suppress_prompts:
-                        arguments.append('-q')
-                    og = OpusGet(arguments)
+
+                    arguments = {'source': self.fromto[0],
+                        'target': self.fromto[1], 'directory': self.directory,
+                        'release': self.release, 'preprocess': self.preprocess,
+                        'download_dir': self.download_dir,
+                        'list_resources': True}
+                    og = OpusGet(**arguments)
                     og.get_files()
-                    arguments.remove('-l')
-                    og = OpusGet(arguments)
+                    arguments['list_resources'] = False
+                    if self.suppress_prompts:
+                        arguments['suppress_prompts'] = True
+                    og = OpusGet(**arguments)
                     og.get_files()
 
                     self.openZipFiles()
