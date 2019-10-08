@@ -133,21 +133,13 @@ In `your_script.py`, first import the package:
 
 `import opustools_pkg`
 
-If you want to give the arguments on command line, initialize `OpusRead` with an empty argument list:
+Initialize OpusRead:
 
 ```
-opus_reader = opustools_pkg.OpusRead([])
-opus_reader.printPairs()
-```
-
-and then run:
-
-`python3 your_script.py -d Books -s en -t fi`
-
-You can alternatively initialize `OpusRead` with arguments in a list:
-
-```
-opus_reader = opustools_pkg.OpusRead(["-d", "Books", "-s", "en", "-t", "fi"])
+opus_reader = opustools_pkg.OpusRead(
+    directory='Books',
+    source='en',
+    target='fi')
 opus_reader.printPairs()
 ```
 
@@ -253,26 +245,41 @@ All aboard the OPUS Express! Create test/dev/train sets from OPUS data.
 ### Usage
 
 ```
-usage: opus_cat [-h] -d D -l L [-i] [-m M] [-p] [-f F] [-r R] [-pa]
-                [-sa SA [SA ...]] [-ca CA]
+usage: opus_cat [-h] -d DIRECTORY -l LANGUAGE [-i] [-m MAXIMUM] [-p]
+                [-f FILE_NAME] [-r RELEASE] [-pa]
+                [-sa SET_ATTRIBUTE [SET_ATTRIBUTE ...]]
+                [-ca CHANGE_ANNOTATION_DELIMITER] [-rd path_to_dir]
+                [-dl DOWNLOAD_DIR]
 ```
 
 arguments:
 
 ```
--h, --help       show this help message and exit
--d D             Corpus name
--l L             Language
--i               Print without ids when using -p
--m M             Maximum number of sentences
--p               Print in plain txt
--f F             File name (if not given, prints all files)
--r R             Release (default=latest)
--pa              Print annotations, if they exist
--sa SA [SA ...]  Set sentence annotation attributes to be printed, e.g. -sa
-                 pos lem. To print all available attributes use -sa
-                 all_attrs (default=pos,lem)
--ca CA           Change annotation delimiter (default=|)
+-h, --help            show this help message and exit
+-d DIRECTORY, --directory DIRECTORY
+                      Corpus name
+-l LANGUAGE, --language LANGUAGE
+                      Language
+-i, --no_ids          Print without ids when using -p
+-m MAXIMUM, --maximum MAXIMUM
+                      Maximum number of sentences
+-p, --plain           Print in plain txt
+-f FILE_NAME, --file_name FILE_NAME
+                      File name (if not given, prints all files)
+-r RELEASE, --release RELEASE
+                      Release (default=latest)
+-pa, --print_annotations
+                      Print annotations, if they exist
+-sa SET_ATTRIBUTE [SET_ATTRIBUTE ...], --set_attribute SET_ATTRIBUTE [SET_ATTRIBUTE ...]
+                      Set sentence annotation attributes to be printed, e.g.
+                      -sa pos lem. To print all available attributes use -sa
+                      all_attrs (default=pos,lem)
+-ca CHANGE_ANNOTATION_DELIMITER, --change_annotation_delimiter CHANGE_ANNOTATION_DELIMITER
+                      Change annotation delimiter (default=|)
+-rd path_to_dir, --root_directory path_to_dir
+                      Change root directory (default=/proj/nlpl/data/OPUS)
+-dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
+                      Set download directory (default=current directory)
 ```
 
 
@@ -282,21 +289,10 @@ In `your_script.py`, first import the package:
 
 `import opustools_pkg`
 
-If you want to give the arguments on command line, initialize `OpusCat` with an empty argument list:
+Initialize OpusCat
 
 ```
-opus_cat = opustools_pkg.OpusCat([])
-opus_cat.printSentences()
-```
-
-and then run:
-
-`python3 your_script.py -d Books -s en`
-
-You can alternatively initialize `OpusCat` with arguments in a list:
-
-```
-opus_cat = opustools_pkg.OpusRead(["-d", "Books", "-l", "en"])
+opus_cat = opustools_pkg.OpusCat(directory='Books', language='en')
 opus_cat.printSentences()
 ```
 
@@ -313,24 +309,28 @@ Read a document from OPUS and print to STDOUT
 ## Usage
 
 ```
-opus-get [-h] -s S [-t T] [-d D] [-r R] [-p {raw,xml,parsed}] [-l]
-         [-dl DL] [-q]
+usage: opus-get [-h] -s SOURCE [-t TARGET] [-d DIRECTORY] [-r RELEASE]
+                [-p {raw,xml,parsed}] [-l] [-dl DOWNLOAD_DIR] [-q]
 ```
 
 arguments:
 
 ```
 -h, --help            show this help message and exit
--s S, --source S      Source language
--t T, --target T      Target language
--d D, --directory D   Corpus name
--r R, --release R     Release
+-s SOURCE, --source SOURCE
+                      Source language
+-t TARGET, --target TARGET
+                      Target language
+-d DIRECTORY, --directory DIRECTORY
+                      Corpus name
+-r RELEASE, --release RELEASE
+                      Release
 -p {raw,xml,parsed}, --preprocess {raw,xml,parsed}
                       Preprocess type
--l, --list            List resources
--dl DL, --download_dir DL
+-l, --list_resources  List resources
+-dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
                       Set download directory (default=current directory)
--q, --supress_prompts
+-q, --suppress_prompts
                       Download necessary files without prompting "(y/n)"
 ```
 
@@ -344,17 +344,21 @@ Download files from OPUS
 ## Usage
 
 ```
-opus_langid [-h] -f F [-t T] [-v] [-s]
+usage: opus_langid [-h] -f FILE_PATH [-t TARGET_FILE_PATH] [-v] [-s]
 ```
 
 arguments:
 
 ```
--h, --help  show this help message and exit
--f F        File path
--t T        Target file path. By default, the original file is edited
--v          Verbosity. -v: print current xml file
--s          Suppress error messages in language detection
+-h, --help            show this help message and exit
+-f FILE_PATH, --file_path FILE_PATH
+                      File path
+-t TARGET_FILE_PATH, --target_file_path TARGET_FILE_PATH
+                      Target file path. By default, the original file is
+                      edited
+-v, --verbosity       Verbosity. -v: print current xml file
+-s, --suppress_errors
+                      Suppress error messages in language detection
 ```
 
 
