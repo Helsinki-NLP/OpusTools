@@ -54,16 +54,12 @@ class OpusFilter:
         src_lan = fromto[0]
         tgt_lan = fromto[1]
 
-        opus_reader = OpusRead('-d {corpus_name} -s {src} -t {tgt} '
-            '-r {version} -p {preprocessing} -wm moses '
-            '-w {result_dir}/{src_filename} '
-            '{result_dir}/{tgt_filename} -ln'.format(
-                corpus_name=parameters['corpus_name'], src=src_lan,
-                tgt=tgt_lan, version=parameters['release'],
-                preprocessing=parameters['preprocessing'],
-                result_dir=self.output_dir,
-                src_filename=parameters['src_output'],
-                tgt_filename=parameters['tgt_output']).split())
+        opus_reader = OpusRead(directory=parameters['corpus_name'],
+            source=src_lan, target=tgt_lan, release=parameters['release'],
+            preprocess=parameters['preprocessing'], write_mode='moses',
+            write=[os.path.join(self.output_dir, parameters['src_output']),
+                os.path.join(self.output_dir, parameters['tgt_output'])],
+            leave_non_alignments_out=True)
 
         opus_reader.printPairs()
 

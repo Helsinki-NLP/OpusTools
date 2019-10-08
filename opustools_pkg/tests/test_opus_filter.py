@@ -85,7 +85,8 @@ class TestOpusFilter(unittest.TestCase):
                                 'tgt_threshold': 50.0,
                                 'diff_threshold': 10.0}}]}}]}
 
-        OpusGet('-d RF -s en -t sv -r latest -p xml -q'.split()).get_files()
+        OpusGet(directory='RF', source='en', target='sv', release='latest',
+            preprocess='xml', suppress_prompts=True).get_files()
         self.opus_filter = OpusFilter(self.configuration)
         self.opus_filter.execute_steps()
 
