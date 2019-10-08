@@ -1,8 +1,10 @@
 import os
 import zipfile
 import argparse
-import pycld2
 import cgi
+import tempfile
+
+import pycld2
 from langid.langid import LanguageIdentifier, model
 identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
 
@@ -91,57 +93,45 @@ class LanguageIdAdder(SentenceParser):
 
 class OpusLangid:
 
-    def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='opus_langid',
-            description= ('Add language ids to sentences in plain xml files '
-                        'or xml files in zip archives using pycld2 and '
-                        'langid.py'))
-        parser.add_argument('-f', help='File path', required=True)
-        parser.add_argument('-t',
-            help='Target file path. By default, the original file is edited')
-        parser.add_argument('-v', help='Verbosity. -v: print current xml file',
-            action='count', default=0)
-        parser.add_argument('-s',
-            help='Suppress error messages in language detection',
-            action='store_true')
+    def __init__(self, file_path=None, target_file_path=None, verbosity=0,
+            suppress_errors=False):
 
-        if len(arguments) == 0:
-            self.args = parser.parse_args()
-        else:
-            self.args = parser.parse_args(arguments)
+        self.file_path = file_path
+        self.target_file_path = target_file_path
+        self.verbosity = verbosity
+        self.suppress_errors = suppress_errors
 
     def processFiles(self):
         try:
-            tempname = (self.args.f.replace('/','_')+
-                    '_opus_langid_temp.temp.zip')
-            with zipfile.ZipFile(self.args.f, 'r') as zip_arc:
-                with zipfile.ZipFile(tempname, 'w') as new_arc:
+            tempname = tempfile.mkstemp()
+            with zipfile.ZipFile(self.file_path, 'r') as zip_arc:
+                with zipfile.ZipFile(tempname[1], 'w') as new_arc:
                     for filename in zip_arc.filelist:
-                        if self.args.v > 0:
+                        if self.verbosity > 0:
                             print(filename.filename)
                         with zip_arc.open(filename.filename) as infile:
                             if filename.filename[-4:] == '.xml':
-                                tempxml = (filename.filename.replace('/','_')+
-                                        '_opus_langid_temp.temp.xml')
-                                with open(tempxml, 'wb') as outfile:
-                                    sparser = LanguageIdAdder(self.args.s, True)
+                                tempxml = tempfile.mkstemp()
+                                with open(tempxml[1], 'wb') as outfile:
+                                    sparser = LanguageIdAdder(
+                                        self.suppress_errors, True)
                                     sparser.addIds(infile, outfile)
-                                new_arc.write(tempxml, filename.filename)
-                                os.remove(tempxml)
+                                new_arc.write(tempxml[1], filename.filename)
+                                os.remove(tempxml[1])
                             else:
                                 new_bytes = b''.join(infile.readlines())
                                 new_arc.writestr(filename, new_bytes)
         except zipfile.BadZipfile:
-            tempname = (self.args.f.replace('/','_')+
-                    '_opus_langid_temp.temp.xml')
-            sparser = LanguageIdAdder(self.args.s, False)
-            with open(self.args.f, 'r') as infile:
-                with open(tempname, 'w') as outfile:
+            tempname = tempfile.mkstemp()
+            sparser = LanguageIdAdder(self.suppress_errors, False)
+            with open(self.file_path, 'r') as infile:
+                with open(tempname[1], 'w') as outfile:
                     sparser.addIds(infile, outfile)
 
-        if self.args.t:
-            os.rename(tempname, self.args.t)
+        if self.target_file_path:
+            os.rename(tempname[1], self.target_file_path)
         else:
-            os.remove(self.args.f)
-            os.rename(tempname, self.args.f)
+            os.remove(self.file_path)
+            os.rename(tempname[1], self.file_path)
+
 

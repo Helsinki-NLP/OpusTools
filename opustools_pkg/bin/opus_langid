@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
+import argparse
+
 from opustools_pkg.opus_langid import OpusLangid
 
-#OpusLangid([]).addIds()
-OpusLangid([]).processFiles()
+parser = argparse.ArgumentParser(prog='opus_langid',
+    description= ('Add language ids to sentences in plain xml files '
+                'or xml files in zip archives using pycld2 and '
+                'langid.py'))
+parser.add_argument('-f', '--file_path', help='File path',
+    required=True)
+parser.add_argument('-t', '--target_file_path',
+    help='Target file path. By default, the original file is edited')
+parser.add_argument('-v', '--verbosity',
+    help='Verbosity. -v: print current xml file',
+    action='count', default=0)
+parser.add_argument('-s', '--suppress_errors',
+    help='Suppress error messages in language detection',
+    action='store_true')
+
+args = parser.parse_args()
+
+OpusLangid(**vars(args)).processFiles()

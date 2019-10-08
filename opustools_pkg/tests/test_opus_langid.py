@@ -2,6 +2,7 @@ import os
 import unittest
 import zipfile
 import shutil
+import tempfile
 
 from opustools_pkg.opus_langid import OpusLangid
 
@@ -9,9 +10,9 @@ class TestOpusLangid(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        os.mkdir('test_files')
-        
-        with open('test_files/xml_fi.xml', 'w') as f:
+        self.tempdir = tempfile.mkdtemp()
+
+        with open(os.path.join(self.tempdir, 'xml_fi.xml'), 'w') as f:
             f.write('<?xml version="1.0" encoding="utf-8"?>\n<text>\n '
             '<head>\n  <meta> The Hound of the Baskervilles \n by Sir '
             'Arthur Conan Doyle \n Aligned by: András Farkas (fully '
@@ -25,7 +26,7 @@ class TestOpusLangid(unittest.TestCase):
             '<w id="w3.5">LUKU</w>\n <w id="w3.6">.</w>\n</s>\n '
             '</body>\n</text>\n')
 
-        with open('test_files/raw_fi.xml', 'w') as f:
+        with open(os.path.join(self.tempdir, 'raw_fi.xml'), 'w') as f:
             f.write('<?xml version="1.0" encoding="UTF-8"?>\n\n<text>\n '
             '<head>\n  <meta> The Hound of the Baskervilles \n by Sir '
             'Arthur Conan Doyle \n Aligned by: András Farkas '
@@ -52,7 +53,7 @@ class TestOpusLangid(unittest.TestCase):
             'vanhat perhelääkärit -- se näytti arvokkaalta, vakavalta '
             'ja luottamusta herättävältä.</s>\n  </p>\n </body>\n</text>\n')
 
-        with open('test_files/osrawfi.xml', 'w') as f:
+        with open(os.path.join(self.tempdir, 'osrawfi.xml'), 'w') as f:
             f.write('<?xml version="1.0" encoding="utf-8"?>\n<document '
             'id="5763965">\n  <s id="1">\n    <time id="T1S" '
             'value="00:01:48,446" />\nHitto, tämä vuotaa.\n    '
@@ -84,31 +85,34 @@ class TestOpusLangid(unittest.TestCase):
             '<HD>1</HD>\n      <cds>1/1</cds>\n      <year>2003</year>\n    '
             '</source>\n  </meta>\n</document>\n')
 
-        with zipfile.ZipFile('test_files/xml_fi.zip', 'w') as xmlzip:
-            xmlzip.write('test_files/xml_fi.xml') 
+        with zipfile.ZipFile(os.path.join(self.tempdir, 'xml_fi.zip'),
+                'w') as xmlzip:
+            xmlzip.write(os.path.join(self.tempdir, 'xml_fi.xml'))
 
-        with zipfile.ZipFile('test_files/raw_fi.zip', 'w') as xmlzip:
-            xmlzip.write('test_files/raw_fi.xml') 
+        with zipfile.ZipFile(os.path.join(self.tempdir, 'raw_fi.zip'),
+                'w') as xmlzip:
+            xmlzip.write(os.path.join(self.tempdir, 'raw_fi.xml'))
 
-        with zipfile.ZipFile('test_files/osrawfi.zip', 'w') as xmlzip:
-            xmlzip.write('test_files/osrawfi.xml') 
+        with zipfile.ZipFile(os.path.join(self.tempdir, 'osrawfi.zip'),
+                'w') as xmlzip:
+            xmlzip.write(os.path.join(self.tempdir, 'osrawfi.xml'))
 
     @classmethod
     def tearDownClass(self):
-        shutil.rmtree('test_files')
+        shutil.rmtree(self.tempdir)
 
     def run_opuslangid_and_assertEqual(self, source, target, lines, iszip,
             correct_line):
-        source = 'test_files/'+source
+        source = os.path.join(self.tempdir, source)
         if target != None:
-            target = 'test_files/'+target
-            command = '-f {0} -t {1}'.format(source, target)
+            target = os.path.join(self.tempdir, target)
+            arguments = {'file_path': source, 'target_file_path': target}
             result = target
         else:
-            command = '-f ' + source
+            arguments = {'file_path': source}
             result = source
 
-        langids = OpusLangid(command.split())
+        langids = OpusLangid(**arguments)
         langids.processFiles()
 
         if iszip:
