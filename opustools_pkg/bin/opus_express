@@ -9,13 +9,15 @@ from opustools_pkg import OpusRead
 from random import Random
 from xml.parsers.expat import ExpatError
 
-all_collections = [
-  'ada83', 'Bianet', 'bible-uedin', 'Books', 'CAPES', 'DGT', 'DOGC', 'ECB', 'EhuHac', 'Elhuyar', 'EMEA', 'EUbookshop', 'EUconst',
-  'Europarl', 'Finlex', 'fiskmo', 'giga-fren', 'GlobalVoices', 'GNOME', 'hrenWaC', 'JRC-Acquis', 'KDE4', 'KDEdoc', 'MBS', 'memat',
-  'MontenegrinSubs', 'MPC1', 'MultiUN', 'News-Commentary', 'OfisPublik', 'OpenOffice', 'OpenSubtitles', 'ParaCrawl', 'PHP', 'QED',
-  'RF', 'sardware', 'SciELO', 'SETIMES', 'SPC', 'Tanzil', 'Tatoeba', 'TED2013', 'TedTalks', 'TEP', 'TildeMODEL', 'Ubuntu', 'UN',
-  'UNPC', 'wikimedia', 'Wikipedia', 'WikiSource', 'WMT-News', 'XhosaNavy'
-]
+all_collections = ['Bianet', 'Books', 'CAPES', 'DGT', 'DOGC', 'ECB', 'EMEA',
+  'EUbookshop', 'EUconst', 'EhuHac', 'Elhuyar', 'Europarl', 'Finlex', 'GNOME',
+  'GlobalVoices', 'JRC-Acquis', 'JW300', 'KDE4', 'KDEdoc', 'MBS', 'MPC1',
+  'MontenegrinSubs', 'MultiUN', 'News-Commentary', 'OfisPublik', 'OpenOffice',
+  'OpenSubtitles', 'PHP', 'ParaCrawl', 'QED', 'RF', 'SETIMES', 'SPC', 'SciELO',
+  'TED2013', 'TEP', 'Tanzil', 'Tatoeba', 'TedTalks', 'TildeMODEL', 'UN',
+  'UNPC', 'Ubuntu', 'WMT-News', 'WikiSource', 'Wikipedia', 'XhosaNavy',
+  'ada83', 'bible-uedin', 'fiskmo', 'giga-fren', 'hrenWaC', 'memat',
+  'sardware', 'wikimedia']
 
 collection_choices = ['ALL'] + all_collections
 
