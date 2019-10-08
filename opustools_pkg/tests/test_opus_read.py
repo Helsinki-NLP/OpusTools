@@ -2550,19 +2550,18 @@ class TestOpusCat(unittest.TestCase):
             shutil.rmtree(self.tempdir1)
             shutil.rmtree(self.root_directory)
 
-    def printSentencesToVariable(self, arguments):
+    def printSentencesToVariable(self, **kwargs):
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
-        oprinter = OpusCat(arguments)
+        oprinter = OpusCat(**kwargs)
         oprinter.printSentences()
         sys.stdout = old_stdout
         return printout.getvalue()
 
     def test_printing_sentences(self):
-        var  = self.printSentencesToVariable(
-            '-d RF -l en -p -rd {rootdir}'.format(
-                rootdir=self.root_directory).split())
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            plain=True, root_directory=self.root_directory)
         self.assertEqual(var[-183:],
             """("s72.1")>It is the Government 's resposibility and ai"""
             """m to put to use all good initiatives , to work for bro"""
@@ -2570,25 +2569,24 @@ class TestOpusCat(unittest.TestCase):
             """f the whole nation .\n""")
 
     def test_printing_sentences_with_limit(self):
-        var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -p -rd {rootdir}'.format(
-                rootdir=self.root_directory).split())
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            maximum='1', plain=True, root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN'
             ' AFFAIRS Press Section Check against delivery\n')
 
     def test_printing_sentences_without_ids(self):
-        var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -i -p -rd {rootdir}'.format(
-                rootdir=self.root_directory).split())
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            maximum='1', no_ids=True, plain=True,
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY FOR FOREIGN'
             ' AFFAIRS Press Section Check against delivery\n')
 
     def test_print_annotations(self):
-        var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -i -p -pa -rd {rootdir}'.format(
-                rootdir=self.root_directory).split())
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            maximum='1', no_ids=True, plain=True, print_annotations=True,
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY|NNP|ministry FOR|NNP'
             '|for FOREIGN|NNP|FOREIGN AFFAIRS|NNP Press|NNP|Press Sec'
@@ -2596,9 +2594,9 @@ class TestOpusCat(unittest.TestCase):
             'very|NN|delivery\n')
 
     def test_print_annotations_all_attributes(self):
-        var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -i -p -pa -sa all_attrs -rd {rootdir}'.format(
-                rootdir=self.root_directory).split())
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            maximum='1', no_ids=True, plain=True, print_annotations=True,
+            set_attribute=['all_attrs'], root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY|null|0|NN|w1.1.1|mini'
             'stry|NNP|NN FOR|prep|1|IN|w1.1.2|for|NNP|IN FOREIGN|nn|7'
@@ -2609,22 +2607,22 @@ class TestOpusCat(unittest.TestCase):
             'N|w1.1.9|delivery|NN|NN\n')
 
     def test_print_xml(self):
-        var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -rd {rootdir}'.format(
-                rootdir=self.root_directory).split())
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            maximum='1', root_directory=self.root_directory)
         self.assertEqual(var[-38:],
             '<w id="w2.10">1996</w>\n</p><p id="3">\n')
 
     def test_printing_specific_file(self):
-        var = self.printSentencesToVariable(
-            '-d RF -l en -m 1 -i -p -f RF/xml/en/1988.xml '
-            '-rd {rootdir}'.format(rootdir=self.root_directory).split())
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            maximum=1, no_ids=True, plain=True, file_name='RF/xml/en/1988.xml',
+            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1988.xml\n\nStatement of Government Policy'
             ' by the Prime Minister , Mr Ingvar Carlsson , at the Open'
             'ing of the Swedish Parliament on Tuesday , 4 October , 1'
             '988 .\n')
 
+    '''
     def test_empty_argument_list(self):
         temp_args = sys.argv.copy()
         sys.argv = [temp_args[0]] + '-d RF -l en -m 1 -p -rd {rootdir}'.format(
@@ -2634,13 +2632,13 @@ class TestOpusCat(unittest.TestCase):
             '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN '
             'AFFAIRS Press Section Check against delivery\n')
         sys.argv = temp_args.copy()
+    '''
 
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y']
-        var = self.printSentencesToVariable(
-            '-d RFOSIAJ -l en -m 1 -p -rd {rootdir}'.format(
-                rootdir=self.root_directory).split())
+        var = self.printSentencesToVariable(directory='RFOSIAJ', language='en',
+            maximum='1', plain=True, root_directory=self.root_directory)
 
         self.assertEqual(var[-28:],
             '\nNecessary files not found.\n')
@@ -2652,15 +2650,16 @@ class TestOpusCat(unittest.TestCase):
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
-        OpusCat.openFiles(OpusCat('-d RF -l en -dl {tempdir}'.format(
-            tempdir=self.tempdir1).split()),
+        OpusCat.openFiles(
+            OpusCat(directory='RF', language='en', download_dir=self.tempdir1),
             os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'), '')
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
-        OpusCat.openFiles(OpusCat('-d RF -l en -dl {tempdir}'.format(
-            tempdir=self.tempdir1).split()),
+        OpusCat.openFiles(
+            OpusCat(directory='RF', language='en', download_dir=self.tempdir1),
             os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'), '')
         sys.stdout = old_stdout
-        self.assertTrue('No file found with parameters' in printout.getvalue())
+        print(printout.getvalue())
+        self.assertTrue('No file found' in printout.getvalue())
 
 class TestOpusGet(unittest.TestCase):
 

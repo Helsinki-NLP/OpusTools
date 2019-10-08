@@ -1,4 +1,42 @@
 #!/usr/bin/env python3
+import argparse
+
 from opustools_pkg import OpusCat
 
-OpusCat([]).printSentences()
+parser = argparse.ArgumentParser(prog='opus_cat',
+    description='Read a document from OPUS and print to STDOUT')
+
+parser.add_argument('-d', '--directory', help='Corpus name',
+    required=True)
+parser.add_argument('-l', '--language', help='Language', required=True)
+parser.add_argument('-i', '--no_ids',
+    help='Print without ids when using -p', action='store_true')
+parser.add_argument('-m', '--maximum',
+    help='Maximum number of sentences', default='all')
+parser.add_argument('-p', '--plain', help='Print in plain txt',
+    action='store_true')
+parser.add_argument('-f', '--file_name',
+    help='File name (if not given, prints all files)')
+parser.add_argument('-r', '--release', help='Release (default=latest)',
+    default='latest')
+parser.add_argument('-pa', '--print_annotations',
+    help='Print annotations, if they exist', action='store_true')
+parser.add_argument('-sa', '--set_attribute',
+    help='Set sentence annotation attributes to be printed'
+        ', e.g. -sa pos lem. To print all available attributes '
+        'use -sa all_attrs (default=pos,lem)',
+    nargs='+', default=['pos', 'lem'])
+parser.add_argument('-ca', '--change_annotation_delimiter',
+    help='Change annotation delimiter (default=|)',
+    default='|')
+parser.add_argument('-rd', '--root_directory',
+    help='Change root directory (default=/proj/nlpl/data/OPUS)',
+    metavar='path_to_dir',
+    default='/proj/nlpl/data/OPUS')
+parser.add_argument('-dl', '--download_dir',
+    help='Set download directory (default=current directory)',
+    default='.')
+
+args = parser.parse_args()
+
+OpusCat(**vars(args)).printSentences()

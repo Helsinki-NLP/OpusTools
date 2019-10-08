@@ -7,12 +7,13 @@ from .parse.sentence_parser import SentenceParser
 
 class SentenceParser(SentenceParser):
 
-    def __init__(self, document, args):
-        super().__init__(document, '', '', '', '', args.pa, args.sa, args.ca,
-            False)
-        self.args = args
+    def __init__(self, document, print_annotations, set_attribute,
+            change_annotation_delimiter, no_ids):
+        super().__init__(document, '', '', '', '', print_annotations,
+            set_attribute, change_annotation_delimiter, False)
 
         self.stopit = False
+        self.no_ids = no_ids
 
         self.parser.StartElementHandler = self.start_element_opuscat
         self.parser.EndElementHandler = self.end_element_opuscat
@@ -56,63 +57,40 @@ class SentenceParser(SentenceParser):
         if sentence == '':
             return ''
 
-        if self.args.i:
+        if self.no_ids:
             return sentence
         else:
             return '("' + self.sid + '")>' + sentence
 
 class OpusCat:
 
-    def __init__(self, arguments):
-        parser = argparse.ArgumentParser(prog='opus_cat',
-            description='Read a document from OPUS and print to STDOUT')
+    def __init__(self, directory=None, language=None, no_ids=False,
+            maximum='all', plain=False, file_name=None, release='latest',
+            print_annotations=False, set_attribute=['pos', 'lem'],
+            change_annotation_delimiter='|',
+            root_directory='/proj/nlpl/data/OPUS', download_dir='.' ):
 
-        parser.add_argument('-d', help='Corpus name', required=True)
-        parser.add_argument('-l', help='Language', required=True)
-        parser.add_argument('-i', help='Print without ids when using -p',
-            action='store_true')
-        parser.add_argument('-m', help='Maximum number of sentences',
-            default='all')
-        parser.add_argument('-p', help='Print in plain txt',
-            action='store_true')
-        parser.add_argument('-f',
-            help='File name (if not given, prints all files)')
-        parser.add_argument('-r', help='Release (default=latest)',
-            default='latest')
-        parser.add_argument('-pa', help='Print annotations, if they exist',
-            action='store_true')
-        parser.add_argument('-sa',
-            help='Set sentence annotation attributes to be printed'
-                ', e.g. -sa pos lem. To print all available attributes '
-                'use -sa all_attrs (default=pos,lem)',
-            nargs='+',
-            default=['pos', 'lem'])
-        parser.add_argument('-ca',
-            help='Change annotation delimiter (default=|)',
-            default='|')
-        parser.add_argument('-rd',
-            help='Change root directory (default=/proj/nlpl/data/OPUS/)',
-            metavar='path_to_dir',
-            default='/proj/nlpl/data/OPUS/')
-        parser.add_argument('-dl',
-            help='Set download directory (default=current directory)',
-            default='.')
-
-        if len(arguments) == 0:
-            self.args = parser.parse_args()
-        else:
-            self.args = parser.parse_args(arguments)
-
-        self.openFiles(
-            os.path.join(self.args.dl, self.args.d+'_'+self.args.r+'_xml_'+
-                self.args.l+'.zip'),
-            os.path.join(self.args.rd, self.args.d, 'latest', 'xml',
-                self.args.l+'.zip'))
-
-        if self.args.m == 'all':
+        if maximum == 'all':
             self.maximum = -2
         else:
-            self.maximum = int(self.args.m)
+            self.maximum = int(maximum)
+
+        self.directory = directory
+        self.language = language
+        self.release = release
+        self.download_dir = download_dir
+        self.print_annotations = print_annotations
+        self.set_attribute = set_attribute
+        self.change_annotation_delimiter = change_annotation_delimiter
+        self.no_ids = no_ids
+        self.file_name = file_name
+        self.plain = plain
+
+        self.openFiles(
+            os.path.join(download_dir, directory+'_'+release+'_xml_'+
+                language+'.zip'),
+            os.path.join(root_directory, directory, 'latest', 'xml',
+                language+'.zip'))
 
     def openFiles(self, localfile, defaultpath):
         try:
@@ -123,22 +101,28 @@ class OpusCat:
         except FileNotFoundError:
             print('\nRequested file not found. The following files are '
                 'availble for downloading:\n')
-            arguments = ['-d', self.args.d, '-s', self.args.l, '-t', ' ',
-                '-p', 'xml', '-l', '-r', self.args.r, '-dl', self.args.dl]
-            og = OpusGet(arguments)
+            arguments = ['-d', self.directory, '-s', self.language, '-t', ' ',
+                '-p', 'xml', '-l', '-r', self.release, '-dl',
+                self.download_dir]
+            arguments={'directory': self.directory, 'source': self.language,
+                'target': ' ', 'preprocess': 'xml', 'list_resources': True,
+                'release': self.release, 'download_dir': self.download_dir}
+            og = OpusGet(**arguments)
             og.get_files()
-            arguments.remove('-l')
-            og = OpusGet(arguments)
+            arguments['list_resources'] = False
+            og = OpusGet(**arguments)
             og.get_files()
             try:
                 self.lzip = zipfile.ZipFile(localfile)
             except FileNotFoundError:
-                print('No file found with parameters '+str(self.args.__dict__))
+                print('No file found')
 
     def printFile(self, f, n):
         xml_break = False
-        if self.args.p:
-            spar = SentenceParser(f, self.args)
+        if self.plain:
+            spar = SentenceParser(f, self.print_annotations,
+                self.set_attribute, self.change_annotation_delimiter,
+                self.no_ids)
             print('\n# '+n+'\n')
             while True:
                 sent = spar.readSentence()
@@ -161,9 +145,9 @@ class OpusCat:
 
     def printSentences(self):
         try:
-            if self.args.f:
-                with self.lzip.open(self.args.f, 'r') as f:
-                    self.printFile(f, self.args.f)
+            if self.file_name:
+                with self.lzip.open(self.file_name, 'r') as f:
+                    self.printFile(f, self.file_name)
             else:
                 for n in self.lzip.namelist():
                     if n[-4:] == '.xml':
