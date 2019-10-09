@@ -142,7 +142,7 @@ class SentenceParser:
             sentences = (sentences + '\n(' + self.direction + ')="' +
                 str(sid) + '">' + sentence)
         elif self.wmode == 'tmx':
-            sentences = sentences + ' ' + html.escape(sentence)
+            sentences = sentences + ' ' + html.escape(sentence, quote=False)
             sentences = sentences.replace('<seg> ', '<seg>')
         elif self.wmode == 'moses':
             sentences = sentences + ' ' + sentence

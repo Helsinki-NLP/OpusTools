@@ -72,7 +72,7 @@ class TestOpusRead(unittest.TestCase):
                 'meta></head><body>\n<s cld2="en" cld2conf="0.97" id="s1" '
                 'langid="en" langidconf="0.99">\n <chunk id="c1-1" type="NP'
                 '">\n  <w hun="NN" id="w1.1" lem="source" pos="NN" tree="NN'
-                '">Source&amp;&lt;&gt;</w>\n </chunk>\n <w hun=":" '
+                '">Source&amp;&lt;&gt;"\'</w>\n </chunk>\n <w hun=":" '
                 'id="w1.2" lem=":" pos'
                 '=":" tree=":">:</w>\n <chunk id="c1-3" type="NP">\n  <w '
                 'hun="NNP" id="w1.3" pos="NNP" tree="NN">manybooks.'
@@ -2177,7 +2177,7 @@ class TestOpusRead(unittest.TestCase):
             '\n# en/1996.xml.gz'
             '\n# sv/1996.xml.gz'
             '\n\n================================'
-            '\n(src)="s1">Source&<> : manybooks.netAudiobook available here'
+            '\n(src)="s1">Source&<>"\' : manybooks.netAudiobook available here'
             '\n(trg)="s1">Source : Project Gutenberg'
             '\n================================\n')
 
@@ -2192,7 +2192,7 @@ class TestOpusRead(unittest.TestCase):
             '\n# sv/1996.xml.gz'
             '\n\n================================'
             '\n(src)="s1">Source : Project Gutenberg'
-            '\n(trg)="s1">Source&<> : manybooks.netAudiobook available here'
+            '\n(trg)="s1">Source&<>"\' : manybooks.netAudiobook available here'
             '\n================================\n')
 
     def test_source_zip_given_and_target_automatic(self):
@@ -2519,11 +2519,11 @@ class TestOpusRead(unittest.TestCase):
             '========================\n')
 
     def test_addSentence_escapes_characters_when_write_mode_tmx(self):
-        sentence = self.opr.par.sPar.addSentence('', ' &<>', '1')
-        self.assertEqual(sentence, '\n(src)="1"> &<>')
+        sentence = self.opr.par.sPar.addSentence('', ' &<>"\'', '1')
+        self.assertEqual(sentence, '\n(src)="1"> &<>"\'')
         self.opr.par.sPar.wmode='tmx'
-        sentence = self.opr.par.sPar.addSentence('', '&<>', '')
-        self.assertEqual(sentence, ' &amp;&lt;&gt;')
+        sentence = self.opr.par.sPar.addSentence('', '&<>"\'', '')
+        self.assertEqual(sentence, ' &amp;&lt;&gt;"\'')
 
     def test_escape_characters_when_write_mode_tmx(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -2535,7 +2535,7 @@ class TestOpusRead(unittest.TestCase):
             '\n<tmx version="1.4.">\n<header srclang="en"'
             '\n\tadminlang="en"\n\tsegtype="sentence"'
             '\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-            '\n\t\t\t<tuv xml:lang="en"><seg>Source&amp;&lt;&gt; : '
+            '\n\t\t\t<tuv xml:lang="en"><seg>Source&amp;&lt;&gt;"\' : '
             'manybooks.netAudiobook available here</seg></tuv>'
             '\n\t\t\t<tuv xml:lang="sv"><seg>Source : Project Gutenberg</seg>'
             '</tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
