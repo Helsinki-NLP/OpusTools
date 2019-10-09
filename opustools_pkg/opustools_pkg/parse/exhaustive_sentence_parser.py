@@ -2,9 +2,9 @@ from .sentence_parser import SentenceParser
 
 class ExhaustiveSentenceParser(SentenceParser):
 
-    def __init__(self, document, preprocessing, direction, wmode, 
+    def __init__(self, document, preprocessing, direction, wmode,
             language, annotations, anno_attrs, delimiter, preserve):
-        super().__init__(document, direction, preprocessing, wmode, 
+        super().__init__(document, direction, preprocessing, wmode,
             language, annotations, anno_attrs, delimiter, preserve)
         self.sentences = {}
         self.done = False

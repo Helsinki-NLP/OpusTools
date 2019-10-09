@@ -1,4 +1,5 @@
 import xml.parsers.expat
+import html
 
 class SentenceParser:
 
@@ -140,9 +141,11 @@ class SentenceParser:
         if self.wmode == 'normal':
             sentences = (sentences + '\n(' + self.direction + ')="' +
                 str(sid) + '">' + sentence)
-        elif self.wmode == 'moses' or self.wmode == 'tmx':
-            sentences = sentences + ' ' + sentence
+        elif self.wmode == 'tmx':
+            sentences = sentences + ' ' + html.escape(sentence)
             sentences = sentences.replace('<seg> ', '<seg>')
+        elif self.wmode == 'moses':
+            sentences = sentences + ' ' + sentence
         return sentences
 
     def addTuEnding(self, sentences):
