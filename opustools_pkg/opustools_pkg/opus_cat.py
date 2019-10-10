@@ -65,16 +65,12 @@ class SentenceParser(SentenceParser):
 class OpusCat:
 
     def __init__(self, directory=None, language=None, no_ids=False,
-            maximum='all', plain=False, file_name=None, release='latest',
+            maximum=-2, plain=False, file_name=None, release='latest',
             print_annotations=False, set_attribute=['pos', 'lem'],
             change_annotation_delimiter='|',
             root_directory='/proj/nlpl/data/OPUS', download_dir='.' ):
 
-        if maximum == 'all':
-            self.maximum = -2
-        else:
-            self.maximum = int(maximum)
-
+        self.maximum = maximum
         self.directory = directory
         self.language = language
         self.release = release

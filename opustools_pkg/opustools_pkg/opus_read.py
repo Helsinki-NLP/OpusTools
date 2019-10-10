@@ -10,7 +10,7 @@ from .opus_get import OpusGet
 class OpusRead:
 
     def __init__(self, directory=None, source=None, target=None,
-            release='latest', preprocess='xml', maximum='all', src_range='all',
+            release='latest', preprocess='xml', maximum=-1, src_range='all',
             tgt_range='all', attribute='any', threshold=None,
             leave_non_alignments_out=False, write=None, write_mode='normal',
             print_file_names=False, fast=False,
@@ -254,20 +254,19 @@ class OpusRead:
             self.resultfile.close()
 
     def readAlignment(self, align):
-        if self.maximum == 'all':
+        if self.maximum == -1:
             for line in align:
                 lastline = self.outputPair(self.par, line)[1]
                 self.addLinkGrpEnding(line)
         else:
-            pairs = int(self.maximum)
             while True:
                 line = align.readline()
                 if len(line) == 0:
                     break
                 link, lastline = self.outputPair(self.par, line)
                 self.addLinkGrpEnding(line)
-                pairs -= link
-                if pairs == 0:
+                self.maximum -= link
+                if self.maximum == 0:
                     break
         return lastline
 

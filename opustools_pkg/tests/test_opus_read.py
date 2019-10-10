@@ -243,7 +243,7 @@ class TestOpusRead(unittest.TestCase):
         self.opr.par.attribute = 'any'
         #self.opr.par.nonAlignments = self.opr.par.leave_non_alignments_out
         self.opr.par.nonAlignments = False
-        self.opr.par.maximum = 'all'
+        self.opr.par.maximum = -1
         self.opr.par.alignParser = xml.parsers.expat.ParserCreate()
         self.opr.par.alignParser.StartElementHandler = \
             self.opr.par.start_element
@@ -261,7 +261,7 @@ class TestOpusRead(unittest.TestCase):
         self.fastopr.par.attribute = 'any'
         self.fastopr.par.nonAlignments = False
             #self.fastopr.par.leave_non_alignments_out
-        self.fastopr.par.maximum = 'all'
+        self.fastopr.par.maximum = -1
         self.fastopr.par.alignParser = xml.parsers.expat.ParserCreate()
         self.fastopr.par.alignParser.StartElementHandler = \
             self.fastopr.par.start_element
@@ -2073,7 +2073,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_nonalphabetical_lang_order(self):
         var = pairPrinterToVariable(directory='RF', source='sv', target='en',
-            release='v1', maximum='1', trg_cld2=['un', '0'],
+            release='v1', maximum=1, trg_cld2=['un', '0'],
             src_cld2=['fi', '0.97'], trg_langid=['en', '0.17'],
             src_langid=['fi', '1'],
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
@@ -2088,7 +2088,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_nonalphabetical_lang_order_fast(self):
         var = pairPrinterToVariable(directory='RF', source='sv', target='en',
-            release='v1', maximum='1', trg_cld2=['un', '0'],
+            release='v1', maximum=1, trg_cld2=['un', '0'],
             src_cld2=['fi', '0.97'], trg_langid=['en', '0.17'],
             src_langid=['fi', '1'], fast=True,
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
@@ -2103,7 +2103,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_no_matches_found(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum='1', src_cld2=['fi', '2'],
+            release='v1', maximum=1, src_cld2=['fi', '2'],
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             download_dir=self.tempdir1)
         self.assertEqual(var,
@@ -2113,7 +2113,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_no_matches_found_fast(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum='1', src_cld2=['fi', '2'], fast=True,
+            release='v1', maximum=1, src_cld2=['fi', '2'], fast=True,
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             download_dir=self.tempdir1)
         self.assertEqual(var,
@@ -2123,7 +2123,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_src_cld2_print_links(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum='1', src_cld2=['en', '0.98'],
+            release='v1', maximum=1, src_cld2=['en', '0.98'],
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             write_mode='links', download_dir=self.tempdir1)
         self.assertEqual(var,
@@ -2136,7 +2136,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_print_links(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum='1', src_cld2=['un', '0'],
+            release='v1', maximum=1, src_cld2=['un', '0'],
             trg_cld2=['fi', '0.97'], src_langid=['en', '0.17'],
             trg_langid=['fi', '1'],
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
@@ -2151,7 +2151,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_filtering_by_lang_labels_write_links(self):
         OpusRead(directory='RF', source='en', target='sv',
-            release='v1', maximum='1', src_cld2=['un', '0'],
+            release='v1', maximum=1, src_cld2=['un', '0'],
             trg_cld2=['fi', '0.97'], src_langid=['en', '0.17'],
             trg_langid=['fi', '1'],
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
@@ -2169,7 +2169,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_use_given_zip_files(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum='1', source_zip=os.path.join(self.tempdir1, 'en.zip'),
+            maximum=1, source_zip=os.path.join(self.tempdir1, 'en.zip'),
             target_zip=os.path.join(self.tempdir1, 'sv.zip'),
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             root_directory=self.root_directory)
@@ -2183,7 +2183,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_use_given_zip_files_unalphabetical(self):
         var = pairPrinterToVariable(directory='RF', target='en', source='sv',
-            maximum='1', target_zip=os.path.join(self.tempdir1, 'en.zip'),
+            maximum=1, target_zip=os.path.join(self.tempdir1, 'en.zip'),
             source_zip=os.path.join(self.tempdir1, 'sv.zip'),
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             root_directory=self.root_directory)
@@ -2319,12 +2319,12 @@ class TestOpusRead(unittest.TestCase):
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum='1',
+            maximum=1,
             alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'))
         self.assertEqual(var[-18:], '128 KB Total size\n')
 
     def test_alignment_file_not_found_no_prompt(self):
-        opr = OpusRead(directory='RF', source='en', target='sv', maximum='1',
+        opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
             alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'),
             suppress_prompts=True, download_dir=self.tempdir1,
             root_directory=self.root_directory)
@@ -2342,7 +2342,7 @@ class TestOpusRead(unittest.TestCase):
     @mock.patch('opustools_pkg.opus_get.input', create=True)
     def test_zip_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y']
-        opr = OpusRead(directory='RF', source='en', target='sv', maximum='1',
+        opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
             download_dir=self.tempdir1, root_directory=self.root_directory)
         opr.par.source = ''
 
@@ -2367,7 +2367,7 @@ class TestOpusRead(unittest.TestCase):
         self.assertFalse(self.opr.par.testConfidence('', [], ''))
 
     def test_id_file_printing(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
             attribute='certainty', threshold='1',
             write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
             root_directory=self.root_directory).printPairs()
@@ -2377,7 +2377,7 @@ class TestOpusRead(unittest.TestCase):
                 '.xml.gz\ts3.2\ts3.2\t1.14214\n')
 
     def test_id_file_printing_unalphabetical(self):
-        OpusRead(directory='RF', source='sv', target='en', maximum='1',
+        OpusRead(directory='RF', source='sv', target='en', maximum=1,
             src_range='1', tgt_range='2', attribute='certainty',
             threshold='0.1',
             write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
@@ -2388,7 +2388,7 @@ class TestOpusRead(unittest.TestCase):
                 '.xml.gz\ts4.4\ts4.4 s4.5\t0.188136\n')
 
     def test_id_file_printing_with_no_attribute(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
             write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(
@@ -2397,7 +2397,7 @@ class TestOpusRead(unittest.TestCase):
                 '.xml.gz\ts1.1\ts1.1\tNone\n')
 
     def test_id_file_printing_with_attribute_no_threshold(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
             attribute='certainty',
             write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
             root_directory=self.root_directory).printPairs()
@@ -2407,7 +2407,7 @@ class TestOpusRead(unittest.TestCase):
                 '.xml.gz\ts1.1\ts1.1\t-0.0636364\n')
 
     def test_id_file_printing_with_invalid_attribute(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
             attribute='asfg',
             write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
             root_directory=self.root_directory).printPairs()
@@ -2417,7 +2417,7 @@ class TestOpusRead(unittest.TestCase):
                 '.xml.gz\ts1.1\ts1.1\tNone\n')
 
     def test_id_file_printing_with_only_threshold(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum='1',
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
             threshold='0',
             write_ids=os.path.join(self.tempdir1, 'test_files', 'test.id'),
             root_directory=self.root_directory).printPairs()
@@ -2470,7 +2470,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_writing_time_tags_xml(self):
         var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
-            target='tl', maximum='1', preserve_inline_tags=True,
+            target='tl', maximum=1, preserve_inline_tags=True,
             root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# eo/2009/1187043/6483790.xml.gz\n'
@@ -2482,7 +2482,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_writing_time_tags_xml_fast(self):
         var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
-            target='tl', maximum='1', preserve_inline_tags=True, fast=True,
+            target='tl', maximum=1, preserve_inline_tags=True, fast=True,
             root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# eo/2009/1187043/6483790.xml.gz\n'
@@ -2494,7 +2494,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_writing_time_tags_raw(self):
         var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
-            target='tl', maximum='1', preserve_inline_tags=True,
+            target='tl', maximum=1, preserve_inline_tags=True,
             preprocess='raw',
             root_directory=self.root_directory)
         self.assertEqual(var,
@@ -2507,7 +2507,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_writing_time_tags_raw_fast(self):
         var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
-            target='tl', maximum='1', preserve_inline_tags=True,
+            target='tl', maximum=1, preserve_inline_tags=True,
             preprocess='raw',
             fast=True, root_directory=self.root_directory)
         self.assertEqual(var,
@@ -2595,14 +2595,14 @@ class TestOpusCat(unittest.TestCase):
 
     def test_printing_sentences_with_limit(self):
         var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum='1', plain=True, root_directory=self.root_directory)
+            maximum=1, plain=True, root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN'
             ' AFFAIRS Press Section Check against delivery\n')
 
     def test_printing_sentences_without_ids(self):
         var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum='1', no_ids=True, plain=True,
+            maximum=1, no_ids=True, plain=True,
             root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY FOR FOREIGN'
@@ -2610,7 +2610,7 @@ class TestOpusCat(unittest.TestCase):
 
     def test_print_annotations(self):
         var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum='1', no_ids=True, plain=True, print_annotations=True,
+            maximum=1, no_ids=True, plain=True, print_annotations=True,
             root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY|NNP|ministry FOR|NNP'
@@ -2620,7 +2620,7 @@ class TestOpusCat(unittest.TestCase):
 
     def test_print_annotations_all_attributes(self):
         var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum='1', no_ids=True, plain=True, print_annotations=True,
+            maximum=1, no_ids=True, plain=True, print_annotations=True,
             set_attribute=['all_attrs'], root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# RF/xml/en/1996.xml\n\nMINISTRY|null|0|NN|w1.1.1|mini'
@@ -2633,7 +2633,7 @@ class TestOpusCat(unittest.TestCase):
 
     def test_print_xml(self):
         var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum='1', root_directory=self.root_directory)
+            maximum=1, root_directory=self.root_directory)
         self.assertEqual(var[-38:],
             '<w id="w2.10">1996</w>\n</p><p id="3">\n')
 
@@ -2663,7 +2663,7 @@ class TestOpusCat(unittest.TestCase):
     def test_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y']
         var = self.printSentencesToVariable(directory='RFOSIAJ', language='en',
-            maximum='1', plain=True, root_directory=self.root_directory)
+            maximum=1, plain=True, root_directory=self.root_directory)
 
         self.assertEqual(var[-28:],
             '\nNecessary files not found.\n')

@@ -22,7 +22,7 @@ parser.add_argument('-p', '--preprocess',
     help='Preprocess-type (raw, xml or parsed, default=xml)',
     default='xml', choices=['raw', 'xml', 'parsed'])
 parser.add_argument('-m', '--maximum', help='Maximum number of alignments',
-    default='all')
+    default=-1, type=int)
 parser.add_argument('-S', '--src_range',
     help='Number of source sentences in alignments (range is '
         'allowed, eg. -S 1-2)',
