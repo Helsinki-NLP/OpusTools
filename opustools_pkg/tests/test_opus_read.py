@@ -2321,7 +2321,7 @@ class TestOpusRead(unittest.TestCase):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1,
             alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'))
-        self.assertEqual(var[-18:], '128 KB Total size\n')
+        self.assertTrue('No alignment file' in var)
 
     def test_alignment_file_not_found_no_prompt(self):
         opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,

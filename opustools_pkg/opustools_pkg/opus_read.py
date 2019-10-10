@@ -275,15 +275,17 @@ class OpusRead:
             self.addTmxHeader()
 
         if self.alignment[-3:] == '.gz':
-            try:
-                try:
-                    gzipAlign = gzip.open(os.path.join(self.download_dir,
-                        self.directory+'_'+
-                        self.release+'_xml_'+self.fromto[0]+'-'+
-                        self.fromto[1]+'.xml.gz'))
-                except FileNotFoundError:
-                    gzipAlign = gzip.open(self.alignment)
-            except FileNotFoundError:
+            local_align_name = os.path.join(self.download_dir,
+                self.directory+'_'+ self.release+'_xml_'+self.fromto[0]+'-'+
+                self.fromto[1]+'.xml.gz')
+            #See if downloaded alignment file exists
+            if os.path.exists(local_align_name):
+                gzipAlign = gzip.open(local_align_name)
+            #See if default alignment file exists
+            elif os.path.exists(self.alignment):
+                gzipAlign = gzip.open(self.alignment)
+            #Else download necessary files
+            else:
                 print(('\nAlignment file ' + self.alignment + ' not found. '
                     'The following files are available for downloading:\n'))
                 arguments = {'source': self.fromto[0],
@@ -297,18 +299,24 @@ class OpusRead:
                     arguments['suppress_prompts'] = True
                 og = OpusGet(**arguments)
                 og.get_files()
-                try:
-                    gzipAlign = gzip.open(os.path.join(self.download_dir,
-                        self.directory+'_'+self.release+'_xml_'+
-                        self.fromto[0]+'-'+self.fromto[1]+'.xml.gz'))
-                except FileNotFoundError:
+
+                if os.path.exists(local_align_name):
+                    gzipAlign = gzip.open(local_align_name)
+                else:
+                    print('No alignment file "{default}" or "{downloaded}"'
+                        ' found'.format(default=self.alignment,
+                            downloaded=local_align_name))
                     return
 
             lastline = self.readAlignment(gzipAlign)
             gzipAlign.close()
         else:
-            with open(self.alignment) as xmlAlign:
-                lastline = self.readAlignment(xmlAlign)
+            if os.path.exists(self.alignment):
+                with open(self.alignment) as xmlAlign:
+                    lastline = self.readAlignment(xmlAlign)
+            else:
+                print('No alignment file "{}" found'.format(self.alignment))
+                return
 
         if self.write_mode == 'links' and lastline != '</cesAlign>':
             self.addLinkFileEnding()
