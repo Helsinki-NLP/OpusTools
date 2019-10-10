@@ -82,49 +82,53 @@ class AlignmentParser:
         self.tlim = tgt_range.split('-')
         self.tlim.sort()
 
-    def getZipFile(self, zipname, soutar, localfile):
-        if localfile != None:
-            openedzip = zipfile.ZipFile(localfile, 'r')
-        else:
-            try:
-                openedzip = zipfile.ZipFile(zipname, 'r')
-            except FileNotFoundError:
-                openedzip = zipfile.ZipFile(soutar, 'r')
+    def getZipFile(self, downloaded, default, localfile):
+        if localfile != None and os.path.exists(localfile):
+            return zipfile.ZipFile(localfile, 'r')
+        elif os.path.exists(downloaded):
+            return zipfile.ZipFile(downloaded, 'r')
+        elif os.path.exists(default):
+            return zipfile.ZipFile(default, 'r')
 
-        return openedzip
+        return None
 
     def openZipFiles(self):
-        self.sourcezip = self.getZipFile(os.path.join(self.download_dir,
-            self.directory+'_'+self.release+'_'+
-            self.preprocess+'_'+self.fromto[0]+'.zip'),
+        self.sourcezip = self.getZipFile(
+            os.path.join(self.download_dir, self.directory+'_'+
+                self.release+'_'+ self.preprocess+'_'+self.fromto[0]+'.zip'),
             self.source,
             self.source_zip)
-        self.targetzip = self.getZipFile(os.path.join(self.download_dir,
-            self.directory+'_'+self.release+'_'+
-            self.preprocess+'_'+self.fromto[1]+'.zip'),
+        self.targetzip = self.getZipFile(
+            os.path.join(self.download_dir, self.directory+'_'+
+                self.release+'_'+ self.preprocess+'_'+self.fromto[1]+'.zip'),
             self.target,
             self.target_zip)
 
     def openSentenceParsers(self, attrs):
-        try:
-            if attrs['fromDoc'][-3:] == '.gz':
-                sourcefile = gzip.open(os.path.join(self.download_dir,
-                    attrs['fromDoc']), 'rb')
+        fromDoc = attrs['fromDoc']
+        toDoc = attrs['toDoc']
+        sourcefile_path = os.path.join(self.download_dir, fromDoc)
+        targetfile_path = os.path.join(self.download_dir, toDoc)
+
+        #See if source and target files exist locally outside zip archives
+        if os.path.exists(sourcefile_path) and os.path.exists(targetfile_path):
+            if sourcefile_path[-3:] == '.gz':
+                sourcefile = gzip.open(sourcefile_path, 'rb')
             else:
-                sourcefile = open(os.path.join(self.download_dir,
-                    attrs['fromDoc']), 'r')
-            if attrs['toDoc'][-3:] == '.gz':
-                targetfile = gzip.open(os.path.join(self.download_dir,
-                    attrs['toDoc']), 'rb')
+                sourcefile = open(sourcefile_path, 'r')
+
+            if targetfile_path[-3:] == '.gz':
+                targetfile = gzip.open(targetfile_path, 'rb')
             else:
-                targetfile = open(os.path.join(self.download_dir,
-                    attrs['toDoc']), 'r')
-        except FileNotFoundError:
+                targetfile = open(targetfile_path, 'r')
+        #Else open local zip archives
+        else:
             if self.zipFilesOpened == False:
-                try:
-                    self.openZipFiles()
+                self.openZipFiles()
+                if self.sourcezip and self.targetzip:
                     self.zipFilesOpened = True
-                except FileNotFoundError:
+                #If local zip archives don't exists, download them
+                else:
                     print('\nZip files are not found. The following '
                         'files are available for downloading:\n')
 
@@ -142,16 +146,40 @@ class AlignmentParser:
                     og.get_files()
 
                     self.openZipFiles()
-                    self.zipFilesOpened = True
+                    if self.sourcezip and self.targetzip:
+                        self.zipFilesOpened = True
+                    else:
+                        exit('No zip files found')
 
-            try:
-                sourcefile = self.sourcezip.open(self.directory+'/'+
-                    self.preprocess+'/'+attrs['fromDoc'][:-3], 'r')
-                targetfile = self.targetzip.open(self.directory+'/'+
-                    self.preprocess+'/'+attrs['toDoc'][:-3], 'r')
-            except KeyError:
-                sourcefile = self.sourcezip.open(attrs['fromDoc'], 'r')
-                targetfile = self.targetzip.open(attrs['toDoc'], 'r')
+            #Try OPUS style file names in zip archives first. In OPUS,
+            #directory and preprocessing information need to be added and
+            #the ".gz" ending needs to be removed.
+            opus_style_name_source = (self.directory+'/'+ self.preprocess+'/'+
+                fromDoc[:-3])
+            opus_style_name_target = (self.directory+'/'+ self.preprocess+'/'+
+                toDoc[:-3])
+
+            if opus_style_name_source in self.sourcezip.namelist():
+                sourcefile = self.sourcezip.open(opus_style_name_source, 'r')
+            elif fromDoc in self.sourcezip.namelist():
+                sourcefile = self.sourcezip.open(fromDoc, 'r')
+            else:
+                raise Exception('No sentence file "{plain}" or "{opus}" '
+                    '(OPUS format) found in {zipfile}'.format(
+                        plain=fromDoc,
+                        opus=opus_style_name_source,
+                        zipfile=self.sourcezip.filename))
+
+            if opus_style_name_target in self.targetzip.namelist():
+                targetfile = self.targetzip.open(opus_style_name_target, 'r')
+            elif toDoc in self.targetzip.namelist():
+                targetfile = self.targetzip.open(toDoc, 'r')
+            else:
+                raise Exception('No sentence file "{plain}" or "{opus}" '
+                    '(OPUS format) found in {zipfile}'.format(
+                        plain=toDoc,
+                        opus=opus_style_name_target,
+                        zipfile=self.targetzip.filename))
 
         if self.sPar and self.tPar:
             self.sPar.document.close()
@@ -162,10 +190,8 @@ class AlignmentParser:
             pre = 'rawos'
 
         st = ['src', 'trg']
-        #langs = [self.source, self.target]
         if self.switch_langs:
             st = ['trg', 'src']
-            #langs = [self.target, self.source]
 
         if self.fast:
             self.sPar = SentenceParser(sourcefile, st[0], pre,

@@ -158,6 +158,12 @@ class TestOpusRead(unittest.TestCase):
                 'xtargets="s8.1;s8.1" id="SL8.1"/>\n<link xtargets="s167.0'
                 ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n')
 
+            with gzip.open(os.path.join(self.tempdir1,
+                    'RF_v1_xml_en-sv.xml.gz'), 'wb') as f:
+                with open(os.path.join(self.tempdir1, 'books_alignment.xml'),
+                        'rb') as b:
+                    f.write(b.read())
+
         if ('OPUSREAD_TEST_ROOTDIR' in os.environ.keys() and
             os.path.exists(os.environ['OPUSREAD_TEST_ROOTDIR'])):
             self.root_directory = os.environ['OPUSREAD_TEST_ROOTDIR']
@@ -208,6 +214,12 @@ class TestOpusRead(unittest.TestCase):
 
             add_to_root_dir(corpus='Books', source='eo', target='pt',
                 preprocess='xml', root_dir=self.root_directory)
+
+            add_to_root_dir(corpus='RF', source='fr', target='sv',
+                preprocess='xml', root_dir=self.root_directory)
+
+            os.remove(os.path.join(self.root_directory, 'RF', 'latest', 'xml',
+                'fr.zip'))
 
         self.opr = OpusRead(directory='RF', source='en', target='sv',
             root_directory=self.root_directory)
@@ -1947,6 +1959,123 @@ class TestOpusRead(unittest.TestCase):
             '(trg)="s1">test_fi1 test_fi2'
             '\n================================\n')
 
+    def test_open_documents_from_specifed_zips(self):
+        with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'
+                'test_en" toDoc="test_files/test_fi" >\n<link xtargets='
+                '"s1;s1"/>\n </linkGrp>+\n</cesAlign>')
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_en.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                arcname=os.path.join('test_files', 'test_en'))
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
+                '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_fi.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                arcname=os.path.join('test_files', 'test_fi'))
+
+        var = pairPrinterToVariable(directory='Books', source='en',
+            target='fi', alignment_file=os.path.join(self.tempdir1,
+                'test_files', 'testlinks'),
+            source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+            target_zip = os.path.join(self.tempdir1, 'test_fi.zip'))
+        self.assertEqual(var,
+            '\n# test_files/test_en\n# test_files/test_fi\n\n'
+            '================================\n(src)="s1">test_en1 test_en2\n'
+            '(trg)="s1">test_fi1 test_fi2'
+            '\n================================\n')
+
+    def test_try_to_open_wrongly_named_docs_from_specifed_source_zip(self):
+        with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'
+                'test_en" toDoc="test_files/test_fi" >\n<link xtargets='
+                '"s1;s1"/>\n </linkGrp>+\n</cesAlign>')
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_en.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                arcname=os.path.join('test_files', 'test_un'))
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
+                '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_fi.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                arcname=os.path.join('test_files', 'test_fi'))
+
+        with self.assertRaises(Exception):
+            OpusRead(directory='Books', source='en',
+                    target='fi', alignment_file=os.path.join(self.tempdir1,
+                        'test_files', 'testlinks'),
+                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
+                ).printPairs()
+
+    def test_try_to_open_wrongly_named_docs_from_specifed_target_zip(self):
+        with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'
+                'test_en" toDoc="test_files/test_fi" >\n<link xtargets='
+                '"s1;s1"/>\n </linkGrp>+\n</cesAlign>')
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_en.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                arcname=os.path.join('test_files', 'test_en'))
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
+                '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_fi.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                arcname=os.path.join('test_files', 'test_un'))
+
+        with self.assertRaises(Exception):
+            OpusRead(directory='Books', source='en',
+                    target='fi', alignment_file=os.path.join(self.tempdir1,
+                        'test_files', 'testlinks'),
+                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
+                ).printPairs()
+
     def test_checks_first_whether_documents_are_in_path_gz(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
                 'w') as f:
@@ -2539,6 +2668,36 @@ class TestOpusRead(unittest.TestCase):
             'manybooks.netAudiobook available here</seg></tuv>'
             '\n\t\t\t<tuv xml:lang="sv"><seg>Source : Project Gutenberg</seg>'
             '</tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
+
+    def test_open_predownloaded_alignment_file(self):
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            release='v1', maximum=1, download_dir=self.tempdir1)
+        self.assertEqual(var,
+            '\n# en/1996.xml.gz'
+            '\n# sv/1996.xml.gz'
+            '\n\n================================'
+            '\n(src)="s1">Source&<>"\' : manybooks.netAudiobook available here'
+            '\n(trg)="s1">Source : Project Gutenberg'
+            '\n================================\n')
+
+    def test_no_plain_xml_alingment_file_found(self):
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            alignment_file='unfound.xml')
+        self.assertEqual(var, 'No alignment file "unfound.xml" found\n')
+
+    def test_download_zip_files_no_prompt(self):
+        var = pairPrinterToVariable(directory='RF', source='fr', target='sv',
+            maximum=1, download_dir=self.tempdir1, suppress_prompts=True,
+            root_directory=self.root_directory)
+        self.assertEqual(var[-230:],
+            '(src)="s1.1">Declaration de Politique Générale du '
+            'Gouvernement présentée mardi 4 octobre 1988 devant le '
+            'Riksdag par Monsieur Ingvar Carlsson , Premier Ministre .\n'
+            '(trg)="s1.1">REGERINGSFÖRKLARING .\n'
+            '================================\n')
+        os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_fr.zip'))
+        os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
+        os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_fr-sv.xml.gz'))
 
 class TestOpusCat(unittest.TestCase):
 
