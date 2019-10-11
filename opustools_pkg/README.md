@@ -22,7 +22,7 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [-ta attribute [attribute ...]] [-ca delimiter]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
-                 [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi]
+                 [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi] [-v]
 ```
 
 arguments:
@@ -105,6 +105,7 @@ arguments:
                     Set download directory (default=current directory)
 -pi, --preserve_inline_tags
                     Preserve inline tags within sentences
+-v, --verbose       Print progess messages when writing results to files
 ```
 
 
@@ -181,8 +182,8 @@ usage: opus_express [-h] [-f] -s lang_id -t lang_id
                     [--root-dir /path/to/OPUS] [--test-override /path/to/file]
                     [--test-quota num_sents] [--dev-quota num_sents]
                     [--doc-bounds] [--quality-aware]
-                    [--overlap-threshold min_pct] [--shuffle]
-                    [--test-set filename] [--dev-set filename]
+                    [--overlap-threshold min_pct] [--preserve-inline-tags]
+                    [--shuffle] [--test-set filename] [--dev-set filename]
                     [--train-set filename]
 ```
 
@@ -227,6 +228,9 @@ arguments:
 --overlap-threshold min_pct
                       threshold for alignment overlap in `--quality-aware'
                       mode (default: 0.8)
+--preserve-inline-tags
+                      preserve inline timestamp tags in aligned samples
+                      (default: False)
 --shuffle             shuffle samples (incompatible with `--doc-bounds')
                       (default: False)
 --test-set filename   filename stub for output test set (default: `test')

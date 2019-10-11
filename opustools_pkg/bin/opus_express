@@ -34,6 +34,7 @@ parser.add_argument('--dev-quota', help='development set size in sentences (defa
 parser.add_argument('--doc-bounds', help='preserve document blocks (also marks document boundaries) (default: False)', action='store_true')
 parser.add_argument('--quality-aware', help='reserve one-to-one aligned samples with high overlap for test/dev sets (incompatible with `--doc-bounds\') (default: False)', action='store_true')
 parser.add_argument('--overlap-threshold', help='threshold for alignment overlap in `--quality-aware\' mode (default: 0.8)', type=float, metavar='min_pct', default=0.8)
+parser.add_argument('--preserve-inline-tags', help='preserve inline timestamp tags in aligned samples (default: False)', action='store_true')
 parser.add_argument('--shuffle', help='shuffle samples (incompatible with `--doc-bounds\') (default: False)', action='store_true')
 parser.add_argument('--test-set', help='filename stub for output test set (default: `test\')', type=str, metavar='filename', default='test')
 parser.add_argument('--dev-set', help='filename stub for output development set (default: `dev\')', type=str, metavar='filename', default='dev')
@@ -139,7 +140,8 @@ for collection in collections:
             attribute='overlap',
             directory=collection,
             source=src_lang, target=tgt_lang,
-            write_mode='moses', write=[tmp, tmp], write_ids=tmp)
+            write_mode='moses', write=[tmp, tmp], write_ids=tmp,
+            preserve_inline_tags=args.preserve_inline_tags)
 
     reader.printPairs() # Doesn't actually print (since overridden), but passes on data.
 
