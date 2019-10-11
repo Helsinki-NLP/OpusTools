@@ -19,7 +19,7 @@ class AlignmentParser:
             fast=None, write_mode=None, print_file_names=None, write=None,
             attribute=None, print_annotations=None, target_annotations=None,
             source_annotations=None, change_annotation_delimiter=None,
-            preserve_inline_tags=None, threshold=None):
+            preserve_inline_tags=None, threshold=None, verbose=False):
 
         self.source = source
         self.target = target
@@ -48,6 +48,7 @@ class AlignmentParser:
         self.trg_cld2 = trg_cld2
         self.src_langid = src_langid
         self.trg_langid = trg_langid
+        self.verbose = verbose
 
         for item in [src_cld2, trg_cld2, src_langid, trg_langid]:
             if item:
@@ -83,11 +84,15 @@ class AlignmentParser:
         self.tlim.sort()
 
     def getZipFile(self, downloaded, default, localfile):
+        if self.verbose: print('Opening zip archive ', end='')
         if localfile != None and os.path.exists(localfile):
+            if self.verbose: print('"{}" ... '.format(localfile), end='')
             return zipfile.ZipFile(localfile, 'r')
         elif os.path.exists(downloaded):
+            if self.verbose: print('"{}" ... '.format(downloaded), end='')
             return zipfile.ZipFile(downloaded, 'r')
         elif os.path.exists(default):
+            if self.verbose: print('"{}" ... '.format(default), end='')
             return zipfile.ZipFile(default, 'r')
 
         return None
@@ -98,11 +103,13 @@ class AlignmentParser:
                 self.release+'_'+ self.preprocess+'_'+self.fromto[0]+'.zip'),
             self.source,
             self.source_zip)
+        if self.verbose: print('Done')
         self.targetzip = self.getZipFile(
             os.path.join(self.download_dir, self.directory+'_'+
                 self.release+'_'+ self.preprocess+'_'+self.fromto[1]+'.zip'),
             self.target,
             self.target_zip)
+        if self.verbose: print('Done')
 
     def openSentenceParsers(self, attrs):
         fromDoc = attrs['fromDoc']
@@ -193,6 +200,10 @@ class AlignmentParser:
         if self.switch_langs:
             st = ['trg', 'src']
 
+        if self.verbose: print('Reading source file "{source}" and target '
+            'file "{target}"'.format(
+                source=sourcefile.name,
+                target=targetfile.name))
         if self.fast:
             self.sPar = SentenceParser(sourcefile, st[0], pre,
                 self.write_mode, self.fromto[0], self.print_annotations,

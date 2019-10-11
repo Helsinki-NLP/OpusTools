@@ -557,7 +557,6 @@ class TestOpusRead(unittest.TestCase):
             ('(src)="3">Director PARK Jae-sik\n\n'
             '================================\n', ''))
 
-
     def test_switch_labels_when_languages_are_in_unalphabetical_order(self):
         opr = OpusRead(directory='RF', source='sv', target='en',
             root_directory=self.root_directory)
@@ -775,6 +774,25 @@ class TestOpusRead(unittest.TestCase):
                 '>REGERINGSFÖRKLARING .\n============================'
                 '====\n')
 
+    def test_normal_xml_write_verbose(self):
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            maximum=1, write=[os.path.join(
+                self.tempdir1, 'test_files', 'test_result')],
+            root_directory=self.root_directory, verbose=True)
+        self.assertEqual(var,
+            'Reading alignment file "{alignment}"\n'
+            'Opening zip archive "{source}" ... Done\n'
+            'Opening zip archive "{target}" ... Done\n'
+            'Reading source file "RF/xml/en/1988.xml" and target file '
+            '"RF/xml/sv/1988.xml"\nDone\n'.format(
+                alignment=os.path.join(self.root_directory, 'RF', 'latest',
+                    'xml', 'en-sv.xml.gz'),
+                source=os.path.join(self.root_directory, 'RF', 'latest',
+                    'xml', 'en.zip'),
+                target=os.path.join(self.root_directory, 'RF', 'latest',
+                    'xml', 'sv.zip')
+                ))
+
     def test_normal_xml_write_fast(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
             write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
@@ -794,6 +812,19 @@ class TestOpusRead(unittest.TestCase):
     def test_normal_xml_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, root_directory=self.root_directory)
+        self.assertEqual(var,
+            '\n# en/1988.xml.gz\n'
+            '# sv/1988.xml.gz\n\n'
+            '================================\n(src)="s1.1">State'
+            'ment of Government Policy by the Prime Minister , Mr'
+            ' Ingvar Carlsson , at the Opening of the Swedish Parl'
+            'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
+            '>REGERINGSFÖRKLARING .\n============================'
+            '====\n')
+
+    def test_normal_xml_print_verbose(self):
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            maximum=1, root_directory=self.root_directory, verbose=True)
         self.assertEqual(var,
             '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
@@ -1179,6 +1210,21 @@ class TestOpusRead(unittest.TestCase):
     def test_tmx_xml_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write_mode='tmx', root_directory=self.root_directory)
+        self.assertEqual(var,
+            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
+            '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
+            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
+            '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
+            'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
+            'n , at the Opening of the Swedish Parliament on Tues'
+            'day , 4 October , 1988 .'
+            '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
+            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
+
+    def test_tmx_xml_print_verbose(self):
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+            maximum=1, write_mode='tmx', root_directory=self.root_directory,
+            verbose=True)
         self.assertEqual(var,
             '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='

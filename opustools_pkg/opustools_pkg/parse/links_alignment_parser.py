@@ -19,7 +19,7 @@ class LinksAlignmentParser(AlignmentParser):
             fast=None, write_mode=None, print_file_names=None, write=None,
             attribute=None, print_annotations=None, target_annotations=None,
             source_annotations=None, change_annotation_delimiter=None,
-            preserve_inline_tags=None, threshold=None):
+            preserve_inline_tags=None, threshold=None, verbose=None):
 
         super().__init__(source=source, target=target, result=result,
             mosessrc=mosessrc, mosestrg=mosestrg, fromto=fromto,
@@ -36,7 +36,8 @@ class LinksAlignmentParser(AlignmentParser):
             target_annotations=target_annotations,
             source_annotations=source_annotations,
             change_annotation_delimiter=change_annotation_delimiter,
-            preserve_inline_tags=preserve_inline_tags, threshold=threshold)
+            preserve_inline_tags=preserve_inline_tags, threshold=threshold,
+            verbose=verbose)
 
         self.attribute = attribute
         self.end = ''

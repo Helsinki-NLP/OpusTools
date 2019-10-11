@@ -27,7 +27,7 @@ class OpusRead:
             change_annotation_delimiter='|',
             src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
             write_ids=None, suppress_prompts=False, download_dir='.',
-            preserve_inline_tags=False):
+            preserve_inline_tags=False, verbose=False):
 
         self.fromto = sorted([source, target])
         fromto_copy = [source, target]
@@ -35,6 +35,10 @@ class OpusRead:
 
         self.src_range = src_range
         self.tgt_range = tgt_range
+
+        self.verbose = verbose
+        if write == None:
+            self.verbose = False
 
         if self.switch_langs:
             temp = src_range
@@ -97,7 +101,8 @@ class OpusRead:
                 target_annotations=target_annotations,
                 source_annotations=source_annotations,
                 change_annotation_delimiter=change_annotation_delimiter,
-                preserve_inline_tags=preserve_inline_tags, threshold=threshold)
+                preserve_inline_tags=preserve_inline_tags, threshold=threshold,
+                verbose=self.verbose)
         else:
             self.par = AlignmentParser(source=source_file, target=target_file,
                 result=self.resultfile, mosessrc=self.mosessrc,
@@ -116,7 +121,8 @@ class OpusRead:
                 target_annotations=target_annotations,
                 source_annotations=source_annotations,
                 change_annotation_delimiter=change_annotation_delimiter,
-                preserve_inline_tags=preserve_inline_tags, threshold=threshold)
+                preserve_inline_tags=preserve_inline_tags, threshold=threshold,
+                verbose=self.verbose)
 
         self.write_mode = write_mode
         self.change_moses_delimiter = change_moses_delimiter
@@ -287,16 +293,19 @@ class OpusRead:
         if self.write_mode == 'tmx':
             self.addTmxHeader()
 
+        if self.verbose: print('Reading alignment file ', end='')
         if self.alignment[-3:] == '.gz':
             local_align_name = os.path.join(self.download_dir,
                 self.directory+'_'+ self.release+'_xml_'+self.fromto[0]+'-'+
                 self.fromto[1]+'.xml.gz')
             #See if downloaded alignment file exists
             if os.path.exists(local_align_name):
+                if self.verbose: print('"{}"'.format(local_align_name))
                 gzipAlign = gzip.open(local_align_name)
                 self.alignment = local_align_name
             #See if default alignment file exists
             elif os.path.exists(self.alignment):
+                if self.verbose: print('"{}"'.format(self.alignment))
                 gzipAlign = gzip.open(self.alignment)
             #Else download necessary files
             else:
@@ -315,6 +324,7 @@ class OpusRead:
                 og.get_files()
 
                 if os.path.exists(local_align_name):
+                    if self.verbose: print('"{}"'.format(local_align_name))
                     gzipAlign = gzip.open(local_align_name)
                     self.alignment=local_align_name
                 else:
@@ -326,6 +336,7 @@ class OpusRead:
             lastline = self.readAlignment(gzipAlign)
             gzipAlign.close()
         else:
+            if self.verbose: print('"{}"'.format(self.alignment))
             if os.path.exists(self.alignment):
                 with open(self.alignment) as xmlAlign:
                     lastline = self.readAlignment(xmlAlign)
@@ -346,6 +357,8 @@ class OpusRead:
 
         if self.write_ids != None:
             self.id_file.close()
+
+        if self.verbose: print('Done')
 
 '''
     def printPairsMoses(self):

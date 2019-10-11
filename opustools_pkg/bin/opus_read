@@ -126,6 +126,9 @@ parser.add_argument('-dl', '--download_dir',
 parser.add_argument('-pi', '--preserve_inline_tags',
     help='Preserve inline tags within sentences',
     action='store_true')
+parser.add_argument('-v', '--verbose',
+    help='Print progess messages when writing results to files',
+    action='store_true')
 
 args = parser.parse_args()
 OpusRead(**vars(args)).printPairs()
