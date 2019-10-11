@@ -1,6 +1,11 @@
 import xml.parsers.expat
 import html
 
+class SentenceParserError(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
 class SentenceParser:
 
     def __init__(self, document, direction, preprocessing, wmode,
@@ -71,7 +76,14 @@ class SentenceParser:
             self.oneLineSEnd = True
 
     def parseLine(self, line):
-        self.parser.Parse(line.strip())
+        try:
+            self.parser.Parse(line.strip())
+        except xml.parsers.expat.ExpatError as e:
+            raise SentenceParserError(
+                'Sentence file "{document}" could not be parsed: '
+                '{error}'.format(
+                    document=self.document.name,
+                    error=e.args[0]))
 
     def addToken(self, sentence):
         newSentence = sentence

@@ -10,6 +10,8 @@ import zipfile
 import tempfile
 
 from opustools_pkg import OpusRead, OpusCat, OpusGet
+from opustools_pkg.opus_read import AlignmentParserError
+from opustools_pkg.parse.sentence_parser import SentenceParserError
 
 def pairPrinterToVariable(**kwargs):
     old_stdout = sys.stdout
@@ -2068,7 +2070,7 @@ class TestOpusRead(unittest.TestCase):
             zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
                 arcname=os.path.join('test_files', 'test_un'))
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(FileNotFoundError):
             OpusRead(directory='Books', source='en',
                     target='fi', alignment_file=os.path.join(self.tempdir1,
                         'test_files', 'testlinks'),
@@ -2698,6 +2700,117 @@ class TestOpusRead(unittest.TestCase):
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_fr.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_fr-sv.xml.gz'))
+
+    def test_alignment_file_could_not_be_parsed(self):
+        with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'
+                'test_en" toDoc="test_files/test_fi" >\n<link xtargets='
+                '"s1;s1"/>\n </linkGrp></linkGrp>\n</cesAlign>')
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_en.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                arcname=os.path.join('test_files', 'test_en'))
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
+                '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_fi.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                arcname=os.path.join('test_files', 'test_fi'))
+
+        with self.assertRaises(AlignmentParserError):
+            OpusRead(directory='Books', source='en',
+                    target='fi', alignment_file=os.path.join(self.tempdir1,
+                        'test_files', 'testlinks'),
+                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
+                ).printPairs()
+        with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'
+                'test_en" toDoc="test_files/test_fi" >\n<link xtargets='
+                '"s1;s1"/>\n </linkGrp\n</cesAlign>')
+        with self.assertRaises(AlignmentParserError):
+            OpusRead(directory='Books', source='en',
+                    target='fi', alignment_file=os.path.join(self.tempdir1,
+                        'test_files', 'testlinks'),
+                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
+                ).printPairs()
+
+    def test_sentence_file_could_not_be_parsed(self):
+        with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+                '\n<cesAlign version="1.0">\n<linkGrp fromDoc="test_files/'
+                'test_en" toDoc="test_files/test_fi" >\n<link xtargets='
+                '"s1;s1"/>\n </linkGrp>\n</cesAlign>')
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
+                '</w>\n</s><s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_en.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                arcname=os.path.join('test_files', 'test_en'))
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
+                '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2'
+                '</w>\n</s>\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_fi.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                arcname=os.path.join('test_files', 'test_fi'))
+
+        with self.assertRaises(SentenceParserError):
+            OpusRead(directory='Books', source='en',
+                    target='fi', alignment_file=os.path.join(self.tempdir1,
+                        'test_files', 'testlinks'),
+                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
+                ).printPairs()
+
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
+                '</w>\n</s\n </body>\n</text>')
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_en.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                arcname=os.path.join('test_files', 'test_en'))
+
+        with self.assertRaises(SentenceParserError):
+            OpusRead(directory='Books', source='en',
+                    target='fi', alignment_file=os.path.join(self.tempdir1,
+                        'test_files', 'testlinks'),
+                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
+                ).printPairs()
+
 
 class TestOpusCat(unittest.TestCase):
 

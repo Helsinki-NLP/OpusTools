@@ -1,11 +1,17 @@
 import argparse
 import gzip
 import os
+import xml.parsers.expat
 
 from .parse.alignment_parser import AlignmentParser
 from .parse.links_alignment_parser import LinksAlignmentParser
 #from .parse.moses_read import MosesRead
 from .opus_get import OpusGet
+
+class AlignmentParserError(Exception):
+
+    def __init__(self, message):
+        self.message = message
 
 class OpusRead:
 
@@ -167,7 +173,14 @@ class OpusRead:
         self.id_file.write(id_line)
 
     def outputPair(self, par, line):
-        par.parseLine(line)
+        try:
+            par.parseLine(line)
+        except xml.parsers.expat.ExpatError as e:
+            raise AlignmentParserError(
+                'Alignment file "{alignment}" could not be parsed: '
+                '{error}'.format(
+                    alignment=self.alignment, error=e.args[0]))
+
         sPair = par.readPair()
         ftDocs = [par.fromDoc, par.toDoc]
         ftIds = [par.fromids, par.toids]
@@ -281,6 +294,7 @@ class OpusRead:
             #See if downloaded alignment file exists
             if os.path.exists(local_align_name):
                 gzipAlign = gzip.open(local_align_name)
+                self.alignment = local_align_name
             #See if default alignment file exists
             elif os.path.exists(self.alignment):
                 gzipAlign = gzip.open(self.alignment)
@@ -302,6 +316,7 @@ class OpusRead:
 
                 if os.path.exists(local_align_name):
                     gzipAlign = gzip.open(local_align_name)
+                    self.alignment=local_align_name
                 else:
                     print('No alignment file "{default}" or "{downloaded}"'
                         ' found'.format(default=self.alignment,

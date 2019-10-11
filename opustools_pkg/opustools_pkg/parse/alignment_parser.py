@@ -164,8 +164,8 @@ class AlignmentParser:
             elif fromDoc in self.sourcezip.namelist():
                 sourcefile = self.sourcezip.open(fromDoc, 'r')
             else:
-                raise Exception('No sentence file "{plain}" or "{opus}" '
-                    '(OPUS format) found in {zipfile}'.format(
+                raise FileNotFoundError('No sentence file "{plain}" or '
+                    '"{opus}" (OPUS format) found in {zipfile}'.format(
                         plain=fromDoc,
                         opus=opus_style_name_source,
                         zipfile=self.sourcezip.filename))
@@ -175,8 +175,8 @@ class AlignmentParser:
             elif toDoc in self.targetzip.namelist():
                 targetfile = self.targetzip.open(toDoc, 'r')
             else:
-                raise Exception('No sentence file "{plain}" or "{opus}" '
-                    '(OPUS format) found in {zipfile}'.format(
+                raise FileNotFoundError('No sentence file "{plain}" or '
+                    '"{opus}" (OPUS format) found in {zipfile}'.format(
                         plain=toDoc,
                         opus=opus_style_name_target,
                         zipfile=self.targetzip.filename))
