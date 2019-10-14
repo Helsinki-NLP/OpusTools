@@ -45,15 +45,17 @@ args = parser.parse_args()
 if not args.force and args.shuffle and args.doc_bounds:
   answer = input('Using --doc-bounds will override --shuffle. Continue? (y/n) ')
 
-  if answer != 'y':
+  if answer == 'y':
     args.shuffle = False
+  else:
     exit()
 
 if not args.force and args.quality_aware and args.doc_bounds:
   answer = input('Using --doc-bounds will override --quality-aware. Continue? (y/n) ')
 
-  if answer != 'y':
-    args.doc_bounds = False
+  if answer == 'y':
+    args.quality_aware = False
+  else:
     exit()
 
 src_lang = args.src_lang
@@ -174,10 +176,11 @@ for collection in collections:
         else:
           dump = dump_loqu
 
+        doc_id = (src_uri, tgt_uri)
         stats_line = '\t'.join([src_uri, tgt_uri,
             ' '.join(src_align), ' '.join(tgt_align), str(overlap)])
 
-        dump.append((src_sent, tgt_sent, stats_line))
+        dump.append((src_sent, tgt_sent, stats_line, doc_id))
   except ExpatError:
     print('...skipping (ill-formatted XML).')
   except FileNotFoundError:
@@ -214,23 +217,24 @@ for dump in [dump_test, dump_hiqu, dump_loqu]:
       dump = train
 
     if args.doc_bounds:
-      if test and item[2] == test[-1][2]:
+      if test and item[3] == test[-1][3]:
         dump = test
-      elif dev and item[2] == dev[-1][2]:
+      elif dev and item[3] == dev[-1][3]:
         dump = dev
-      elif train and item[2] == train[-1][2]:
+      elif train and item[3] == train[-1][3]:
         dump = train
-      elif dump:
-        dump.append(('', '', ''))
+
+      if dump and item[3] != dump[-1][3]:
+        dump.append(('', '', '', None))
 
     dump.append(item)
 
     if dump == test:
-      test_size += 1 if item != ('', '', '') else 0
+      test_size += 1 if item != ('', '', '', None) else 0
     elif dump == dev:
-      dev_size += 1 if item != ('', '', '') else 0
+      dev_size += 1 if item != ('', '', '', None) else 0
     else:
-      train_size += 1 if item != ('', '', '') else 0
+      train_size += 1 if item != ('', '', '', None) else 0
 
 print('...done!')
 
@@ -267,7 +271,7 @@ with open(test_src_path, mode='w', encoding='utf-8') as test_src_file:
       print('Writing test data to `%s.{%s,%s,%s}\'...' % (test_set, src_lang, tgt_lang, 'ids'))
 
       num_written = 0
-      for src_line, tgt_line, ids_line in test:
+      for src_line, tgt_line, ids_line, _ in test:
         test_src_file.write(src_line + '\n')
         test_tgt_file.write(tgt_line + '\n')
         test_ids_file.write(ids_line + '\n')
@@ -302,7 +306,7 @@ with open(dev_src_path, mode='w', encoding='utf-8') as dev_src_file:
       print('Writing development data to `%s.{%s,%s,%s}\'...' % (dev_set, src_lang, tgt_lang, 'ids'))
 
       num_written = 0
-      for src_line, tgt_line, ids_line in dev:
+      for src_line, tgt_line, ids_line, _ in dev:
         dev_src_file.write(src_line + '\n')
         dev_tgt_file.write(tgt_line + '\n')
         dev_ids_file.write(ids_line + '\n')
@@ -337,7 +341,7 @@ with open(train_src_path, mode='w', encoding='utf-8') as train_src_file:
       print('Writing training data to `%s.{%s,%s,%s}\'...' % (train_set, src_lang, tgt_lang, 'ids'))
 
       num_written = 0
-      for src_line, tgt_line, ids_line in train:
+      for src_line, tgt_line, ids_line, _ in train:
         train_src_file.write(src_line + '\n')
         train_tgt_file.write(tgt_line + '\n')
         train_ids_file.write(ids_line + '\n')
