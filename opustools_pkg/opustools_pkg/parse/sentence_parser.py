@@ -4,12 +4,33 @@ import html
 class SentenceParserError(Exception):
 
     def __init__(self, message):
+        """Raise error when sentence parsing fails.
+
+        Keyword arguments:
+        message -- Error message to be printed
+        """
+
         self.message = message
 
 class SentenceParser:
 
     def __init__(self, document, direction, preprocessing, wmode,
             language, annotations, anno_attrs, delimiter, preserve):
+        """Parse xml sentence files that have sentence ids in sequential
+        order.
+
+        Positional arguments:
+        document -- Xml file to be parsed
+        direction -- Source/target direction
+        preprocessing -- Preprocessing type of the document
+        wmode -- Write mode
+        language -- Language id of the document
+        annotations -- Print annotations
+        anno_attrs -- Which annotations will be printed
+        delimiter -- Annotation attribute delimiter
+        preserve -- Preserve inline tags
+        """
+
         self.document = document
         self.direction = direction
         self.pre = preprocessing
@@ -76,6 +97,7 @@ class SentenceParser:
             self.oneLineSEnd = True
 
     def parseLine(self, line):
+        """Parse a line of xml."""
         try:
             self.parser.Parse(line.strip())
         except xml.parsers.expat.ExpatError as e:
@@ -86,6 +108,7 @@ class SentenceParser:
                     error=e.args[0]))
 
     def addToken(self, sentence):
+        """Add a token to the sentence that is being built."""
         newSentence = sentence
         if self.sfound and  self.start == 'w' and self.end == 'w':
             newSentence = sentence + ' ' + self.chara
@@ -97,6 +120,7 @@ class SentenceParser:
         return newSentence
 
     def processTokenizedSentence(self, sentence, ids, line):
+        """Process and build a tokenized sentence."""
         newSentence, stop = sentence, 0
         if self.efound:
             self.sfound = False
@@ -114,6 +138,7 @@ class SentenceParser:
         return newSentence, stop
 
     def processRawSentenceOS(self, sentence, ids, line):
+        """Process and build a raw sentence in OpenSubtitles."""
         newSentence, stop = sentence, 0
         if self.efound:
             self.sfound = False
@@ -133,6 +158,7 @@ class SentenceParser:
         return newSentence, stop
 
     def processRawSentence(self, sentence, ids, line):
+        """Process and build a raw sentence."""
         if self.start == 's' and self.sid in ids:
             newSentence = self.chara
             self.chara = ''
@@ -142,6 +168,7 @@ class SentenceParser:
             return sentence, 0
 
     def addTuBeginning(self):
+        """Add translation unit beginning to tmx."""
         sentences = ' '
         if self.direction == 'src':
             sentences = sentences + '\t\t<tu>\n'
@@ -150,6 +177,7 @@ class SentenceParser:
         return sentences
 
     def addSentence(self, sentences, sentence, sid):
+        """Add a sentence to a sequence of sentences."""
         if self.wmode == 'normal':
             sentences = (sentences + '\n(' + self.direction + ')="' +
                 str(sid) + '">' + sentence)
@@ -161,12 +189,14 @@ class SentenceParser:
         return sentences
 
     def addTuEnding(self, sentences):
+        """Add translation unit ending to tmx."""
         sentences = sentences + '</seg></tuv>'
         if self.direction == 'trg':
             sentences = sentences + '\n\t\t</tu>'
         return sentences
 
     def readSentence(self, ids):
+        """Read document and output sentence based on given sentence ids."""
         if len(ids) == 0 or ids[0] == '':
             return '', {}
         sentences = ''

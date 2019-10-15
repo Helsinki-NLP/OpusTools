@@ -9,6 +9,16 @@ class SentenceParser(SentenceParser):
 
     def __init__(self, document, print_annotations, set_attribute,
             change_annotation_delimiter, no_ids):
+        """Read sentence from a xml document.
+
+        Keyword arguments:
+        document -- Xml document
+        print_annotations -- Print annotations
+        set_attribute -- Set annotation attributes to be printed
+        change_annotation_delimiter -- Change annotation delimiter
+        no_ids -- Print sentences without sentence ids in plain mode
+        """
+
         super().__init__(document, '', '', '', '', print_annotations,
             set_attribute, change_annotation_delimiter, False)
 
@@ -29,6 +39,7 @@ class SentenceParser(SentenceParser):
             self.stopit = True
 
     def processTokenizedSentence(self, sentence):
+        """Process and build tokenized sentence."""
         newSentence, stop = sentence, 0
         if self.efound:
             self.sfound = False
@@ -43,6 +54,7 @@ class SentenceParser(SentenceParser):
         return newSentence, stop
 
     def readSentence(self):
+        """Read and return sentence."""
         sentence = ''
         while True:
             line = self.document.readline()
@@ -69,6 +81,23 @@ class OpusCat:
             print_annotations=False, set_attribute=['pos', 'lem'],
             change_annotation_delimiter='|',
             root_directory='/proj/nlpl/data/OPUS', download_dir='.' ):
+        """Print the contents of a xml sentence file.
+
+        Keyword arguments:
+        directory -- Name of the corpus directory
+        language -- Language of the corpus
+        no_ids -- Print sentences without ids in plain mode
+        maximum -- Maximum number of sentences to be printed (default all)
+        plain -- Print sentence in plain text
+        file_name -- Print a specific file within a corpus
+        release -- Corpus release version (default latest)
+        print_annotations -- Print annotations
+        set_attribute -- Set annotation attributes (default pos,lem)
+        change_annotation_delimiter -- Change annotation delimiter (default |)
+        root_directory -- Root directory for corpus files
+            (default /proj/nlpl/data/OPUS)
+        download_dir -- Directory where files will be downloaded (default .)
+        """
 
         self.maximum = maximum
         self.directory = directory
@@ -89,6 +118,7 @@ class OpusCat:
                 language+'.zip'))
 
     def openFiles(self, localfile, defaultpath):
+        """Open zip file."""
         try:
             try:
                 self.lzip = zipfile.ZipFile(localfile)
@@ -114,6 +144,7 @@ class OpusCat:
                 print('No file found')
 
     def printFile(self, f, n):
+        """Print sentences from a document."""
         xml_break = False
         if self.plain:
             spar = SentenceParser(f, self.print_annotations,
@@ -140,6 +171,7 @@ class OpusCat:
         return xml_break
 
     def printSentences(self):
+        """Print sentences from documents in a zip file."""
         try:
             if self.file_name:
                 with self.lzip.open(self.file_name, 'r') as f:

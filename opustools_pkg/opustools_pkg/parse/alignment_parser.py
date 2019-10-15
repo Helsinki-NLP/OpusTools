@@ -20,6 +20,47 @@ class AlignmentParser:
             attribute=None, print_annotations=None, target_annotations=None,
             source_annotations=None, change_annotation_delimiter=None,
             preserve_inline_tags=None, threshold=None, verbose=False):
+        """Parse xces alignment files and output sentence pairs.
+
+        source -- Source zip file name
+        target -- Target zip file name
+        result -- Result file name
+        mosessrc -- Moses source result file name
+        mosestrg -- Moses target result file name
+        fromto -- Language direction
+        switch_langs -- Switch language direction
+        src_cld2 -- Filter source sentence by cld2 language ids and confidence
+        trg_cld2 -- Filter target sentence by cld2 language ids and confidence
+        src_langid -- Filter source sentence by langid.py language ids and
+            confidence
+        trg_langid -- Filter target sentence by langid.py language ids and
+            confidence
+        leave_non_alignment_out -- Leave non-alignments out
+        src_range -- Number of source sentences in alignment (default all)
+        trg_range -- Number of target sentences in alignment (default all)
+        download_dir -- Set directory where files will be downloaded
+        directory -- Corpus directory name
+        release -- Corpus release version (default latest)
+        preprocess -- Corpus preprocessing type (default xml)
+        source_zip -- Source zip file
+        target_zip -- Target zip file
+        suppress_prompts -- Download necessary files without prompting "(y/n)"
+        fast -- Use fast parsing (unstable)
+        write_mode -- Set write mode (default normal)
+        print_file_names -- Print file names when using moses format
+        write -- Write to a given file name. Give two file names to write
+            moses format to two files.
+        attribute -- Set attribute for filtering
+        print_annotations -- Print annotations if they exist
+        source_annotations -- Set source annotations to be printed
+            (default pos,lem)
+        target_annotations -- Set target annotations to be printed
+            (default pos,lem)
+        change_annotation_delimiter -- Change annotation delimiter (default |)
+        preserve_inline_tags -- Preserve inline tags within sentences
+        threshold -- Set threshold for filtering attribute
+        verbose -- Print progress messages when writing results to files
+        """
 
         self.source = source
         self.target = target
@@ -84,6 +125,7 @@ class AlignmentParser:
         self.tlim.sort()
 
     def getZipFile(self, downloaded, default, localfile):
+        """Open zip file."""
         if self.verbose: print('Opening zip archive ', end='')
         if localfile != None and os.path.exists(localfile):
             if self.verbose: print('"{}" ... '.format(localfile), end='')
@@ -98,6 +140,7 @@ class AlignmentParser:
         return None
 
     def openZipFiles(self):
+        """Open source and target zip files."""
         self.sourcezip = self.getZipFile(
             os.path.join(self.download_dir, self.directory+'_'+
                 self.release+'_'+ self.preprocess+'_'+self.fromto[0]+'.zip'),
@@ -112,6 +155,7 @@ class AlignmentParser:
         if self.verbose: print('Done')
 
     def openSentenceParsers(self, attrs):
+        """Open sentence parsers."""
         fromDoc = attrs['fromDoc']
         toDoc = attrs['toDoc']
         sourcefile_path = os.path.join(self.download_dir, fromDoc)
@@ -230,6 +274,7 @@ class AlignmentParser:
             self.tPar.storeSentences()
 
     def initializeSentenceParsers(self, attrs):
+        """Initialize sentence parsers."""
         if self.write_mode == 'normal':
             docnames = ('\n# ' + attrs['fromDoc'] + '\n# ' +
                 attrs['toDoc'] + '\n\n================================')
@@ -251,6 +296,7 @@ class AlignmentParser:
         self.openSentenceParsers(attrs)
 
     def processLink(self, attrs):
+        """Process a link in a xces alignment file."""
         self.ascore = None
         if self.attribute in attrs.keys():
             self.ascore = attrs[self.attribute]
@@ -276,10 +322,12 @@ class AlignmentParser:
             self.processLink(attrs)
 
     def parseLine(self, line):
+        """Parse a line in alignment file."""
         self.start = ''
         self.alignParser.Parse(line)
 
     def sentencesOutsideLimit(self):
+        """Test if numbers of sentences are outside specifed limits."""
         snum = len(self.fromids)
         tnum = len(self.toids)
         if snum == 0 or self.fromids[0] == '':
@@ -292,6 +340,7 @@ class AlignmentParser:
             (tnum < int(self.tlim[0]) or tnum > int(self.tlim[-1]))))
 
     def testConfidence(self, confidence, attrsList, ider):
+        """See if language id confidence is over spcified limit."""
         if attrsList == []:
             return False
         if confidence:
@@ -303,12 +352,14 @@ class AlignmentParser:
         return True
 
     def langIdConfidence(self, srcAttrs, trgAttrs):
+        """Test language id confidence for all settings."""
         return (self.testConfidence(self.src_cld2, srcAttrs, 'cld2')
             and self.testConfidence(self.trg_cld2, trgAttrs, 'cld2')
             and self.testConfidence(self.src_langid, srcAttrs, 'langid')
             and self.testConfidence(self.trg_langid, trgAttrs, 'langid'))
 
     def readPair(self):
+        """Read and output sentence pair based on a link in alignment file."""
         #tags other than link are printed in link printing mode, 
         #otherwise they are skipped
         if self.start != 'link':
@@ -341,6 +392,7 @@ class AlignmentParser:
             return sourceSen, targetSen
 
     def closeFiles(self):
+        """Close zip files and document files."""
         if self.zipFilesOpened:
             self.sourcezip.close()
             self.targetzip.close()

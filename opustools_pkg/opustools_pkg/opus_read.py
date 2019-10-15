@@ -11,6 +11,11 @@ from .opus_get import OpusGet
 class AlignmentParserError(Exception):
 
     def __init__(self, message):
+        """Raise error when alignment parsing fails.
+
+        Keyword arguments:
+        message -- Error message to be printed
+        """
         self.message = message
 
 class OpusRead:
@@ -28,6 +33,50 @@ class OpusRead:
             src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
             write_ids=None, suppress_prompts=False, download_dir='.',
             preserve_inline_tags=False, verbose=False):
+        """Read xces alignment files and xml sentence files and output in
+        desired format.
+
+        Keyword arguments:
+        directory -- Corpus directory name
+        source -- Source language
+        target -- Target language
+        release -- Corpus release version (default latest)
+        preprocess -- Corpus preprocessing type (default xml)
+        maximum -- Maximum number of alignments outputted (default all)
+        src_range -- Number of source sentences in alignment (default all)
+        trg_range -- Number of target sentences in alignment (default all)
+        attribute -- Set attribute for filtering
+        threshold -- Set threshold for filtering attribute
+        leave_non_alignment_out -- Leave non-alignments out
+        write -- Write to a given file name. Give two file names to write
+            moses format to two files.
+        write_mode -- Set write mode (default normal)
+        print_file_names -- Print file names when using moses format
+        fast -- Use fast parsing (unstable)
+        root_directory -- Set root directory for corpora
+            (default /proj/nlpl/data/OPUS)
+        alignment_file -- Use given alignment file
+        source_zip -- Use given source zip file
+        target_zip -- Use given target zip file
+        change_moses_delimiter -- Change moses delimiter (default tab)
+        print_annotations -- Print annotations if they exist
+        source_annotations -- Set source annotations to be printed
+            (default pos,lem)
+        target_annotations -- Set target annotations to be printed
+            (default pos,lem)
+        change_annotation_delimiter -- Change annotation delimiter (default |)
+        src_cld2 -- Filter source sentence by cld2 language ids and confidence
+        trg_cld2 -- Filter target sentence by cld2 language ids and confidence
+        src_langid -- Filter source sentence by langid.py language ids and
+            confidence
+        trg_langid -- Filter target sentence by langid.py language ids and
+            confidence
+        write_ids -- Write sentence ids to a given file
+        suppress_prompts -- Download necessary files without prompting "(y/n)"
+        download_dir -- Directory where files will be downloaded (default .)
+        preserve_inline_tags -- Preserve inline tags within sentences
+        verbose -- Print progress messages when writing results to files
+        """
 
         self.fromto = sorted([source, target])
         fromto_copy = [source, target]
@@ -137,6 +186,7 @@ class OpusRead:
         self.write_ids=write_ids
 
     def printPair(self, sPair):
+        """Return sentence pair in printing format."""
         ret = ''
         if self.write_mode == 'links':
             ret = sPair
@@ -150,6 +200,7 @@ class OpusRead:
         return ret
 
     def writePair(self, sPair):
+        """Return sentence pair in writing format."""
         ret1, ret2 = '', ''
         if self.write_mode == 'links':
             ret1 = sPair+'\n'
@@ -166,6 +217,7 @@ class OpusRead:
         return (ret1, ret2)
 
     def sendPairOutput(self, wpair):
+        """Write pair to output file."""
         if self.write_mode == 'moses' and len(self.write) == 2:
             self.mosessrc.write(wpair[0])
             self.mosestrg.write(wpair[1])
@@ -173,12 +225,14 @@ class OpusRead:
             self.resultfile.write(wpair[0])
 
     def sendIdOutput(self, id_details):
+        """Write sentence ids to output file."""
         id_line = '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(
             id_details[0], id_details[1], ' '.join(id_details[2]),
             ' '.join(id_details[3]), id_details[4])
         self.id_file.write(id_line)
 
     def outputPair(self, par, line):
+        """Read pair from alignment parser and output in appropriate way."""
         try:
             par.parseLine(line)
         except xml.parsers.expat.ExpatError as e:
@@ -273,6 +327,7 @@ class OpusRead:
             self.resultfile.close()
 
     def readAlignment(self, align):
+        """Read and process alignment file."""
         if self.maximum == -1:
             for line in align:
                 lastline = self.outputPair(self.par, line)[1]
@@ -290,6 +345,7 @@ class OpusRead:
         return lastline
 
     def printPairs(self):
+        """Open alignment file, parse it and output sentence pairs."""
         if self.write_mode == 'tmx':
             self.addTmxHeader()
 

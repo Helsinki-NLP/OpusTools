@@ -13,11 +13,19 @@ from .parse.sentence_parser import SentenceParser
 class LanguageIdAdder(SentenceParser):
 
     def __init__(self, suppress, iszip):
+        """Add language ids and confidence scores to sentences in a xml file.
+
+        Positional arguments:
+        suppress -- Suppress errors in language identification
+        iszip -- Parse zip file (bytes) instead of plain text
+        """
+
         super().__init__('', '', '', False, '', '', '', '', False)
         self.iszip = iszip
         self.suppress = suppress
 
     def detectLanguage(self, sentence, sid):
+        """Assign language ids and scores to a sentence."""
         try:
             clddetails = pycld2.detect(sentence)
         except Exception as e:
@@ -39,6 +47,7 @@ class LanguageIdAdder(SentenceParser):
         return cldlan, cldconf, lilan, liconf
 
     def addIds(self, infile, outfile):
+        """Add language ids to sentences in a xml file."""
         done = False
         outfile.write(infile.readline())
         while not done:
@@ -95,6 +104,15 @@ class OpusLangid:
 
     def __init__(self, file_path=None, target_file_path=None, verbosity=0,
             suppress_errors=False):
+        """Add language ids and confidence scores to sentences in plain xml
+        files or xml file in zip archives.
+
+        Keyword arguments:
+        file_path -- Path to the file where language ids will be added
+        target_file -- Path to the output file
+        verbosity -- Report progress during language identification
+        suppress_errors -- Suppress errors in language detection
+        """
 
         self.file_path = file_path
         self.target_file_path = target_file_path
@@ -102,6 +120,7 @@ class OpusLangid:
         self.suppress_errors = suppress_errors
 
     def processFiles(self):
+        """Add language ids and confidence score to xml files."""
         try:
             tempname = tempfile.mkstemp()
             with zipfile.ZipFile(self.file_path, 'r') as zip_arc:

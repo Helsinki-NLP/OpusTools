@@ -57,9 +57,9 @@ parser.add_argument('-f', '--fast',
         'ids in alignment files to be in sequence.',
     action='store_true')
 parser.add_argument('-rd', '--root_directory',
-    help='Change root directory (default=/proj/nlpl/data/OPUS/)',
+    help='Change root directory (default=/proj/nlpl/data/OPUS)',
     metavar='path_to_dir',
-    default='/proj/nlpl/data/OPUS/')
+    default='/proj/nlpl/data/OPUS')
 parser.add_argument('-af', '--alignment_file',
     help='Use given alignment file',
     metavar='path_to_file', default=-1)
@@ -127,7 +127,7 @@ parser.add_argument('-pi', '--preserve_inline_tags',
     help='Preserve inline tags within sentences',
     action='store_true')
 parser.add_argument('-v', '--verbose',
-    help='Print progess messages when writing results to files',
+    help='Print progress messages when writing results to files',
     action='store_true')
 
 args = parser.parse_args()

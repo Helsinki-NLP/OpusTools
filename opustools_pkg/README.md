@@ -64,7 +64,7 @@ arguments:
                     a small part of the whole corpus, but requires the
                     sentence ids in alignment files to be in sequence.
 -rd path_to_dir, --root_directory path_to_dir
-                    Change root directory (default=/proj/nlpl/data/OPUS/)
+                    Change root directory (default=/proj/nlpl/data/OPUS)
 -af path_to_file, --alignment_file path_to_file
                     Use given alignment file
 -sz path_to_zip, --source_zip path_to_zip
@@ -105,7 +105,7 @@ arguments:
                     Set download directory (default=current directory)
 -pi, --preserve_inline_tags
                     Preserve inline tags within sentences
--v, --verbose       Print progess messages when writing results to files
+-v, --verbose       Print prorgess messages when writing results to files
 ```
 
 

@@ -9,6 +9,18 @@ class OpusGet:
     def __init__(self, source=None, target=None, directory=None,
             release='latest', preprocess='xml', list_resources=False,
             download_dir='.', suppress_prompts=False):
+        """Download files from OPUS.
+
+        Keyword arguments:
+        source -- Source language
+        target -- Target language
+        directory -- Corpus directory name
+        release -- Corpus release version (default latest)
+        preprocess -- Corpus preprocessing type (default xml)
+        list_resource -- List resources instead of downloading
+        download_dir -- Directory where files will be downloaded (default .)
+        suppress_prompts -- Download files without prompting "(y/n)"
+        """
 
         if target != None:
             self.fromto = [source, target]
@@ -37,6 +49,7 @@ class OpusGet:
         self.suppress_prompts = suppress_prompts
 
     def round_size(self, size, length, unit):
+        """Round file size."""
         last_n = str(size)[-length]
         size = int(str(size)[:-length])
         if int(last_n) >= 5:
@@ -45,6 +58,7 @@ class OpusGet:
         return size
 
     def format_size(self, size):
+        """Format file size."""
         if len(str(size)) > 9:
             size = self.round_size(size, 9, ' TB')
         elif len(str(size)) > 6:
@@ -53,9 +67,10 @@ class OpusGet:
             size = self.round_size(size, 3, ' MB')
         else:
             size = str(size) + ' KB'
-        return(size)
+        return size
 
     def get_response(self, url):
+        """Return data from a url."""
         response = urllib.request.urlopen(url[:-1])
         result = response.read().decode('utf-8')
         data = json.loads(result)
@@ -63,6 +78,7 @@ class OpusGet:
         return data
 
     def add_data_with_aligment(self, tempdata, retdata):
+        """Add corpus data, that has source and target files, to data."""
         for i in tempdata:
             if (i['preprocessing'] == 'xml' and i['source'] == self.fromto[0]
                     and i['target'] == self.fromto[1]):
@@ -71,6 +87,9 @@ class OpusGet:
         return retdata
 
     def remove_data_with_no_alignment(self, data):
+        """Remove corpus data, that are missing source or target files,
+        from data.
+        """
         retdata = []
         tempdata = []
         prev_directory = ''
@@ -87,6 +106,7 @@ class OpusGet:
         return retdata
 
     def make_file_name(self, c):
+        """Return file name based on corpus data."""
         filename = c['url'].replace('/', '_').replace(
             'https:__object.pouta.csc.fi_OPUS-', '')
         if self.release == 'latest':
@@ -95,6 +115,7 @@ class OpusGet:
         return os.path.join(self.download_dir, filename)
 
     def get_corpora_data(self):
+        """Receive corpus data."""
         file_n = 0
         total_size = 0
         data = self.get_response(self.url)
@@ -120,6 +141,7 @@ class OpusGet:
         return ret_corpora, file_n, total_size
 
     def progress_status(self, count, blockSize, totalSize):
+        """Report download progress."""
         percent = int(count*blockSize*100/totalSize)
         if percent > 100:
             percent = 100
@@ -127,6 +149,7 @@ class OpusGet:
             self.filesize), end='', flush=True)
 
     def download(self, corpora, file_n, total_size):
+        """Download files."""
         if self.suppress_prompts == False:
             answer = input(('Downloading ' + str(file_n) + ' file(s) with the '
                 'total size of ' + total_size + '. Continue? (y/n) '))
@@ -146,12 +169,13 @@ class OpusGet:
                     return
 
     def print_files(self, corpora, file_n, total_size):
+        """Print file list."""
         for c in corpora:
             print('{0:>7} {1:s}'.format(self.format_size(c['size']), c['url']))
         print('\n{0:>7} {1:s}'.format(total_size, 'Total size'))
 
-
     def get_files(self):
+        """Output corpus file information/data."""
         try:
             corpora, file_n, total_size = self.get_corpora_data()
         except urllib.error.URLError as e:

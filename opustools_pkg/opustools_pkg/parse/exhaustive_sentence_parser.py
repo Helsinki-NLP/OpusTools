@@ -4,12 +4,27 @@ class ExhaustiveSentenceParser(SentenceParser):
 
     def __init__(self, document, preprocessing, direction, wmode,
             language, annotations, anno_attrs, delimiter, preserve):
+        """Parse xml sentence files that have sentence ids in any order.
+
+        Positional arguments:
+        document -- Xml file to be parsed
+        preprocessing -- Preprocessing type of the document
+        direction -- Source/target direction
+        wmode -- Write mode
+        language -- Language id of the document
+        annotations -- Print annotations
+        anno_attrs -- Which annotations will be printed
+        delimiter -- Annotation attribute delimiter
+        preserve -- Preserve inline tags
+        """
+
         super().__init__(document, direction, preprocessing, wmode,
             language, annotations, anno_attrs, delimiter, preserve)
         self.sentences = {}
         self.done = False
 
     def storeSentences(self):
+        """Read document and store sentences in a dictionary."""
         self.document.readline()
         while not self.done:
             sentence = ''
@@ -50,12 +65,14 @@ class ExhaustiveSentenceParser(SentenceParser):
         self.document.close()
 
     def getSentence(self, sid):
+        """Return a sentence based on given sentence id."""
         if sid in self.sentences.keys():
             return self.sentences[sid]
         else:
             return '', {}
 
     def readSentence(self, ids):
+        """Return a sequence of sentences based on given sentence ids."""
         if len(ids) == 0 or ids[0] == '':
             return '', []
         sentence = ''
