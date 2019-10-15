@@ -6,7 +6,7 @@ from os import path
 import zipfile
 
 from opustools_pkg import OpusRead
-from random import Random
+from random import randint
 from xml.parsers.expat import ExpatError
 
 all_collections = ['Bianet', 'Books', 'CAPES', 'DGT', 'DOGC', 'ECB', 'EMEA',
@@ -84,9 +84,6 @@ if test_override_path:
 
   print('...done!')
 
-seed = 8675309
-fixed = Random(seed)
-
 dump_test = []
 dump_hiqu = []
 dump_loqu = []
@@ -136,7 +133,7 @@ for collection in collections:
   print('Checking out %s...' % collection)
 
   try:
-    tmp = 'tmp-%d' % fixed.randint(10000000, 99999999)
+    tmp = 'tmp-%d' % randint(10000000, 99999999)
 
     reader = OpusReadPipe(root_directory=args.root_dir,
             attribute='overlap',
@@ -199,9 +196,9 @@ if not dump_test and not dump_hiqu and not dump_loqu:
 if args.shuffle:
   print('Pre-shuffling bins...')
 
-  fixed.shuffle(dump_test)
-  fixed.shuffle(dump_hiqu)
-  fixed.shuffle(dump_loqu)
+  shuffle(dump_test)
+  shuffle(dump_hiqu)
+  shuffle(dump_loqu)
 
   print('...done!')
 
@@ -241,9 +238,9 @@ print('...done!')
 if args.shuffle:
   print('Post-shuffling test/dev/train sets...')
 
-  fixed.shuffle(test)
-  fixed.shuffle(dev)
-  fixed.shuffle(train)
+  shuffle(test)
+  shuffle(dev)
+  shuffle(train)
 
   print('...done!')
 
