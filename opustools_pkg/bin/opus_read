@@ -79,14 +79,14 @@ parser.add_argument('-pa', '--print_annotations',
 parser.add_argument('-sa', '--source_annotations',
     help='Set source sentence annotation attributes to be printed'
         ', e.g. -sa pos lem. To print all available attributes use '
-        '-sa all_attrs (default=pos,lem)',
+        '-sa all_attrs (default=pos lem)',
     metavar='attribute',
     nargs='+',
     default=['pos', 'lem'])
 parser.add_argument('-ta', '--target_annotations',
     help='Set target sentence annotation attributes to be printed'
         ', e.g. -ta pos lem. To print all available attributes use '
-        '-ta all_attrs (default=pos,lem)',
+        '-ta all_attrs (default=pos lem)',
     metavar='attribute',
     nargs='+',
     default=['pos', 'lem'])

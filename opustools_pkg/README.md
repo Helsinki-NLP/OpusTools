@@ -78,11 +78,11 @@ arguments:
 -sa attribute [attribute ...], --source_annotations attribute [attribute ...]
                     Set source sentence annotation attributes to be
                     printed, e.g. -sa pos lem. To print all available
-                    attributes use -sa all_attrs (default=pos,lem)
+                    attributes use -sa all_attrs (default=pos lem)
 -ta attribute [attribute ...], --target_annotations attribute [attribute ...]
                     Set target sentence annotation attributes to be
                     printed, e.g. -ta pos lem. To print all available
-                    attributes use -ta all_attrs (default=pos,lem)
+                    attributes use -ta all_attrs (default=pos lem)
 -ca delimiter, --change_annotation_delimiter delimiter
                     Change annotation delimiter (default=|)
 --src_cld2 lang_id score
@@ -108,46 +108,6 @@ arguments:
 -v, --verbose       Print prorgess messages when writing results to files
 ```
 
-
-**Examples:**
-
-Read sentence alignment in XCES align format:
-
-`opus_read -d Books -s en -t fi`
-
-Print alignments with alignment certainty > LinkThr=0:
-
-`opus_read -d MultiUN -s en -t es -a certainty -tr 0`
-
-Print first 10 alignment pairs:
-
-`opus_read -d Books -s en -t fi -m 10`
-
-Print XCES align format of all 1:1 sentence alignments:
-
-`opus_read -d Books -s en -t fi -S 1 -T 1 -wm links`
-
-
-**You can also import the module to your python script:**
-
-In `your_script.py`, first import the package:
-
-`import opustools_pkg`
-
-Initialize OpusRead:
-
-```
-opus_reader = opustools_pkg.OpusRead(
-    directory='Books',
-    source='en',
-    target='fi')
-opus_reader.printPairs()
-```
-
-and then run:
-
-`python3 your_script.py`
-
 ### Description
 
 `opus_read` is a script to read sentence alignments stored in XCES align format and prints the aligned sentences to STDOUT. It requires monolingual alignments of sentences in linked XML files. Linked XML files are specified in the "toDoc" and "fromDoc" attributes (see below).
@@ -171,6 +131,151 @@ XCES align format. Set the "-wm" flag to "links" to enable this mode.
 `opus_read` uses `ExhaustiveSentenceParser` by default. This means that each time a `<linkGrp>` tag is found, the corresponding source and target documents are read through and each sentence is stored in a hashmap with the sentence id as the key. This allows the reader to read alignment files that have sentence ids in non-sequential order. Each time a `<linkGrp>` tag is found, the script pauses printing for a second to read through the source and target documents. The duration of the pause depends on the size of the source and target documents.
 
 Using the "-f" flag allows the usage of `SentenceParser`, which is faster than ExhaustiveSentenceParser in cases where only a small part of a corpus is read. `SentenceParser` does not store the sentences in a hashmap. Rather, when it finds a `<link>` tag, it iterates through a sentence file until a sentence id is matched with the sentence id found in the `<link>` tag. SentenceParser can't go backwards, which means that if the ids are not in sequential order in the alignment file, the parser will not find alignment pairs after the sentence id sequence breaks. `SentenceParser` is less reliable than `ExhaustiveSentenceParser`, but using the "-f" flag is beneficial when the whole corpus does not need to be scanned, in other words, when using the "-m" flag.
+
+**Examples:**
+
+Read sentence alignment in XCES align format. Necessary files will be downloaded if they are not found locally:
+
+`opus_read --directory RF --source en --target sv`
+
+Read sentences with specific preprocessing type. (default is xml, which is tokenized text):
+
+`opus_read --directory RF --source en --target sv --preprocess raw`
+
+Leave non-alignments (pairs with no sentences on one side) out
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --preprocess raw\
+    --leave_non_alignments_out
+```
+
+Print first 10 alignment pairs:
+
+`opus_read --directory RF --source en --target sv -m 10`
+
+Print XCES align format of all 1:1 sentence alignments:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --src_range 1 \
+    --tgt_range 1
+```
+
+Print alignments with alignment certainty than 1.1:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --attribute certainty \
+    --threshold 1.1
+```
+
+Write results to file:
+
+`opus_read --directory RF --source en --target sv --write result.txt`
+
+Write with different output format:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --write result.tmx\
+    --write_mode tmx
+```
+
+Write moses format to one file:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --write en-sv.txt\
+    --write_mode moses
+```
+
+or to two files:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --write en-sv.en en-sv.sv \
+    --write_mode moses
+```
+
+Read sentence using your alignment file. First create an alignment file, for example:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --attribute certainty \
+    --threshold 1.1 \
+    --write_mode links \
+    --write en-sv.links
+```
+
+Then use the created alignment file:
+
+`opus_read --directory RF --source en --target sv --alignment_file en-sv.links`
+
+Annotations can be printed with `--print_annotations` if they are included in the sentence files. To print all annotation attributes, specify this with `--source_annotations` and `--target_annotations` flags:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --print_annotations \
+    --source_annotations all_attrs \
+    --target_annotations all_attrs
+```
+
+Sentences can be filtered by their language identification labels and confidence score. First, language ids need to be added to sentence files with `opus_langid`. If you have run the previous examples, you should have `RF_latest_xml_en.zip` and `RF_latest_xml_sv.zip` in your current working directory. Apply `opus_langid` to these files:
+
+```
+opus_langid --file_path RF_latest_xml_en.zip
+opus_langid --file_path RF_latest_xml_sv.zip
+```
+
+Now you can filter by language ids. This example uses both cld2 and langid.py language detection confidence scores:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --src_cld2 en 0.99 \
+    --trg_cld2 sv 0.99 \
+    --src_langid en 1 \
+    --trg_langid sv 1
+```
+
+**You can also import the module to your python script:**
+
+In `your_script.py`, first import the package:
+
+`import opustools_pkg`
+
+Initialize OpusRead:
+
+```
+opus_reader = opustools_pkg.OpusRead(
+    directory='Books',
+    source='en',
+    target='fi')
+opus_reader.printPairs()
+```
+
+and then run:
+
+`python3 your_script.py`
+
 
 ## opus_express
 
