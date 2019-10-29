@@ -78,7 +78,8 @@ class OpusGet:
         return data
 
     def add_data_with_aligment(self, tempdata, retdata):
-        """Add corpus data, that has source and target files, to data."""
+        """Add tempdata, that has an alignment file for the
+        current language pair, to retdata."""
         for i in tempdata:
             if (i['preprocessing'] == 'xml' and i['source'] == self.fromto[0]
                     and i['target'] == self.fromto[1]):
@@ -87,13 +88,17 @@ class OpusGet:
         return retdata
 
     def remove_data_with_no_alignment(self, data):
-        """Remove corpus data, that are missing source or target files,
-        from data.
+        """Remove corpus data, that are missing an alignment file for
+        the current language pair, from data.
         """
         retdata = []
         tempdata = []
         prev_directory = ''
 
+        #Put all files from one directory to tempfile, and
+        #when the directory changes, add the files to retdata,
+        #if the files contain an alignment file for the current
+        #language pair.
         for c in data['corpora']:
             directory = '/{0}/{1}'.format(c['corpus'], c['version'])
             if prev_directory != '' and prev_directory!=directory:
