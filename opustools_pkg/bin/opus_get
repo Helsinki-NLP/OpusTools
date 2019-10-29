@@ -5,7 +5,7 @@ from opustools_pkg import OpusGet
 
 parser = argparse.ArgumentParser(prog='opus-get',
     description='Download files from OPUS')
-parser.add_argument('-s', '--source', help='Source language', required=True)
+parser.add_argument('-s', '--source', help='Source language')
 parser.add_argument('-t', '--target', help='Target language')
 parser.add_argument('-d', '--directory', help='Corpus name')
 parser.add_argument('-r', '--release', help='Release', default='latest')

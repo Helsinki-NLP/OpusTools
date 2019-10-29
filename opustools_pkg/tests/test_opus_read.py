@@ -3233,6 +3233,15 @@ class TestOpusGet(unittest.TestCase):
 
         self.assertEqual(printout.getvalue(), '')
 
+    def test_download_everything_from_a_corpus(self):
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
+        files = OpusGet(directory='RF', release='v1', preprocess='xml',
+            list_resources=True).get_files()
+        sys.stdout = old_stdout
+        self.assertEqual(len(printout.getvalue().split('\n')), 18)
+
 if __name__ == '__main__':
     unittest.main()
 
