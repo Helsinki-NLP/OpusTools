@@ -9,9 +9,9 @@ import shutil
 import zipfile
 import tempfile
 
-from opustools_pkg import OpusRead, OpusCat, OpusGet
-from opustools_pkg.opus_read import AlignmentParserError
-from opustools_pkg.parse.sentence_parser import SentenceParserError
+from opustools import OpusRead, OpusCat, OpusGet
+from opustools.opus_read import AlignmentParserError
+from opustools.parse.sentence_parser import SentenceParserError
 
 def pairPrinterToVariable(**kwargs):
     old_stdout = sys.stdout
@@ -274,7 +274,7 @@ class TestOpusRead(unittest.TestCase):
         self.fastopr.par.tlim=['all']
         self.fastopr.par.attribute = 'any'
         self.fastopr.par.nonAlignments = False
-            #self.fastopr.par.leave_non_alignments_out
+        #self.fastopr.par.leave_non_alignments_out
         self.fastopr.par.maximum = -1
         self.fastopr.par.alignParser = xml.parsers.expat.ParserCreate()
         self.fastopr.par.alignParser.StartElementHandler = \
@@ -2485,7 +2485,7 @@ class TestOpusRead(unittest.TestCase):
         sys.argv = temp_args.copy()
     '''
 
-    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    @mock.patch('opustools.opus_get.input', create=True)
     def test_alignment_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y', 'n']
         opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -2516,7 +2516,7 @@ class TestOpusRead(unittest.TestCase):
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
 
-    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    @mock.patch('opustools.opus_get.input', create=True)
     def test_zip_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y']
         opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -2977,7 +2977,7 @@ class TestOpusCat(unittest.TestCase):
         sys.argv = temp_args.copy()
     '''
 
-    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    @mock.patch('opustools.opus_get.input', create=True)
     def test_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y']
         var = self.printSentencesToVariable(directory='RFOSIAJ', language='en',
@@ -2986,7 +2986,7 @@ class TestOpusCat(unittest.TestCase):
         self.assertEqual(var[-28:],
             '\nNecessary files not found.\n')
 
-    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    @mock.patch('opustools.opus_get.input', create=True)
     def test_download_necessary_files(self, mocked_input):
         mocked_input.side_effect = ['y', 'n', 'n']
 
@@ -3180,7 +3180,7 @@ class TestOpusGet(unittest.TestCase):
 
         self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
 
-    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    @mock.patch('opustools.opus_get.input', create=True)
     def test_download_invalid_url(self, mocked_input):
         mocked_input.side_effect = ['y']
         opg = OpusGet(directory='RF', source='en', target='sv',
@@ -3195,7 +3195,7 @@ class TestOpusGet(unittest.TestCase):
 
         self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
 
-    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    @mock.patch('opustools.opus_get.input', create=True)
     def test_dont_list_files_that_are_already_in_path(self, mocked_input):
         mocked_input.side_effect = ['y']
         OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
@@ -3216,7 +3216,7 @@ class TestOpusGet(unittest.TestCase):
             'ts\n        {tempdir}/RF_latest_xml_sv.zip already exist'
             's\n\n   0 KB Total size\n'.format(tempdir=self.tempdir))
 
-    @mock.patch('opustools_pkg.opus_get.input', create=True)
+    @mock.patch('opustools.opus_get.input', create=True)
     def test_dont_download_files_that_are_already_in_path(self, mocked_input):
         mocked_input.side_effect = ['y', 'y']
         OpusGet(directory='RF', source='en', target='sv', preprocess='xml',

@@ -3,7 +3,7 @@
 import argparse
 from yaml import load, Loader
 
-from opustools_pkg.opus_filter import OpusFilter
+from opustools.opus_filter import OpusFilter
 
 parser = argparse.ArgumentParser(prog='opus_filter',
     description='Filter OPUS bitexts')

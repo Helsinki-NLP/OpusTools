@@ -4,7 +4,7 @@ import zipfile
 import shutil
 import tempfile
 
-from opustools_pkg.opus_langid import OpusLangid
+from opustools.opus_langid import OpusLangid
 
 class TestOpusLangid(unittest.TestCase):
 

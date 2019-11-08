@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 
-from opustools_pkg import OpusCat
+from opustools import OpusCat
 
 parser = argparse.ArgumentParser(prog='opus_cat',
     description='Read a document from OPUS and print to STDOUT')

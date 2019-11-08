@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 
-from opustools_pkg import OpusGet
+from opustools import OpusGet
 
 parser = argparse.ArgumentParser(prog='opus-get',
     description='Download files from OPUS')

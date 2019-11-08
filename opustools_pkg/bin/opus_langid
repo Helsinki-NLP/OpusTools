@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 
-from opustools_pkg.opus_langid import OpusLangid
+from opustools.opus_langid import OpusLangid
 
 parser = argparse.ArgumentParser(prog='opus_langid',
     description= ('Add language ids to sentences in plain xml files '

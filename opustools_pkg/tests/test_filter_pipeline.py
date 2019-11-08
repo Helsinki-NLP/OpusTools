@@ -1,6 +1,6 @@
 import unittest
 
-from opustools_pkg.filter.pipeline import FilterPipeline
+from opustools.filter.pipeline import FilterPipeline
 
 class TestFilterPipeline(unittest.TestCase):
 

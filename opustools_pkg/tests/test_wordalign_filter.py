@@ -5,7 +5,7 @@ import os
 import tempfile
 import unittest
 
-from opustools_pkg.filter import word_alignment
+from opustools.filter import word_alignment
 
 
 class TestAlignFilter(unittest.TestCase):

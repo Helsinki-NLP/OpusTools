@@ -1,6 +1,6 @@
 import unittest
 
-from opustools_pkg import filter as opusfilter
+from opustools import filter as opusfilter
 
 
 class TestOpusFilter(unittest.TestCase):

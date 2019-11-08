@@ -5,7 +5,7 @@ import os
 from os import path
 import zipfile
 
-from opustools_pkg import OpusRead
+from opustools import OpusRead
 from random import randint
 from xml.parsers.expat import ExpatError
 

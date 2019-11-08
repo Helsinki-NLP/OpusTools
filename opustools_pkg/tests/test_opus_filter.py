@@ -5,9 +5,9 @@ import os
 import shutil
 import tempfile
 
-from opustools_pkg import OpusGet
-from opustools_pkg.opus_filter import OpusFilter
-from opustools_pkg.filter import lm
+from opustools import OpusGet
+from opustools.opus_filter import OpusFilter
+from opustools.filter import lm
 
 
 class TestOpusFilter(unittest.TestCase):

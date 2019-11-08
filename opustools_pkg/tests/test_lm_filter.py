@@ -5,7 +5,7 @@ import os
 import tempfile
 import unittest
 
-from opustools_pkg.filter import lm
+from opustools.filter import lm
 
 
 # TODO: tests for LMTokenizer

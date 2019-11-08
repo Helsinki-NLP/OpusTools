@@ -4,7 +4,7 @@ import os
 import tempfile
 import unittest
 
-from opustools_pkg.filter import tokenization
+from opustools.filter import tokenization
 
 
 class TestTokenization(unittest.TestCase):
