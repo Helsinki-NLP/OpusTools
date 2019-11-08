@@ -8,6 +8,8 @@ Tools for accessing and processing OPUS data.
 * opus_get: download files from OPUS
 * opus_langid: add language ids to sentences in xml files in zip archives
 
+---
+
 ## opus_read
 
 ### Usage
@@ -166,7 +168,7 @@ opus_read --directory RF \
     --tgt_range 1
 ```
 
-Print alignments with alignment certainty than 1.1:
+Print alignments with alignment certainty greater than 1.1:
 
 ```
 opus_read --directory RF \
@@ -210,7 +212,7 @@ opus_read --directory RF \
     --write_mode moses
 ```
 
-Read sentence using your alignment file. First create an alignment file, for example:
+Read sentences using your alignment file. First create an alignment file, for example:
 
 ```
 opus_read --directory RF \
@@ -237,7 +239,7 @@ opus_read --directory RF \
     --target_annotations all_attrs
 ```
 
-Sentences can be filtered by their language identification labels and confidence score. First, language ids need to be added to sentence files with `opus_langid`. If you have run the previous examples, you should have `RF_latest_xml_en.zip` and `RF_latest_xml_sv.zip` in your current working directory. Apply `opus_langid` to these files:
+Sentences can be filtered by their language id labels and confidence score. First, the language ids need to be added to the sentence files with `opus_langid`. If you have run the previous examples, you should have `RF_latest_xml_en.zip` and `RF_latest_xml_sv.zip` in your current working directory. Apply `opus_langid` to these files:
 
 ```
 opus_langid --file_path RF_latest_xml_en.zip
@@ -276,6 +278,7 @@ and then run:
 
 `python3 your_script.py`
 
+---
 
 ## opus_express
 
@@ -349,6 +352,8 @@ arguments:
 
 All aboard the OPUS Express! Create test/dev/train sets from OPUS data.
 
+---
+
 ## opus_cat
 
 ### Usage
@@ -391,6 +396,35 @@ arguments:
                       Set download directory (default=current directory)
 ```
 
+### Description
+
+Read a document from OPUS and print to STDOUT
+
+**Examples:**
+
+Read a corpus:
+
+```
+opus_cat --directory RF --language en
+```
+
+Read with output in plain text:
+
+```
+opus_cat --directory RF --language en --plain
+```
+
+Read with output in plain text including annotations:
+
+```
+opus_cat --directory RF --language en --plain --print_annotations
+```
+
+Read a specific file in a corpus:
+
+```
+opus_cat --directory RF --language en --file_name RF/xml/en/1996.xml
+```
 
 **You can also import the module to your python script:**
 
@@ -398,27 +432,14 @@ In `your_script.py`, first import the package:
 
 `import opustools_pkg`
 
-Initialize OpusCat
-
-```
-opus_cat = opustools_pkg.OpusCat(directory='Books', language='en')
-opus_cat.printSentences()
-```
-
-and then run:
-
-`python3 your_script.py`
-
-### Description
-
-Read a document from OPUS and print to STDOUT
+---
 
 ## opus_get
 
-## Usage
+### Usage
 
 ```
-usage: opus-get [-h] -s SOURCE [-t TARGET] [-d DIRECTORY] [-r RELEASE]
+usage: opus_get [-h] -s SOURCE [-t TARGET] [-d DIRECTORY] [-r RELEASE]
                 [-p {raw,xml,parsed}] [-l] [-dl DOWNLOAD_DIR] [-q]
 ```
 
@@ -443,14 +464,53 @@ arguments:
                       Download necessary files without prompting "(y/n)"
 ```
 
-
 ### Description
 
 Download files from OPUS
 
+**Examples:**
+
+List available files in RF corpus for en-sv language pair:
+
+```
+opus_get --directory RF --source en --target sv --list
+```
+
+Download RF corpus for en-sv:
+
+```
+opus_get --directory RF --source en --target sv
+```
+
+You can specify the directory to which the files will be downloaded:
+
+```
+opus_get --directory RF --source en --target sv --download_dir RF_files
+```
+
+List all files in RF that include English:
+
+```
+opus_get --directory RF --source en --list
+```
+
+List all files for all language pairs in RF:
+
+```
+opus_get --directory RF --list
+```
+
+List all en-sv files in while OPUS:
+
+```
+opus_get --source en --target sv --list
+```
+
+---
+
 ## opus_langid
 
-## Usage
+### Usage
 
 ```
 usage: opus_langid [-h] -f FILE_PATH [-t TARGET_FILE_PATH] [-v] [-s]
@@ -470,7 +530,6 @@ arguments:
                       Suppress error messages in language detection
 ```
 
-
 ### Description
 
-Add language ids to sentences in plain xml files or xml files in zip archives using [pycld2](https://pypi.org/project/pycld2/) and [langid.py](https://github.com/saffsd/langid.py).
+Add language ids to sentences in plain xml files or xml files in zip archives using [pycld2](https://pypi.org/project/pycld2/) and [langid.py](https://github.com/saffsd/langid.py). This is required in order to be able to filter sentences by their language ids and confidence scores as described in the examples of opus_read.
