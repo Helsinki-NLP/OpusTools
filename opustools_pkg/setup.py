@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="opustools_pkg",
+    name="opustools",
     version="0.0.52",
     author="Mikko Aulamo",
     author_email="mikko.aulamo@helsinki.fi",

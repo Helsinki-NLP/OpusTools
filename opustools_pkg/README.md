@@ -262,12 +262,12 @@ opus_read --directory RF \
 
 In `your_script.py`, first import the package:
 
-`import opustools_pkg`
+`import opustools`
 
 Initialize OpusRead:
 
 ```
-opus_reader = opustools_pkg.OpusRead(
+opus_reader = opustools.OpusRead(
     directory='Books',
     source='en',
     target='fi')
@@ -430,7 +430,7 @@ opus_cat --directory RF --language en --file_name RF/xml/en/1996.xml
 
 In `your_script.py`, first import the package:
 
-`import opustools_pkg`
+`import opustools`
 
 ---
 
