@@ -175,6 +175,18 @@ class TestOpusRead(unittest.TestCase):
             os.makedirs(os.path.join(self.root_directory, 'RF', 'latest',
                 'xml'))
 
+            with gzip.open(os.path.join(self.root_directory, 'RF', 'latest',
+                    'xml', 'fi-sv.xml.gz'), 'wb') as f:
+                with open(os.path.join(self.tempdir1, 'books_alignment.xml'),
+                        'rb') as b:
+                    f.write(b.read())
+
+            with gzip.open(os.path.join(self.root_directory, 'RF', 'latest',
+                    'xml', 'ab-cd.xml.gz'), 'wb') as f:
+                with open(os.path.join(self.tempdir1, 'books_alignment.xml'),
+                        'rb') as b:
+                    f.write(b.read())
+
             add_to_root_dir(corpus='RF', source='en', target='sv',
                 preprocess='xml', root_dir=self.root_directory)
 
@@ -2746,6 +2758,17 @@ class TestOpusRead(unittest.TestCase):
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_fr.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_fr-sv.xml.gz'))
+
+    def test_zip_files_not_found_no_prompt(self):
+        with self.assertRaises(FileNotFoundError):
+            OpusRead(directory='RF', source='fi', target='sv',
+                maximum=1, download_dir=self.tempdir1, suppress_prompts=True,
+                root_directory=self.root_directory).printPairs()
+
+        with self.assertRaises(FileNotFoundError):
+            OpusRead(directory='RF', source='ab', target='cd',
+                maximum=1, download_dir=self.tempdir1, suppress_prompts=True,
+                root_directory=self.root_directory).printPairs()
 
     def test_alignment_file_could_not_be_parsed(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),

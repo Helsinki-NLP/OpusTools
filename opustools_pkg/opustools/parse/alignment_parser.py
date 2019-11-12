@@ -197,10 +197,18 @@ class AlignmentParser:
                     og.get_files()
 
                     self.openZipFiles()
-                    if self.sourcezip and self.targetzip:
+
+                    emessage = []
+                    for zf in [(self.sourcezip, self.source),
+                            (self.targetzip, self.target)]:
+                        if zf[0] == None:
+                            emessage.append('Zip file "{}" not found.'.format(
+                                zf[1].split('/')[-1]))
+
+                    if len(emessage) == 0:
                         self.zipFilesOpened = True
                     else:
-                        exit('No zip files found')
+                        raise FileNotFoundError(' '.join(emessage))
 
             #Try OPUS style file names in zip archives first. In OPUS,
             #directory and preprocessing information need to be added and
