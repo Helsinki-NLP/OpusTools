@@ -112,7 +112,7 @@ arguments:
 
 ### Description
 
-`opus_read` is a script to read sentence alignments stored in XCES align format and prints the aligned sentences to STDOUT. It requires monolingual alignments of sentences in linked XML files. Linked XML files are specified in the "toDoc" and "fromDoc" attributes (see below).
+`opus_read` is a script to read sentence alignments stored in XCES align format and print the aligned sentences to STDOUT. It requires monolingual alignments of sentences in linked XML files. Linked XML files are specified in the "toDoc" and "fromDoc" attributes (see below).
 
 ```
 <cesAlign version="1.0">
@@ -425,12 +425,6 @@ Read a specific file in a corpus:
 ```
 opus_cat --directory RF --language en --file_name RF/xml/en/1996.xml
 ```
-
-**You can also import the module to your python script:**
-
-In `your_script.py`, first import the package:
-
-`import opustools`
 
 ---
 
