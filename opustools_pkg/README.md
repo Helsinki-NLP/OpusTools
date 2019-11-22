@@ -433,7 +433,7 @@ opus_cat --directory RF --language en --file_name RF/xml/en/1996.xml
 ### Usage
 
 ```
-usage: opus_get [-h] -s SOURCE [-t TARGET] [-d DIRECTORY] [-r RELEASE]
+usage: opus_get [-h] [-s SOURCE] [-t TARGET] [-d DIRECTORY] [-r RELEASE]
                 [-p {raw,xml,parsed}] [-l] [-dl DOWNLOAD_DIR] [-q]
 ```
 
@@ -494,7 +494,7 @@ List all files for all language pairs in RF:
 opus_get --directory RF --list
 ```
 
-List all en-sv files in while OPUS:
+List all en-sv files in the whole OPUS:
 
 ```
 opus_get --source en --target sv --list
