@@ -8,6 +8,10 @@ Tools for accessing and processing OPUS data.
 * opus_get: download files from OPUS
 * opus_langid: add language ids to sentences in xml files in zip archives
 
+### Installation:
+
+`pip install opustools`
+
 ---
 
 ## opus_read
