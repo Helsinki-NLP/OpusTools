@@ -205,16 +205,24 @@ class SentenceParser:
         if self.wmode == 'tmx':
             sentences = self.addTuBeginning()
 
+        eof = False
         for i in ids:
             sentence = ''
             while True:
                 line = self.document.readline()
+                if not line:
+                    eof = True
+                    break
                 self.parseLine(line)
                 newSentence, stop = self.processSentence[self.pre](
                     sentence, ids, line)
                 sentence = newSentence
                 if stop == -1:
                     break
+            if eof:
+                raise SentenceParserError(
+                    'Sentence file "{}" could not be parsed with fast '
+                    'parser'.format(self.document.name))
 
             if self.pre == 'xml' or self.pre == 'parsed':
                 sentence = sentence.lstrip()
