@@ -1,4 +1,5 @@
 import xml.parsers.expat
+from ..util import file_open
 
 class Block:
 
@@ -27,7 +28,8 @@ class BlockParser:
         document -- Xml document to be parsed
         """
 
-        self.document = open(document)
+        #self.document = file_open(document)
+        self.document = document
         self.block = Block(name='root')
         self.completeBlocks = []
 
@@ -69,3 +71,11 @@ class BlockParser:
                 self.completeBlocks = []
                 return ret_blocks
 
+    @staticmethod
+    def tag_in_parents(tag, block):
+        """Check if given tag is in blocks parents"""
+        while block:
+            if block.name == tag:
+                return True
+            block = block.parent
+        return False
