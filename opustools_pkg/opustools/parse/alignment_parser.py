@@ -6,7 +6,6 @@ import os
 
 from .sentence_parser import SentenceParser
 from .exhaustive_sentence_parser import ExhaustiveSentenceParser
-from .new_sentence_parser import NewSentenceParser
 from ..opus_get import OpusGet
 
 class AlignmentParser:
@@ -269,15 +268,13 @@ class AlignmentParser:
                 self.change_annotation_delimiter,
                 self.preserve_inline_tags)
         else:
-            #self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
-            self.sPar = NewSentenceParser(sourcefile, pre, st[0],
+            self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
                 self.write_mode, self.fromto[0], self.print_annotations,
                 self.source_annotations,
                 self.change_annotation_delimiter,
                 self.preserve_inline_tags)
             self.sPar.storeSentences()
-            #self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
-            self.tPar = NewSentenceParser(targetfile, pre, st[1],
+            self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
                 self.write_mode, self.fromto[1], self.print_annotations,
                 self.target_annotations,
                 self.change_annotation_delimiter,
