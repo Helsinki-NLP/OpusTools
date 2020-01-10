@@ -214,3 +214,12 @@ class TestBlockParser(unittest.TestCase):
         self.assertTrue(bp.tag_in_parents('chunk', blocks[0]))
         self.assertTrue(bp.tag_in_parents('s', blocks[0]))
         bp.close_document()
+
+    def test_get_raw_tag(self):
+        bp = BlockParser(open(self.os_path))
+        blocks = bp.get_complete_blocks()
+        self.assertEqual(blocks[0].get_raw_tag(),
+                '<time id="T1S" value="00:00:05,897" />')
+        blocks = bp.get_complete_blocks()
+        self.assertEqual(blocks[0].get_raw_tag(), '<w id="1.1">-</w>')
+        bp.close_document()

@@ -1,6 +1,8 @@
 import xml.parsers.expat
 from ..util import file_open
 
+from .sentence_parser import SentenceParserError
+
 class Block:
 
     def __init__(self, parent=None, name=None, data='', attributes=None):
@@ -9,6 +11,17 @@ class Block:
         self.name = name
         self.data = data
         self.attributes = attributes
+
+    def get_raw_tag(self):
+        astrings = ['{k}="{v}"'.format(k=k, v=v)
+                for k, v in self.attributes.items()]
+        tag_content = ' '.join([self.name]+astrings)
+        if self.data == '':
+            return '<{tag_content} />'.format(
+                    tag_content=tag_content, name=self.name)
+        else:
+            return '<{tag_content}>{data}</{name}>'.format(
+                    tag_content=tag_content, data=self.data, name=self.name)
 
     def __str__(self):
         parent_name = None
@@ -54,7 +67,13 @@ class BlockParser:
         self.p.CharacterDataHandler = char_data
 
     def parse_line(self, line):
-        self.p.Parse(line)
+        try:
+            self.p.Parse(line)
+        except xml.parsers.expat.ExpatError as e:
+            self.close_document()
+            raise SentenceParserError(
+                'Sentence file "{document}" could not be parsed: '
+                '{error}'.format(document=self.document.name, error=e.args[0]))
 
     def close_document(self):
         self.document.close()

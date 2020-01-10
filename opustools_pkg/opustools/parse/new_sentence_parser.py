@@ -46,7 +46,9 @@ class NewSentenceParser:
                     sid = block.attributes['id']
                     if self.pre in ['raw', 'rawos']:
                         sentence.append(block.data.strip())
-                    sentence = ' '.join(sentence)
+                        sentence = ''.join(sentence)
+                    else:
+                        sentence = ' '.join(sentence)
                     self.sentences[sid] = (sentence, block.attributes)
                     sentence = []
                     sid = None
@@ -56,7 +58,7 @@ class NewSentenceParser:
                         data += self.getAnnotations(block)
                     sentence.append(data)
                 elif self.preserve and block.name == 'time':
-                    sentence.append(block.data.strip())
+                    sentence.append(block.get_raw_tag())
             blocks = bp.get_complete_blocks()
         bp.document.close()
 
