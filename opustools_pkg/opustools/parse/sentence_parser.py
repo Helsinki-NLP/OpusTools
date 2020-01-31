@@ -60,6 +60,10 @@ class SentenceParser:
 
         self.wmode = wmode
         self.language = language
+        if self.language in ["ja", "zh", "th"]:
+            self.tokenDelimiter = ""
+        else:
+            self.tokenDelimiter = " "
 
         self.attrs = {}
 
@@ -111,7 +115,7 @@ class SentenceParser:
         """Add a token to the sentence that is being built."""
         newSentence = sentence
         if self.sfound and  self.start == 'w' and self.end == 'w':
-            newSentence = sentence + ' ' + self.chara
+            newSentence = sentence + self.tokenDelimiter + self.chara
             self.chara = ''
             if self.annotations:
                 for a in self.posses:
