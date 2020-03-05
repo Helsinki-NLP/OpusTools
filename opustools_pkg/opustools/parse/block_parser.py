@@ -41,8 +41,8 @@ class BlockParser:
         document -- Xml document to be parsed
         """
 
-        #self.document = file_open(document)
-        self.document = document
+        self.document = file_open(document)
+        #self.document = document
         self.block = Block(name='root')
         self.completeBlocks = []
 

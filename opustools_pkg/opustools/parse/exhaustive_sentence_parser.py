@@ -4,8 +4,9 @@ from .block_parser import BlockParser
 
 class ExhaustiveSentenceParser:
 
-    def __init__(self, document, preprocessing, direction, wmode,
-            language, annotations, anno_attrs, delimiter, preserve):
+    def __init__(self, document, preprocessing=None, direction=None,
+            wmode=None, language=None, annotations=None,
+            anno_attrs=['all_attrs'], delimiter='|', preserve=None):
         """Parse xml sentence files that have sentence ids in any order.
 
         Positional arguments:
@@ -45,9 +46,9 @@ class ExhaustiveSentenceParser:
                     sid = block.attributes['id']
                     if self.pre in ['raw', 'rawos']:
                         sentence.append(block.data.strip())
-                        sentence = ''.join(sentence)
-                    else:
-                        sentence = ' '.join(sentence)
+                        #sentence = ''.join(sentence)
+                    #else:
+                    sentence = ' '.join(sentence)
                     self.sentences[sid] = (sentence, block.attributes)
                     sentence = []
                     sid = None
