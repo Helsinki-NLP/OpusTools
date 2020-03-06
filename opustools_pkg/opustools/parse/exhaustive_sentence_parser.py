@@ -4,8 +4,8 @@ from .block_parser import BlockParser
 
 class ExhaustiveSentenceParser:
 
-    def __init__(self, document, preprocessing=None, direction=None,
-            wmode=None, language=None, annotations=None,
+    def __init__(self, document, preprocessing=None, direction='src',
+            wmode='normal', language=None, annotations=None,
             anno_attrs=['all_attrs'], delimiter='|', preserve=None):
         """Parse xml sentence files that have sentence ids in any order.
 
@@ -31,10 +31,14 @@ class ExhaustiveSentenceParser:
         self.anno_attrs = anno_attrs
         self.language = language
 
+        self.read_sent_f = {'normal': self.read_sentence_normal,
+                            'tmx': self.read_sentence_tmx,
+                            'moses': self.read_sentence_moses}
+
         self.sentences = {}
         self.done = False
 
-    def storeSentences(self):
+    def store_sentences(self):
         """Read document and store sentences in a dictionary."""
         bp = BlockParser(self.document)
         sentence = []
@@ -62,7 +66,7 @@ class ExhaustiveSentenceParser:
             blocks = bp.get_complete_blocks()
         bp.document.close()
 
-    def getAnnotations(self, block):
+    def get_annotations(self, block):
         annotations = ''
         if self.anno_attrs[0] == 'all_attrs':
             attributes = list(block.attributes.keys())
@@ -75,31 +79,57 @@ class ExhaustiveSentenceParser:
                     annotations += self.delimiter + block.attributes[a]
         return annotations
 
-    def getSentence(self, sid):
+    def get_sentence(self, sid):
         """Return a sentence based on given sentence id."""
         if sid in self.sentences.keys():
             return self.sentences[sid]
         else:
             return '', {}
 
-    def readSentence(self, ids):
+    def read_sentence(self, ids):
         """Return a sequence of sentences based on given sentence ids."""
         if len(ids) == 0 or ids[0] == '':
             return '', []
-        sentence = ''
-        attrsList = []
-        if self.wmode == 'tmx':
-            sentence = self.addTuBeginning()
-        for sid in ids:
-            newSentence, attrs = self.getSentence(sid)
-            sentence = self.addSentence(sentence, newSentence, sid)
-            attrsList.append(attrs)
-        if self.wmode == 'tmx':
-            sentence = self.addTuEnding(sentence)
+
+        sentence, attrsList = self.read_sent_f[self.wmode](ids)
 
         return sentence[1:], attrsList
 
-    def addTuBeginning(self):
+    def read_sentence_normal(self, ids):
+        sentence = ''
+        attrsList = []
+        for sid in ids:
+            newSentence, attrs = self.get_sentence(sid)
+            sentence = (sentence + '\n(' + self.direction + ')="' +
+                str(sid) + '">' + newSentence)
+            attrsList.append(attrs)
+
+        return sentence, attrsList
+
+    def read_sentence_tmx(self, ids):
+        sentence = ''
+        attrsList = []
+        sentence = self.add_tu_beginning()
+        for sid in ids:
+            newSentence, attrs = self.get_sentence(sid)
+            sentence = sentence + ' ' + html.escape(newSentence, quote=False)
+            sentence = sentence.replace('<seg> ', '<seg>')
+            attrsList.append(attrs)
+        sentence = self.add_tu_ending(sentence)
+
+        return sentence, attrsList
+
+    def read_sentence_moses(self, ids):
+        sentence = ''
+        attrsList = []
+        for sid in ids:
+            newSentence, attrs = self.get_sentence(sid)
+            sentence = sentence + ' ' + newSentence
+            attrsList.append(attrs)
+
+        return sentence, attrsList
+
+    def add_tu_beginning(self):
         """Add translation unit beginning to tmx."""
         sentences = ' '
         if self.direction == 'src':
@@ -108,19 +138,7 @@ class ExhaustiveSentenceParser:
             '"><seg>')
         return sentences
 
-    def addSentence(self, sentences, sentence, sid):
-        """Add a sentence to a sequence of sentences."""
-        if self.wmode == 'normal':
-            sentences = (sentences + '\n(' + self.direction + ')="' +
-                str(sid) + '">' + sentence)
-        elif self.wmode == 'tmx':
-            sentences = sentences + ' ' + html.escape(sentence, quote=False)
-            sentences = sentences.replace('<seg> ', '<seg>')
-        elif self.wmode == 'moses':
-            sentences = sentences + ' ' + sentence
-        return sentences
-
-    def addTuEnding(self, sentences):
+    def add_tu_ending(self, sentences):
         """Add translation unit ending to tmx."""
         sentences = sentences + '</seg></tuv>'
         if self.direction == 'trg':

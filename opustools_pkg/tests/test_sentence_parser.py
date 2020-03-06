@@ -107,31 +107,72 @@ class TestSentenceParser(unittest.TestCase):
     def tearDownClass(self):
         shutil.rmtree(self.tempdir)
 
-    def test_storeSentences(self):
+    def test_store_sentences(self):
         sp = ExhaustiveSentenceParser(self.books_path)
-        sp.storeSentences()
+        sp.store_sentences()
         self.assertEqual(sp.sentences['s1'][0],
                 'Source : Project GutenbergTranslation')
         sp = ExhaustiveSentenceParser(self.books_raw_path, preprocessing='raw')
-        sp.storeSentences()
+        sp.store_sentences()
         self.assertEqual(sp.sentences['s1'][0],
                 'Source: Project GutenbergTranslation: Isabel F. '
                 'HapgoodAudiobook available here')
         sp = ExhaustiveSentenceParser(self.os_path)
-        sp.storeSentences()
+        sp.store_sentences()
         self.assertEqual(sp.sentences['1'][0], "- How 'd you score that ?")
         sp = ExhaustiveSentenceParser(self.os_raw_path, preprocessing='raw')
-        sp.storeSentences()
+        sp.store_sentences()
         self.assertEqual(sp.sentences['1'][0], "- How'd you score that?")
 
-    def test_getAnnotations(self):
+    def test_get_annotations(self):
         bp = BlockParser(self.books_path)
         sp = ExhaustiveSentenceParser(self.books_path)
         for i in range(19):
             blocks = bp.get_complete_blocks()
-        self.assertEqual(sp.getAnnotations(blocks[0]), '|NN|w1.1|source|NN|NN')
+        self.assertEqual(sp.get_annotations(blocks[0]), '|NN|w1.1|source|NN|NN')
         bp = BlockParser(self.books_path)
         sp = ExhaustiveSentenceParser(self.books_path, anno_attrs=['pos'])
         for i in range(19):
             blocks = bp.get_complete_blocks()
-        self.assertEqual(sp.getAnnotations(blocks[0]), '|NN')
+        self.assertEqual(sp.get_annotations(blocks[0]), '|NN')
+
+    def test_get_sentence(self):
+        sp = ExhaustiveSentenceParser(self.books_raw_path, preprocessing='raw')
+        sp.store_sentences()
+        self.assertEqual(sp.get_sentence('s2')[0], 'Hunchback of Notre-Dame')
+        self.assertEqual(sp.get_sentence('0'), ('', {}))
+
+    def test_read_sentence(self):
+        sp = ExhaustiveSentenceParser(self.books_raw_path, preprocessing='raw')
+        sp.store_sentences()
+        self.assertEqual(sp.read_sentence(['s2'])[0],
+                '(src)="s2">Hunchback of Notre-Dame')
+        self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
+                '(src)="s1">Source: Project GutenbergTranslation: Isabel F. '
+                'HapgoodAudiobook available here\n(src)="s2">Hunchback of '
+                'Notre-Dame')
+
+    def test_read_sentence_moses(self):
+        sp = ExhaustiveSentenceParser(self.books_raw_path,
+                preprocessing='raw', wmode='moses')
+        sp.store_sentences()
+        self.assertEqual(sp.read_sentence(['s2'])[0],
+                'Hunchback of Notre-Dame')
+        self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
+                'Source: Project GutenbergTranslation: Isabel F. '
+                'HapgoodAudiobook available here Hunchback of '
+                'Notre-Dame')
+
+    def test_read_sentence_tmx(self):
+        sp = ExhaustiveSentenceParser(self.books_raw_path,
+                preprocessing='raw', wmode='tmx', language='en')
+        sp.store_sentences()
+        self.assertEqual(sp.read_sentence(['s2'])[0],
+                '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Hunchback of '
+                'Notre-Dame</seg></tuv>')
+        self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
+                '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Source: Project '
+                'GutenbergTranslation: Isabel F. '
+                'HapgoodAudiobook available here Hunchback of '
+                'Notre-Dame</seg></tuv>')
+
