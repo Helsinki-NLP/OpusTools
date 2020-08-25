@@ -3,7 +3,7 @@ import gzip
 import os
 import xml.parsers.expat
 
-from .parse.alignment_parser import AlignmentParser
+from .parse.new_alignment_parser import AlignmentParser
 from .parse.links_alignment_parser import LinksAlignmentParser
 #from .parse.moses_read import MosesRead
 from .opus_get import OpusGet
@@ -155,6 +155,8 @@ class OpusRead:
                 preserve_inline_tags=preserve_inline_tags, threshold=threshold,
                 verbose=self.verbose)
         else:
+            self.alignmentParser = AlignmentParser(self.alignment)
+            '''
             self.par = AlignmentParser(source=source_file, target=target_file,
                 result=self.resultfile, mosessrc=self.mosessrc,
                 mosestrg=self.mosestrg, fromto=self.fromto,
@@ -174,6 +176,7 @@ class OpusRead:
                 change_annotation_delimiter=change_annotation_delimiter,
                 preserve_inline_tags=preserve_inline_tags, threshold=threshold,
                 verbose=self.verbose)
+            '''
 
         self.write_mode = write_mode
         self.change_moses_delimiter = change_moses_delimiter
@@ -348,6 +351,12 @@ class OpusRead:
 
     def printPairs(self):
         """Open alignment file, parse it and output sentence pairs."""
+
+        while True:
+            link = self.alignmentParser.get_link()
+            src_file = link.parent.attributes['fromDoc']
+            trg_file = link.parent.attributes['toDoc']
+        '''
         if self.write_mode == 'tmx':
             self.addTmxHeader()
 
@@ -417,18 +426,5 @@ class OpusRead:
             self.id_file.close()
 
         if self.verbose: print('Done')
+        '''
 
-'''
-    def printPairsMoses(self):
-        mread = MosesRead(self.moses, self.directory, self.fromto[0],
-            self.fromto[1])
-        if self.maximum == 'all':
-            mread.printAll()
-        else:
-            print('\n# ' + self.moses + '\n\n================================')
-
-            for i in range(int(self.maximum)):
-                print(mread.readPair())
-
-            mread.closeFiles()
-'''

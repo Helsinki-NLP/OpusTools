@@ -4,9 +4,8 @@ import xml.parsers.expat
 import re
 import os
 
-from .sentence_parser import SentenceParser
+from .block_parser import BlockParser
 from .exhaustive_sentence_parser import ExhaustiveSentenceParser
-from ..opus_get import OpusGet
 
 class AlignmentParser:
 

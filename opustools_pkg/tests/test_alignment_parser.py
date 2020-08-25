@@ -4,7 +4,7 @@ import shutil
 import os
 
 from opustools.parse.block_parser import BlockParser
-from opustools.parse.new_alignment_parser import NewAlignmentParser
+from opustools.parse.new_alignment_parser import AlignmentParser
 
 class TestAlignmentParser(unittest.TestCase):
 
@@ -33,7 +33,7 @@ class TestAlignmentParser(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_get_link(self):
-        ap = NewAlignmentParser(self.align_path)
+        ap = AlignmentParser(self.align_path)
         link = ap.get_link()
         self.assertEqual(link.attributes['xtargets'], 's1;s1')
         self.assertEqual(link.parent.attributes['fromDoc'],
@@ -57,3 +57,6 @@ class TestAlignmentParser(unittest.TestCase):
         self.assertEqual(link.attributes['xtargets'], 's0 s1;s2 s3')
         self.assertEqual(link.parent.attributes['fromDoc'], 'en/2.xml.gz')
         self.assertEqual(link.parent.attributes['toDoc'], 'fi/2.xml.gz')
+
+        ap.bp.close_document()
+
