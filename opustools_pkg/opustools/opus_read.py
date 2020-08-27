@@ -2,12 +2,14 @@ import argparse
 import gzip
 import os
 import xml.parsers.expat
+import zipfile
 
 from .parse.new_alignment_parser import AlignmentParser
+from .parse.exhaustive_sentence_parser import ExhaustiveSentenceParser
 from .parse.links_alignment_parser import LinksAlignmentParser
 #from .parse.moses_read import MosesRead
 from .opus_get import OpusGet
-from .util import file_open
+from .util import file_open, format_sentences
 
 class AlignmentParserError(Exception):
 
@@ -113,9 +115,9 @@ class OpusRead:
         else:
             self.alignment = alignment_file
 
-        source_file = os.path.join(root_directory, directory, release,
+        self.source_file = os.path.join(root_directory, directory, release,
             preprocess, self.fromto[0]+'.zip')
-        target_file = os.path.join(root_directory, directory, release,
+        self.target_file = os.path.join(root_directory, directory, release,
             preprocess, self.fromto[1]+'.zip')
         moses_file = os.path.join(root_directory, directory, release, 'moses',
             self.fromto[0]+'-'+self.fromto[1]+'.txt.zip')
@@ -155,6 +157,8 @@ class OpusRead:
                 preserve_inline_tags=preserve_inline_tags, threshold=threshold,
                 verbose=self.verbose)
         else:
+            if self.verbose: print('Reading alignment file "{}"'.format(self.alignment))
+            self.alignment = file_open(self.alignment, mode='r', encoding='utf-8')
             self.alignmentParser = AlignmentParser(self.alignment)
             '''
             self.par = AlignmentParser(source=source_file, target=target_file,
@@ -189,6 +193,9 @@ class OpusRead:
         self.preprocess = preprocess
         self.suppress_prompts = suppress_prompts
         self.write_ids=write_ids
+
+        self.src_annot = source_annotations
+        self.trg_annot = target_annotations
 
     def printPair(self, sPair):
         """Return sentence pair in printing format."""
@@ -352,10 +359,90 @@ class OpusRead:
     def printPairs(self):
         """Open alignment file, parse it and output sentence pairs."""
 
-        while True:
+        prev_src_doc_name = None
+        prev_trg_doc_name = None
+
+        if self.verbose:
+            print('Opening zip archive "{}" ... '.format(self.source_file),
+                    end='')
+        src_zip = zipfile.ZipFile(self.source_file, 'r')
+        if self.verbose:
+            print('Done')
+            print('Opening zip archive "{}" ... '.format(self.target_file),
+                    end='')
+        trg_zip = zipfile.ZipFile(self.target_file, 'r')
+        if self.verbose:
+            print('Done')
+
+        link = self.alignmentParser.get_link()
+        total = 0
+        while link:
+            src_doc_name = link.parent.attributes['fromDoc']
+            trg_doc_name = link.parent.attributes['toDoc']
+
+            if (src_doc_name != prev_src_doc_name or
+                    trg_doc_name != prev_trg_doc_name):
+                prev_src_doc_name = src_doc_name
+                prev_trg_doc_name = trg_doc_name
+
+                doc_names = '\n# '+src_doc_name+'\n# '+trg_doc_name+'\n\n'
+                if self.write:
+                    self.resultfile.write(doc_names)
+                else:
+                    print(doc_names, end='')
+
+
+                #Try OPUS style file names in zip archives first. In OPUS,
+                #directory and preprocessing information need to be added and
+                #the ".gz" ending needs to be removed.
+                src_doc_name = (self.directory+'/'+ self.preprocess+
+                        '/'+ src_doc_name[:-3])
+                trg_doc_name = (self.directory+'/'+ self.preprocess+
+                        '/'+ trg_doc_name[:-3])
+
+                if self.verbose:
+                    print('Reading source file "{src}" and target file '
+                        '"{trg}"'.format(src=src_doc_name, trg=trg_doc_name))
+
+                src_doc = src_zip.open(src_doc_name, 'r')
+                trg_doc = trg_zip.open(trg_doc_name, 'r')
+
+                src_parser = ExhaustiveSentenceParser(src_doc, wmode='new',
+                        preprocessing=self.preprocess, anno_attrs=self.src_annot)
+                src_parser.store_sentences()
+                trg_parser = ExhaustiveSentenceParser(trg_doc, wmode='new',
+                        preprocessing=self.preprocess)
+                trg_parser.store_sentences()
+
+            str_src_ids, str_trg_ids = link.attributes['xtargets'].split(';')
+            src_ids = [sid for sid in str_src_ids.split(',')]
+            trg_ids = [tid for tid in str_trg_ids.split(',')]
+            src_sentences, src_attrs = src_parser.read_sentence(src_ids)
+            trg_sentences, trg_attrs = trg_parser.read_sentence(trg_ids)
+            src_result = format_sentences(
+                    src_sentences, src_ids, 'normal', 'src')
+            trg_result = format_sentences(
+                    trg_sentences, trg_ids, 'normal', 'trg')
+
+            if self.write:
+                self.resultfile.write(src_result+trg_result)
+            else:
+                print(src_result+trg_result, end='')
+
             link = self.alignmentParser.get_link()
-            src_file = link.parent.attributes['fromDoc']
-            trg_file = link.parent.attributes['toDoc']
+
+            total +=1
+            if total == self.maximum:
+                break
+
+        self.alignment.close()
+
+        if self.write:
+            self.resultfile.close()
+
+        if self.verbose:
+            print('Done')
+
         '''
         if self.write_mode == 'tmx':
             self.addTmxHeader()

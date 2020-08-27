@@ -33,7 +33,8 @@ class ExhaustiveSentenceParser:
 
         self.read_sent_f = {'normal': self.read_sentence_normal,
                             'tmx': self.read_sentence_tmx,
-                            'moses': self.read_sentence_moses}
+                            'moses': self.read_sentence_moses,
+                            'new': self.read_sentence_new}
 
         self.sentences = {}
         self.done = False
@@ -58,8 +59,9 @@ class ExhaustiveSentenceParser:
                     sid = None
                 elif block.name == 'w' and bp.tag_in_parents('s', block):
                     data = block.data.strip()
-                    if self.annotations:
-                        data += self.getAnnotations(block)
+                    #if self.annotations:
+                    if self.wmode == 'parsed':
+                        data += self.get_annotations(block)
                     sentence.append(data)
                 elif self.preserve and block.name == 'time':
                     sentence.append(block.get_raw_tag())
@@ -93,7 +95,20 @@ class ExhaustiveSentenceParser:
 
         sentence, attrsList = self.read_sent_f[self.wmode](ids)
 
+        if self.wmode == 'new':
+            return sentence, attrsList
+
         return sentence[1:], attrsList
+
+    def read_sentence_new(self, ids):
+        sentence = []
+        attrsList = []
+        for sid in ids:
+            newSentence, attrs = self.get_sentence(sid)
+            sentence.append(newSentence)
+            attrsList.append(attrs)
+
+        return sentence, attrsList
 
     def read_sentence_normal(self, ids):
         sentence = ''

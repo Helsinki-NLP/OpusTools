@@ -19,3 +19,16 @@ def file_open(filename, mode='r', encoding='utf8'):
             mode += 't'
         return gzip.open(filename, mode=mode, encoding=encoding)
     return open(filename, mode=mode, encoding=encoding)
+
+def format_sentences(sentences, ids, wmode, direction):
+    result = ''
+    if wmode == 'normal':
+        if len(sentences) == 0:
+            result = '\n'
+        if direction == 'src':
+            result += '================================'
+        for i, sentence in enumerate(sentences):
+            result += ('\n('+direction+')="'+ids[i]+'">'+sentence)
+        if direction == 'trg':
+            result += '\n================================\n'
+    return result

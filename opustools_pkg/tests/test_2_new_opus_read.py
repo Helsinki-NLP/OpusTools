@@ -20,7 +20,7 @@ def pairPrinterToVariable(**kwargs):
     sys.stdout = printout
     oprinter = OpusRead(**kwargs)
     oprinter.printPairs()
-    oprinter.par.closeFiles()
+    #oprinter.par.closeFiles()
     sys.stdout = old_stdout
     return printout.getvalue()
 
@@ -270,7 +270,6 @@ class TestOpusRead(unittest.TestCase):
                 '>REGERINGSFÖRKLARING .\n============================'
                 '====\n')
 
-    '''
     def test_normal_xml_write_verbose(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write=[os.path.join(
@@ -290,22 +289,6 @@ class TestOpusRead(unittest.TestCase):
                     'xml', 'sv.zip')
                 ))
 
-    def test_normal_xml_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            fast=True, root_directory=self.root_directory).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
-                'r') as f:
-            self.assertEqual(f.read(),
-                '\n# en/1988.xml.gz\n'
-                '# sv/1988.xml.gz\n\n'
-                '================================\n(src)="s1.1">State'
-                'ment of Government Policy by the Prime Minister , Mr'
-                ' Ingvar Carlsson , at the Opening of the Swedish Parl'
-                'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
-                '>REGERINGSFÖRKLARING .\n============================'
-                '====\n')
-
     def test_normal_xml_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, root_directory=self.root_directory)
@@ -319,22 +302,10 @@ class TestOpusRead(unittest.TestCase):
             '>REGERINGSFÖRKLARING .\n============================'
             '====\n')
 
+
     def test_normal_xml_print_verbose(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, root_directory=self.root_directory, verbose=True)
-        self.assertEqual(var,
-            '\n# en/1988.xml.gz\n'
-            '# sv/1988.xml.gz\n\n'
-            '================================\n(src)="s1.1">State'
-            'ment of Government Policy by the Prime Minister , Mr'
-            ' Ingvar Carlsson , at the Opening of the Swedish Parl'
-            'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
-            '>REGERINGSFÖRKLARING .\n============================'
-            '====\n')
-
-    def test_normal_xml_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, fast=True, root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
@@ -361,40 +332,10 @@ class TestOpusRead(unittest.TestCase):
                 '>REGERINGSFÖRKLARING.\n============================'
                 '====\n')
 
-    def test_normal_raw_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            preprocess='raw', fast=True, root_directory=self.root_directory
-            ).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
-                'r') as f:
-            self.assertEqual(f.read(),
-                '\n# en/1988.xml.gz\n'
-                '# sv/1988.xml.gz\n\n'
-                '================================\n(src)="s1.1">State'
-                'ment of Government Policy by the Prime Minister, Mr'
-                ' Ingvar Carlsson, at the Opening of the Swedish Parl'
-                'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
-                '>REGERINGSFÖRKLARING.\n============================'
-                '====\n')
 
     def test_normal_raw_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, preprocess='raw', root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# en/1988.xml.gz\n'
-            '# sv/1988.xml.gz\n\n'
-            '================================\n(src)="s1.1">State'
-            'ment of Government Policy by the Prime Minister, Mr'
-            ' Ingvar Carlsson, at the Opening of the Swedish Parl'
-            'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
-            '>REGERINGSFÖRKLARING.\n============================'
-            '====\n')
-
-    def test_normal_raw_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, preprocess='raw', fast=True,
-            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
@@ -416,17 +357,6 @@ class TestOpusRead(unittest.TestCase):
              '(src)="1">Ĉiuj nomoj, roluloj kaj eventoj reprezentitaj en ĉi '
              'tiu filmo estas fikciaj.\n\n'
              '================================\n')
-
-    def test_normal_raw_print_OpenSubtitles_fast(self):
-        var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
-            target='tl', maximum=1, preprocess='raw', fast=True,
-            root_directory= self.root_directory)
-        self.assertEqual(var,
-            '\n# eo/2009/1187043/6483790.xml.gz\n'
-            '# tl/2009/1187043/6934998.xml.gz\n\n'
-             '================================\n(src)="1">Ĉiuj nomoj, '
-             'roluloj kaj eventoj reprezentitaj en ĉi tiu filmo estas '
-             'fikciaj.\n\n================================\n')
 
     def test_normal_parsed_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -457,6 +387,8 @@ class TestOpusRead(unittest.TestCase):
                 'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
                 '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
                 '\n================================\n')
+
+    '''
 
     def test_normal_parsed_write_fast(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
