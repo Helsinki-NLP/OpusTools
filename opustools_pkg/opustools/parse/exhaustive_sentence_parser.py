@@ -60,7 +60,7 @@ class ExhaustiveSentenceParser:
                 elif block.name == 'w' and bp.tag_in_parents('s', block):
                     data = block.data.strip()
                     #if self.annotations:
-                    if self.wmode == 'parsed':
+                    if self.pre == 'parsed':
                         data += self.get_annotations(block)
                     sentence.append(data)
                 elif self.preserve and block.name == 'time':

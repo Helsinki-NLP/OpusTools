@@ -9,7 +9,7 @@ from .parse.exhaustive_sentence_parser import ExhaustiveSentenceParser
 from .parse.links_alignment_parser import LinksAlignmentParser
 #from .parse.moses_read import MosesRead
 from .opus_get import OpusGet
-from .util import file_open, format_sentences
+from .util import file_open
 
 class AlignmentParserError(Exception):
 
@@ -20,6 +20,85 @@ class AlignmentParserError(Exception):
         message -- Error message to be printed
         """
         self.message = message
+
+def doc_name_type(wmode, write, print_file_names):
+    """Select function for adding doc names"""
+
+    normal_temp = '\n# {}\n# {}\n\n'
+    moses_temp = '\n<fromDoc>{}</fromDoc>\n<toDoc>{}</toDoc>\n\n'
+    link_temp = ' <linkGrp targType="s" fromDoc="{}" toDoc="{}">\n'
+
+    def normal_write(src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg):
+        resultfile.write(normal_temp.format(src_doc_name, trg_doc_name))
+    def normal_print(src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg):
+        print(normal_temp.format(src_doc_name, trg_doc_name), end='')
+    def moses_write(src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg):
+        resultfile.write(moses_temp.format(src_doc_name, trg_doc_name))
+    def moses_write_2(src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg):
+        mosessrc.write('\n<fromDoc>{}</fromDoc>\n\n'.format(src_doc_name))
+        mosestrg.write('\n<toDoc>{}</toDoc>\n\n'.format(trg_doc_name))
+    def moses_print(src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg):
+        print(moses_temp.format(src_doc_name, trg_doc_name), end='')
+    def links_write(src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg):
+        resultfile.write(link_temp.format(src_doc_name, trg_doc_name))
+    def links_print(src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg):
+        print(link_temp.format(src_doc_name, trg_doc_name), end='')
+    def nothing(src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg):
+        pass
+
+    if wmode == 'normal' and write:
+        return normal_write
+    if wmode == 'normal' and not write:
+        return normal_print
+    if wmode == 'moses' and print_file_names and not write:
+        return moses_print
+    if wmode == 'moses' and print_file_names and len(write) == 1:
+        return moses_write
+    if wmode == 'moses' and print_file_names and len(write) == 2:
+        return moses_write_2
+    if wmode == 'links'and write:
+        return links_write
+    if wmode == 'links'and not write:
+        return links_print
+    return nothing
+
+def format_type(wmode):
+    """Select function for formatting sentences"""
+
+    def normal(sentences, ids, direction, language):
+        result = ''
+        if len(sentences) == 0:
+            result = '\n'
+        if direction == 'src':
+            result += '================================'
+        for i, sentence in enumerate(sentences):
+            result += ('\n('+direction+')="'+ids[i]+'">'+sentence)
+        if direction == 'trg':
+            result += '\n================================\n'
+        return result
+
+    def tmx(sentences, ids, direction, language):
+        result = ''
+        for sentence in sentences:
+            if direction == 'src':
+                result += '\t\t<tu>'
+            result += ('\n\t\t\t<tuv xml:lang="' + language +
+                    '"><seg>')
+            result += sentence + '</seg></tuv>'
+            if direction == 'trg':
+                result += '\n\t\t</tu>\n'
+        return result
+
+    def moses(sentences, ids, direction, language):
+        result = ' '.join(sentences) + '\n'
+        return result
+
+    format_fs = {'normal': normal, 'tmx': tmx, 'moses': moses, 'links': None}
+    return format_fs[wmode]
+
+def out_put_type():
+    """Select function for outputting sentece pairs"""
+    pass
 
 class OpusRead:
 
@@ -136,6 +215,7 @@ class OpusRead:
                 self.resultfile = file_open(write[0], mode='w',
                     encoding='utf-8')
 
+        '''
         if write_mode == 'links':
             self.par = LinksAlignmentParser(source=source_file,
                 target=target_file, result=self.resultfile,
@@ -157,10 +237,6 @@ class OpusRead:
                 preserve_inline_tags=preserve_inline_tags, threshold=threshold,
                 verbose=self.verbose)
         else:
-            if self.verbose: print('Reading alignment file "{}"'.format(self.alignment))
-            self.alignment = file_open(self.alignment, mode='r', encoding='utf-8')
-            self.alignmentParser = AlignmentParser(self.alignment)
-            '''
             self.par = AlignmentParser(source=source_file, target=target_file,
                 result=self.resultfile, mosessrc=self.mosessrc,
                 mosestrg=self.mosestrg, fromto=self.fromto,
@@ -180,7 +256,11 @@ class OpusRead:
                 change_annotation_delimiter=change_annotation_delimiter,
                 preserve_inline_tags=preserve_inline_tags, threshold=threshold,
                 verbose=self.verbose)
-            '''
+        '''
+
+        if self.verbose: print('Reading alignment file "{}"'.format(self.alignment))
+        self.alignment = file_open(self.alignment, mode='r', encoding='utf-8')
+        self.alignmentParser = AlignmentParser(self.alignment)
 
         self.write_mode = write_mode
         self.change_moses_delimiter = change_moses_delimiter
@@ -196,6 +276,10 @@ class OpusRead:
 
         self.src_annot = source_annotations
         self.trg_annot = target_annotations
+
+        self.print_file_names = print_file_names
+        self.format_sentences = format_type(write_mode)
+        self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
 
     def printPair(self, sPair):
         """Return sentence pair in printing format."""
@@ -314,13 +398,25 @@ class OpusRead:
         else:
             print('\t</body>\n</tmx>')
 
-    def addLinkFileEnding(self):
-        if self.write != None:
-            self.resultfile.write(' </linkGrp>\n</cesAlign>')
+    def addLinkFileHeader(self):
+        linkheader = ('<?xml version="1.0" encoding="utf-8"?>\n'
+            '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+            '<cesAlign version="1.0">\n')
+        if self.write:
+            self.resultfile.write(linkheader)
         else:
-            print(' </linkGrp>\n</cesAlign>')
+            print(linkheader, end='')
 
-    def addLinkGrpEnding(self, line):
+
+    def addLinkFileEnding(self):
+        linkend = ' </linkGrp>\n</cesAlign>\n'
+        if self.write != None:
+            self.resultfile.write(linkend)
+        else:
+            print(linkend, end='')
+
+    def addLinkGrpEnding(self):
+        '''
         if type(line) == bytes:
             line = line.decode('utf-8')
         if (self.write_mode == 'links' and self.par.end == 'linkGrp'
@@ -330,6 +426,11 @@ class OpusRead:
             else:
                 print(' </linkGrp>')
             self.par.end = ''
+        '''
+        if self.write != None:
+            self.resultfile.write(' </linkGrp>\n')
+        else:
+            print(' </linkGrp>')
 
     def closeResultFiles(self):
         if self.write_mode == 'moses' and len(self.write) == 2:
@@ -359,9 +460,6 @@ class OpusRead:
     def printPairs(self):
         """Open alignment file, parse it and output sentence pairs."""
 
-        prev_src_doc_name = None
-        prev_trg_doc_name = None
-
         if self.verbose:
             print('Opening zip archive "{}" ... '.format(self.source_file),
                     end='')
@@ -374,6 +472,14 @@ class OpusRead:
         if self.verbose:
             print('Done')
 
+        if self.write_mode == 'tmx':
+            self.addTmxHeader()
+        if self.write_mode == 'links':
+            self.addLinkFileHeader()
+
+        prev_src_doc_name = None
+        prev_trg_doc_name = None
+
         link = self.alignmentParser.get_link()
         total = 0
         while link:
@@ -382,52 +488,82 @@ class OpusRead:
 
             if (src_doc_name != prev_src_doc_name or
                     trg_doc_name != prev_trg_doc_name):
+
+                if self.write_mode == 'links' and prev_src_doc_name and prev_trg_doc_name:
+                    self.addLinkGrpEnding()
+
                 prev_src_doc_name = src_doc_name
                 prev_trg_doc_name = trg_doc_name
 
-                doc_names = '\n# '+src_doc_name+'\n# '+trg_doc_name+'\n\n'
-                if self.write:
-                    self.resultfile.write(doc_names)
+                self.add_doc_names(src_doc_name, trg_doc_name,
+                        self.resultfile, self.mosessrc, self.mosestrg)
+
+                if self.write_mode != 'links':
+                    #Try OPUS style file names in zip archives first. In OPUS,
+                    #directory and preprocessing information need to be added and
+                    #the ".gz" ending needs to be removed.
+                    src_doc_name = (self.directory+'/'+ self.preprocess+
+                            '/'+ src_doc_name[:-3])
+                    trg_doc_name = (self.directory+'/'+ self.preprocess+
+                            '/'+ trg_doc_name[:-3])
+
+                    if self.verbose:
+                        print('Reading source file "{src}" and target file '
+                            '"{trg}"'.format(src=src_doc_name, trg=trg_doc_name))
+
+                    src_doc = src_zip.open(src_doc_name, 'r')
+                    trg_doc = trg_zip.open(trg_doc_name, 'r')
+
+                    src_parser = ExhaustiveSentenceParser(src_doc, wmode='new',
+                            preprocessing=self.preprocess, anno_attrs=self.src_annot)
+                    src_parser.store_sentences()
+                    trg_parser = ExhaustiveSentenceParser(trg_doc, wmode='new',
+                            preprocessing=self.preprocess, anno_attrs=self.trg_annot)
+                    trg_parser.store_sentences()
+
+            if self.write_mode != 'links':
+                str_src_ids, str_trg_ids = link.attributes['xtargets'].split(';')
+                src_ids = [sid for sid in str_src_ids.split(',')]
+                trg_ids = [tid for tid in str_trg_ids.split(',')]
+
+                src_sentences, src_attrs = src_parser.read_sentence(src_ids)
+                trg_sentences, trg_attrs = trg_parser.read_sentence(trg_ids)
+
+                if self.switch_langs:
+                    src_result = self.format_sentences(
+                            trg_sentences, trg_ids, 'src', self.fromto[1])
+                    trg_result = self.format_sentences(
+                            src_sentences, src_ids, 'trg', self.fromto[0])
                 else:
-                    print(doc_names, end='')
+                    src_result = self.format_sentences(
+                            src_sentences, src_ids, 'src', self.fromto[0])
+                    trg_result = self.format_sentences(
+                            trg_sentences, trg_ids, 'trg', self.fromto[1])
 
+                if self.write:
+                    if self.write_mode == 'moses' and self.mosessrc:
+                        self.mosessrc.write(src_result)
+                        self.mosestrg.write(trg_result)
+                    else:
+                        if self.write_mode == 'moses':
+                            self.resultfile.write(src_result[:-1]+'\t'+trg_result)
+                        else:
+                            self.resultfile.write(src_result+trg_result)
 
-                #Try OPUS style file names in zip archives first. In OPUS,
-                #directory and preprocessing information need to be added and
-                #the ".gz" ending needs to be removed.
-                src_doc_name = (self.directory+'/'+ self.preprocess+
-                        '/'+ src_doc_name[:-3])
-                trg_doc_name = (self.directory+'/'+ self.preprocess+
-                        '/'+ trg_doc_name[:-3])
+                else:
+                    if self.write_mode == 'moses':
+                        print(src_result[:-1]+'\t'+trg_result, end='')
+                    else:
+                        print(src_result+trg_result, end='')
 
-                if self.verbose:
-                    print('Reading source file "{src}" and target file '
-                        '"{trg}"'.format(src=src_doc_name, trg=trg_doc_name))
-
-                src_doc = src_zip.open(src_doc_name, 'r')
-                trg_doc = trg_zip.open(trg_doc_name, 'r')
-
-                src_parser = ExhaustiveSentenceParser(src_doc, wmode='new',
-                        preprocessing=self.preprocess, anno_attrs=self.src_annot)
-                src_parser.store_sentences()
-                trg_parser = ExhaustiveSentenceParser(trg_doc, wmode='new',
-                        preprocessing=self.preprocess)
-                trg_parser.store_sentences()
-
-            str_src_ids, str_trg_ids = link.attributes['xtargets'].split(';')
-            src_ids = [sid for sid in str_src_ids.split(',')]
-            trg_ids = [tid for tid in str_trg_ids.split(',')]
-            src_sentences, src_attrs = src_parser.read_sentence(src_ids)
-            trg_sentences, trg_attrs = trg_parser.read_sentence(trg_ids)
-            src_result = format_sentences(
-                    src_sentences, src_ids, 'normal', 'src')
-            trg_result = format_sentences(
-                    trg_sentences, trg_ids, 'normal', 'trg')
-
-            if self.write:
-                self.resultfile.write(src_result+trg_result)
             else:
-                print(src_result+trg_result, end='')
+                str_link = '<link {} />\n'.format(' '.join(
+                    ['{}="{}"'.format(k, v) for k, v in link.attributes.items()]))
+                if self.write:
+                    self.resultfile.write(str_link)
+                else:
+                    print(str_link, end='')
+
 
             link = self.alignmentParser.get_link()
 
@@ -435,10 +571,20 @@ class OpusRead:
             if total == self.maximum:
                 break
 
+        if self.write_mode == 'links':
+            self.addLinkFileEnding()
+
+        if self.write_mode == 'tmx':
+            self.addTmxEnding()
+
         self.alignment.close()
 
         if self.write:
-            self.resultfile.close()
+            if self.write_mode == 'moses' and self.mosessrc:
+                self.mosessrc.close()
+                self.mosestrg.close()
+            else:
+                self.resultfile.close()
 
         if self.verbose:
             print('Done')
