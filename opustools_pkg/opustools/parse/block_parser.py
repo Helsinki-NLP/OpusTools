@@ -95,6 +95,6 @@ class BlockParser:
         """Check if given tag is in blocks parents"""
         while block:
             if block.name == tag:
-                return True
+                return block
             block = block.parent
-        return False
+        return None

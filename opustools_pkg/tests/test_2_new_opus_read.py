@@ -903,10 +903,10 @@ class TestOpusRead(unittest.TestCase):
                 ' fromDoc="en/1988.xml.gz">\n'
                 '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" '
                 'id="SL10" />\n </linkGrp>\n <linkGrp targType="s" '
-                'toDoc="sv/1996.xml.gz" fromDoc="en/1996.xml.gz">\n '
+                'fromDoc="en/1996.xml.gz" toDoc="sv/1996.xml.gz">\n '
                 '</linkGrp>\n</cesAlign>\n')
-
     '''
+
     def test_links_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write_mode='links', root_directory=self.root_directory)

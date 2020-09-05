@@ -110,19 +110,19 @@ class TestSentenceParser(unittest.TestCase):
 
     def test_store_sentences(self):
         sp = ExhaustiveSentenceParser(file_open(self.books_path))
-        sp.store_sentences()
+        sp.store_sentences({'s1'})
         self.assertEqual(sp.sentences['s1'][0],
                 'Source : Project GutenbergTranslation')
         sp = ExhaustiveSentenceParser(file_open(self.books_raw_path), preprocessing='raw')
-        sp.store_sentences()
+        sp.store_sentences({'s1'})
         self.assertEqual(sp.sentences['s1'][0],
                 'Source: Project GutenbergTranslation: Isabel F. '
                 'HapgoodAudiobook available here')
         sp = ExhaustiveSentenceParser(file_open(self.os_path))
-        sp.store_sentences()
+        sp.store_sentences({'1'})
         self.assertEqual(sp.sentences['1'][0], "- How 'd you score that ?")
         sp = ExhaustiveSentenceParser(file_open(self.os_raw_path), preprocessing='raw')
-        sp.store_sentences()
+        sp.store_sentences({'1'})
         self.assertEqual(sp.sentences['1'][0], "- How'd you score that?")
 
     def test_get_annotations(self):
@@ -141,13 +141,13 @@ class TestSentenceParser(unittest.TestCase):
 
     def test_get_sentence(self):
         sp = ExhaustiveSentenceParser(file_open(self.books_raw_path), preprocessing='raw')
-        sp.store_sentences()
+        sp.store_sentences({'s2', '0'})
         self.assertEqual(sp.get_sentence('s2')[0], 'Hunchback of Notre-Dame')
         self.assertEqual(sp.get_sentence('0'), ('', {}))
 
     def test_read_sentence(self):
         sp = ExhaustiveSentenceParser(file_open(self.books_raw_path), preprocessing='raw')
-        sp.store_sentences()
+        sp.store_sentences({'s1', 's2'})
         self.assertEqual(sp.read_sentence(['s2'])[0],
                 '(src)="s2">Hunchback of Notre-Dame')
         self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
@@ -158,7 +158,7 @@ class TestSentenceParser(unittest.TestCase):
     def test_read_sentence_moses(self):
         sp = ExhaustiveSentenceParser(file_open(self.books_raw_path),
                 preprocessing='raw', wmode='moses')
-        sp.store_sentences()
+        sp.store_sentences({'s1', 's2'})
         self.assertEqual(sp.read_sentence(['s2'])[0],
                 'Hunchback of Notre-Dame')
         self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
@@ -169,7 +169,7 @@ class TestSentenceParser(unittest.TestCase):
     def test_read_sentence_tmx(self):
         sp = ExhaustiveSentenceParser(file_open(self.books_raw_path),
                 preprocessing='raw', wmode='tmx', language='en')
-        sp.store_sentences()
+        sp.store_sentences({'s1', 's2'})
         self.assertEqual(sp.read_sentence(['s2'])[0],
                 '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Hunchback of '
                 'Notre-Dame</seg></tuv>')
@@ -182,7 +182,7 @@ class TestSentenceParser(unittest.TestCase):
     def test_read_sentence_new(self):
         sp = ExhaustiveSentenceParser(file_open(self.books_raw_path),
                 preprocessing='raw', wmode='new')
-        sp.store_sentences()
+        sp.store_sentences({'s1', 's2'})
         self.assertEqual(sp.read_sentence(['s2']),
                 (['Hunchback of Notre-Dame'], [{'id': 's2'}]))
         self.assertEqual(sp.read_sentence(['s1', 's2'])[0],

@@ -39,7 +39,7 @@ class ExhaustiveSentenceParser:
         self.sentences = {}
         self.done = False
 
-    def store_sentences(self):
+    def store_sentences(self, id_set):
         """Read document and store sentences in a dictionary."""
         bp = BlockParser(self.document)
         sentence = []
@@ -47,23 +47,23 @@ class ExhaustiveSentenceParser:
         blocks = bp.get_complete_blocks()
         while blocks:
             for block in blocks:
-                if block.name == 's':
+                s_parent = bp.tag_in_parents('s', block)
+                if block.name == 's' and block.attributes['id'] in id_set:
                     sid = block.attributes['id']
                     if self.pre in ['raw', 'rawos']:
                         sentence.append(block.data.strip())
-                        #sentence = ''.join(sentence)
-                    #else:
                     sentence = ' '.join(sentence)
                     self.sentences[sid] = (sentence, block.attributes)
                     sentence = []
                     sid = None
-                elif block.name == 'w' and bp.tag_in_parents('s', block):
+                elif (block.name == 'w' and s_parent
+                        and s_parent.attributes['id'] in id_set):
                     data = block.data.strip()
-                    #if self.annotations:
                     if self.pre == 'parsed':
                         data += self.get_annotations(block)
                     sentence.append(data)
-                elif self.preserve and block.name == 'time':
+                elif (self.preserve and block.name == 'time' and s_parent and
+                        s_parent.attributes['id'] in id_set):
                     sentence.append(block.get_raw_tag())
             blocks = bp.get_complete_blocks()
         bp.document.close()
