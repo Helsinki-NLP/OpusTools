@@ -139,7 +139,7 @@ class OpusRead:
 
         if self.verbose: print('Reading alignment file "{}"'.format(self.alignment))
         self.alignment = file_open(self.alignment, mode='r', encoding='utf-8')
-        self.alignmentParser = AlignmentParser(self.alignment)
+        self.alignmentParser = AlignmentParser(self.alignment, (src_range, tgt_range))
 
         self.write_mode = write_mode
         self.change_moses_delimiter = change_moses_delimiter
@@ -288,7 +288,14 @@ class OpusRead:
             print(linkheader, end='')
 
     def addLinkFileEnding(self):
-        linkend = ' </linkGrp>\n</cesAlign>\n'
+        linkend = '</cesAlign>\n'
+        if self.write != None:
+            self.resultfile.write(linkend)
+        else:
+            print(linkend, end='')
+
+    def addLinkGrpEnding(self):
+        linkend = ' </linkGrp>\n'
         if self.write != None:
             self.resultfile.write(linkend)
         else:
@@ -397,6 +404,10 @@ class OpusRead:
                 if total == self.maximum:
                     stop = True
                     break
+
+            if self.write_mode == 'links':
+                self.addLinkGrpEnding()
+
             if stop:
                 break
 

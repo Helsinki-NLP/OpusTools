@@ -20,7 +20,6 @@ def pairPrinterToVariable(**kwargs):
     sys.stdout = printout
     oprinter = OpusRead(**kwargs)
     oprinter.printPairs()
-    #oprinter.par.closeFiles()
     sys.stdout = old_stdout
     return printout.getvalue()
 
@@ -887,11 +886,10 @@ class TestOpusRead(unittest.TestCase):
                 '<link certainty="-0.0636364" xtargets="s1.1;s1.1" id="SL1"'
                 ' />\n </linkGrp>\n</cesAlign>\n')
 
-    '''
     def test_links_write_unalphabetical(self):
         OpusRead(directory='RF', source='sv', target='en',
             write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            write_mode='links', src_range='1', tgt_range='2',
+            write_mode='links', src_range='1-5', tgt_range='2',
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -899,13 +897,12 @@ class TestOpusRead(unittest.TestCase):
                 '<?xml version="1.0" encoding="utf-8"?>\n'
                 '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
                 ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
-                '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
-                ' fromDoc="en/1988.xml.gz">\n'
+                '<linkGrp targType="s" fromDoc="en/1988.xml.gz"'
+                ' toDoc="sv/1988.xml.gz">\n'
                 '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" '
                 'id="SL10" />\n </linkGrp>\n <linkGrp targType="s" '
                 'fromDoc="en/1996.xml.gz" toDoc="sv/1996.xml.gz">\n '
                 '</linkGrp>\n</cesAlign>\n')
-    '''
 
     def test_links_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -918,7 +915,6 @@ class TestOpusRead(unittest.TestCase):
             ' toDoc="sv/1988.xml.gz">\n'
             '<link certainty="-0.0636364" xtargets="s1.1;s1.1" id="SL1"'
             ' />\n </linkGrp>\n</cesAlign>\n')
-    '''
 
     def test_links_print_unalphabetical(self):
         var = pairPrinterToVariable(directory='RF', source='sv', target='en',
@@ -928,11 +924,11 @@ class TestOpusRead(unittest.TestCase):
             '<?xml version="1.0" encoding="utf-8"?>\n'
             '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
             ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
-            '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
-            ' fromDoc="en/1988.xml.gz">\n'
+            '<linkGrp targType="s" fromDoc="en/1988.xml.gz"'
+            ' toDoc="sv/1988.xml.gz">\n'
             '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10"'
-            ' />\n </linkGrp>\n <linkGrp targType="s" toDoc="sv/1996.xml.gz"'
-            ' fromDoc="en/1996.xml.gz">\n </linkGrp>\n</cesAlign>\n')
+            ' />\n </linkGrp>\n <linkGrp targType="s" fromDoc="en/1996.xml.gz"'
+            ' toDoc="sv/1996.xml.gz">\n </linkGrp>\n</cesAlign>\n')
 
     def test_iteration_stops_at_the_end_of_the_document_even_if_max_is_not_filled(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -948,8 +944,7 @@ class TestOpusRead(unittest.TestCase):
             """ns föresats att söka breda lösningar i frågor som är a"""
             """v betydelse för vår nationella säkerhet .\n=========="""
             """======================\n\n# en/1996.xml.gz\n# sv/1996."""
-            """xml.gz\n\n================================\n""")
-
+            """xml.gz\n\n""")
 
     def test_use_given_sentence_alignment_file(self):
         OpusRead(directory='Books', source='eo', target='pt', src_range='2',
@@ -1003,10 +998,8 @@ class TestOpusRead(unittest.TestCase):
             """ur national security .\n(trg)="s4.4">Det är regeringe"""
             """ns föresats att söka breda lösningar i frågor som är a"""
             """v betydelse för vår nationella säkerhet .\n=========="""
-            """======================\n\n# en/1996.xml.gz\n# sv/1996."""
-            """xml.gz\n\n================================\n""")
+            """======================\n""")
 
-    '''
     def test_use_given_sentence_alignment_file_and_print_links(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
             write_mode='links',
@@ -1079,7 +1072,6 @@ class TestOpusRead(unittest.TestCase):
             '"pt/Carroll_Lewis-Alice_in_wonderland.xml.gz">\n<link x'
             'targets="s1;s1" id="SL1" />\n </linkGrp>\n</cesAlign>\n')
 
-    '''
     def test_checks_first_whether_documents_are_in_path(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
                 'w') as f:
@@ -1112,6 +1104,7 @@ class TestOpusRead(unittest.TestCase):
             '(trg)="s1">test_fi1 test_fi2'
             '\n================================\n')
 
+    '''
     def test_open_documents_from_specifed_zips(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
                 'w') as f:
