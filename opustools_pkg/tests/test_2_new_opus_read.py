@@ -1276,7 +1276,6 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s5.0">Herra Sherlock Holmes'
             '\n================================\n')
 
-    '''
     def test_filtering_by_trg_cld2(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             release='v1', maximum=1, trg_cld2=['ia', '0'],
@@ -1353,8 +1352,7 @@ class TestOpusRead(unittest.TestCase):
             download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n'
-            '\n================================\n')
+            '# sv/1996.xml.gz\n\n')
 
     def test_filtering_by_src_cld2_print_links(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -1365,8 +1363,8 @@ class TestOpusRead(unittest.TestCase):
             '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
             'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
             'version="1.0">\n'
-            '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
-            '/1996.xml.gz" >\n<link xtargets="s5.0;s5.0" id="SL5.0"/>'
+            ' <linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+            '/1996.xml.gz">\n<link xtargets="s5.0;s5.0" id="SL5.0" />'
             '\n </linkGrp>\n</cesAlign>\n')
 
     def test_filtering_by_lang_labels_print_links(self):
@@ -1380,8 +1378,8 @@ class TestOpusRead(unittest.TestCase):
             '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
             'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
             'version="1.0">\n'
-            '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
-            '/1996.xml.gz" >\n<link xtargets="s8.1;s8.1" id="SL8.1"/>'
+            ' <linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+            '/1996.xml.gz">\n<link xtargets="s8.1;s8.1" id="SL8.1" />'
             '\n </linkGrp>\n</cesAlign>\n')
 
     def test_filtering_by_lang_labels_write_links(self):
@@ -1398,9 +1396,9 @@ class TestOpusRead(unittest.TestCase):
                 '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
                 'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
                 'version="1.0">\n'
-                '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
-                '/1996.xml.gz" >\n<link xtargets="s8.1;s8.1" id="SL8.1"/>'
-                '\n </linkGrp>\n</cesAlign>')
+                ' <linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+                '/1996.xml.gz">\n<link xtargets="s8.1;s8.1" id="SL8.1" />'
+                '\n </linkGrp>\n</cesAlign>\n')
 
     def test_use_given_zip_files(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -1430,6 +1428,7 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s1">Source&<>"\' : manybooks.netAudiobook available here'
             '\n================================\n')
 
+    '''
     def test_source_zip_given_and_target_automatic(self):
         opr = OpusRead(directory='RF', source='en', target='sv',
             source_zip=os.path.join(self.tempdir1, 'en.zip'),
@@ -1526,6 +1525,7 @@ class TestOpusRead(unittest.TestCase):
         self.assertEqual(opr.par.targetzip.filename,
             os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
 
+    '''
     @mock.patch('opustools.opus_get.input', create=True)
     def test_alignment_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y', 'n']
@@ -1541,6 +1541,7 @@ class TestOpusRead(unittest.TestCase):
             alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'))
         self.assertTrue('No alignment file' in var)
 
+    '''
     def test_alignment_file_not_found_no_prompt(self):
         opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
             alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'),

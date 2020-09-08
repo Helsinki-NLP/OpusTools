@@ -111,6 +111,8 @@ class OpusRead:
             source_annotations = target_annotations.copy()
             target_annotations = temp.copy()
 
+        lang_filters = [src_cld2, src_langid, trg_cld2, trg_langid]
+
         if alignment_file == -1:
             self.alignment = os.path.join(root_directory, directory, release,
                 'xml', self.fromto[0]+'-'+self.fromto[1]+'.xml.gz')
@@ -169,9 +171,12 @@ class OpusRead:
 
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
         self.out_put_pair = out_put_type(write_mode, write)
-        self.format_sentences = sentence_format_type(write_mode)
+        format_sentences = sentence_format_type(write_mode)
+
+        check_filters, self.check_lang = check_lang_conf_type(lang_filters)
         self.format_pair = pair_format_type(
-                write_mode, self.switch_langs, self.format_sentences)
+                write_mode, self.switch_langs, check_filters, self.check_lang,
+                format_sentences)
 
         self.of_handler = OpusFileHandler(
                 download_dir, source_zip, target_zip, directory, release,
@@ -374,7 +379,8 @@ class OpusRead:
             link_attrs, src_set, trg_set, link = \
                 self.alignmentParser.collect_links(last=link)
 
-            if self.write_mode != 'links':
+            if (self.write_mode != 'links' or
+                    (self.write_mode == 'links' and self.check_lang)):
                 src_doc = self.of_handler.open_sentence_file(src_doc_name, 'src')
                 trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
 
@@ -388,6 +394,9 @@ class OpusRead:
             for link_a in link_attrs:
                 src_result, trg_result = self.format_pair(
                         link_a, src_parser, trg_parser, self.fromto)
+
+                if src_result == -1 or trg_result == -1:
+                    continue
 
                 self.out_put_pair(src_result, trg_result, self.resultfile,
                         self.mosessrc, self.mosestrg, link_a)

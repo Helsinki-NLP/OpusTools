@@ -117,7 +117,35 @@ def sentence_format_type(wmode):
     format_fs = {'normal': normal, 'tmx': tmx, 'moses': moses, 'links': None}
     return format_fs[wmode]
 
-def pair_format_type(wmode, switch_langs, format_sentences):
+def check_lang_confs(lang_filters, attrs):
+    names = ('cld2', 'langid')
+    for attr in attrs:
+        for i, lf in enumerate(lang_filters):
+            if lf:
+                label = attr[names[i]]
+                true_label = lf[0]
+                if label != true_label:
+                    return False
+                score = attr[names[i]+'conf']
+                threshold = lf[1]
+                if score < threshold:
+                    return False
+    return True
+
+def check_lang_conf_type(lang_filters):
+    def check(src_attrs, trg_attrs):
+        return (not check_lang_confs(lang_filters[:2], src_attrs) or
+                not check_lang_confs(lang_filters[2:], trg_attrs))
+    def no_check(src_attrs, trg_attrs):
+        return False
+
+    if any(lang_filters):
+        return check, True
+    else:
+        return no_check, False
+
+def pair_format_type(wmode, switch_langs, check_filters, check_lang,
+        format_sentences):
     """Select function for formatting sentence pairs"""
 
     #args = (link_a, src_parser, trg_parser, fromto)
@@ -129,6 +157,9 @@ def pair_format_type(wmode, switch_langs, format_sentences):
         src_sentences, src_attrs = args[1].read_sentence(src_ids)
         trg_sentences, trg_attrs = args[2].read_sentence(trg_ids)
 
+        if check_filters(src_attrs, trg_attrs):
+            return -1, -1
+
         src_result = format_sentences(
                 src_sentences, src_ids, 'src', args[3][0])
         trg_result = format_sentences(
@@ -137,11 +168,14 @@ def pair_format_type(wmode, switch_langs, format_sentences):
 
     def switch(*args):
         str_src_ids, str_trg_ids = args[0]['xtargets'].split(';')
-        src_ids = [sid for sid in str_src_ids.split(',')]
-        trg_ids = [tid for tid in str_trg_ids.split(',')]
+        src_ids = [sid for sid in str_src_ids.split(' ')]
+        trg_ids = [tid for tid in str_trg_ids.split(' ')]
 
         src_sentences, src_attrs = args[1].read_sentence(src_ids)
         trg_sentences, trg_attrs = args[2].read_sentence(trg_ids)
+
+        if check_filters(src_attrs, trg_attrs):
+            return -1, -1
 
         src_result = format_sentences(
                 trg_sentences, trg_ids, 'src', args[3][1])
@@ -149,11 +183,26 @@ def pair_format_type(wmode, switch_langs, format_sentences):
                 src_sentences, src_ids, 'trg', args[3][0])
         return src_result, trg_result
 
+    def link_with_filter(*args):
+        str_src_ids, str_trg_ids = args[0]['xtargets'].split(';')
+        src_ids = [sid for sid in str_src_ids.split(' ')]
+        trg_ids = [tid for tid in str_trg_ids.split(' ')]
+
+        src_sentences, src_attrs = args[1].read_sentence(src_ids)
+        trg_sentences, trg_attrs = args[2].read_sentence(trg_ids)
+
+        if check_filters(src_attrs, trg_attrs):
+            return -1, -1
+        return None, None
+
     def nothing(*args):
         return None, None
 
     if wmode == 'links':
-        return nothing
+        if check_lang:
+            return link_with_filter
+        else:
+            return nothing
     elif switch_langs:
         return switch
     else:
