@@ -11,6 +11,7 @@ from .parse.links_alignment_parser import LinksAlignmentParser
 from .opus_get import OpusGet
 from .util import file_open
 from .formatting import *
+from .opus_file_handler import OpusFileHandler
 
 class AlignmentParserError(Exception):
 
@@ -116,12 +117,22 @@ class OpusRead:
         else:
             self.alignment = alignment_file
 
-        self.source_file = os.path.join(root_directory, directory, release,
-            preprocess, self.fromto[0]+'.zip')
-        self.target_file = os.path.join(root_directory, directory, release,
-            preprocess, self.fromto[1]+'.zip')
-        moses_file = os.path.join(root_directory, directory, release, 'moses',
-            self.fromto[0]+'-'+self.fromto[1]+'.txt.zip')
+        if not source_zip:
+            dl_src_zip = os.path.join(download_dir, directory+'_'+release+'_'+
+                preprocess+'_'+self.fromto[0]+'.zip')
+            if os.path.isfile(dl_src_zip):
+                source_zip = dl_src_zip
+            else:
+                source_zip = os.path.join(root_directory, directory, release,
+                    preprocess, self.fromto[0]+'.zip')
+        if not target_zip:
+            dl_trg_zip = os.path.join(download_dir, directory+'_'+release+'_'+
+                preprocess+'_'+self.fromto[1]+'.zip')
+            if os.path.isfile(dl_trg_zip):
+                target_zip = dl_trg_zip
+            else:
+                target_zip = os.path.join(root_directory, directory, release,
+                    preprocess, self.fromto[1]+'.zip')
 
         self.resultfile = None
         self.mosessrc = None
@@ -159,7 +170,12 @@ class OpusRead:
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
         self.out_put_pair = out_put_type(write_mode, write)
         self.format_sentences = sentence_format_type(write_mode)
-        self.format_pair = pair_format_type(write_mode, self.switch_langs, self.format_sentences)
+        self.format_pair = pair_format_type(
+                write_mode, self.switch_langs, self.format_sentences)
+
+        self.of_handler = OpusFileHandler(
+                download_dir, source_zip, target_zip, directory, release,
+                preprocess, self.verbose)
 
     def printPair(self, sPair):
         """Return sentence pair in printing format."""
@@ -334,18 +350,6 @@ class OpusRead:
 
     def printPairs(self):
 
-        if self.verbose:
-            print('Opening zip archive "{}" ... '.format(self.source_file),
-                    end='')
-        src_zip = zipfile.ZipFile(self.source_file, 'r')
-        if self.verbose:
-            print('Done')
-            print('Opening zip archive "{}" ... '.format(self.target_file),
-                    end='')
-        trg_zip = zipfile.ZipFile(self.target_file, 'r')
-        if self.verbose:
-            print('Done')
-
         if self.write_mode == 'tmx':
             self.addTmxHeader()
         if self.write_mode == 'links':
@@ -371,20 +375,8 @@ class OpusRead:
                 self.alignmentParser.collect_links(last=link)
 
             if self.write_mode != 'links':
-                #Try OPUS style file names in zip archives first. In OPUS,
-                #directory and preprocessing information need to be added and
-                #the ".gz" ending needs to be removed.
-                src_doc_name = (self.directory+'/'+ self.preprocess+
-                        '/'+ src_doc_name[:-3])
-                trg_doc_name = (self.directory+'/'+ self.preprocess+
-                        '/'+ trg_doc_name[:-3])
-
-                if self.verbose:
-                    print('Reading source file "{src}" and target file '
-                        '"{trg}"'.format(src=src_doc_name, trg=trg_doc_name))
-
-                src_doc = src_zip.open(src_doc_name, 'r')
-                trg_doc = trg_zip.open(trg_doc_name, 'r')
+                src_doc = self.of_handler.open_sentence_file(src_doc_name, 'src')
+                trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
 
                 src_parser = ExhaustiveSentenceParser(src_doc, wmode='new',
                         preprocessing=self.preprocess, anno_attrs=self.src_annot)
@@ -425,6 +417,8 @@ class OpusRead:
                 self.mosestrg.close()
             else:
                 self.resultfile.close()
+
+        self.of_handler.close_zipfiles()
 
         if self.verbose:
             print('Done')

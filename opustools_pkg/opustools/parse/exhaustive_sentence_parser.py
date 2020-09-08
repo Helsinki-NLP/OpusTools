@@ -66,7 +66,7 @@ class ExhaustiveSentenceParser:
                         s_parent.attributes['id'] in id_set):
                     sentence.append(block.get_raw_tag())
             blocks = bp.get_complete_blocks()
-        bp.document.close()
+        bp.close_document()
 
     def get_annotations(self, block):
         annotations = ''

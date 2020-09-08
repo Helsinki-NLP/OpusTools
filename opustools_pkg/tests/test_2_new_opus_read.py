@@ -278,8 +278,8 @@ class TestOpusRead(unittest.TestCase):
             'Reading alignment file "{alignment}"\n'
             'Opening zip archive "{source}" ... Done\n'
             'Opening zip archive "{target}" ... Done\n'
-            'Reading source file "RF/xml/en/1988.xml" and target file '
-            '"RF/xml/sv/1988.xml"\nDone\n'.format(
+            'Reading src_file "RF/xml/en/1988.xml"\n'
+            'Reading trg_file "RF/xml/sv/1988.xml"\nDone\n'.format(
                 alignment=os.path.join(self.root_directory, 'RF', 'latest',
                     'xml', 'en-sv.xml.gz'),
                 source=os.path.join(self.root_directory, 'RF', 'latest',
@@ -1104,7 +1104,6 @@ class TestOpusRead(unittest.TestCase):
             '(trg)="s1">test_fi1 test_fi2'
             '\n================================\n')
 
-    '''
     def test_open_documents_from_specifed_zips(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
                 'w') as f:
@@ -1176,7 +1175,7 @@ class TestOpusRead(unittest.TestCase):
             zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
                 arcname=os.path.join('test_files', 'test_fi'))
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             OpusRead(directory='Books', source='en',
                     target='fi', alignment_file=os.path.join(self.tempdir1,
                         'test_files', 'testlinks'),
@@ -1214,7 +1213,7 @@ class TestOpusRead(unittest.TestCase):
             zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
                 arcname=os.path.join('test_files', 'test_un'))
 
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(KeyError):
             OpusRead(directory='Books', source='en',
                     target='fi', alignment_file=os.path.join(self.tempdir1,
                         'test_files', 'testlinks'),
@@ -1277,6 +1276,7 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s5.0">Herra Sherlock Holmes'
             '\n================================\n')
 
+    '''
     def test_filtering_by_trg_cld2(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             release='v1', maximum=1, trg_cld2=['ia', '0'],
@@ -1331,21 +1331,6 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s8.1">Luulenpa että sinulla'
             '\n================================\n')
 
-    def test_filtering_by_lang_labels_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum=1, src_cld2=['un', '0'],
-            trg_cld2=['fi', '0.97'], src_langid=['en', '0.17'],
-            trg_langid=['fi', '1'], fast=True,
-            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
-            download_dir=self.tempdir1)
-        self.assertEqual(var,
-            '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n'
-            '\n================================'
-            '\n(src)="s8.1">I believe'
-            '\n(trg)="s8.1">Luulenpa että sinulla'
-            '\n================================\n')
-
     def test_filtering_by_lang_labels_nonalphabetical_lang_order(self):
         var = pairPrinterToVariable(directory='RF', source='sv', target='en',
             release='v1', maximum=1, trg_cld2=['un', '0'],
@@ -1361,34 +1346,9 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s8.1">I believe'
             '\n================================\n')
 
-    def test_filtering_by_lang_labels_nonalphabetical_lang_order_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='sv', target='en',
-            release='v1', maximum=1, trg_cld2=['un', '0'],
-            src_cld2=['fi', '0.97'], trg_langid=['en', '0.17'],
-            src_langid=['fi', '1'], fast=True,
-            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
-            download_dir=self.tempdir1)
-        self.assertEqual(var,
-            '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n'
-            '\n================================'
-            '\n(src)="s8.1">Luulenpa että sinulla'
-            '\n(trg)="s8.1">I believe'
-            '\n================================\n')
-
     def test_filtering_by_lang_labels_no_matches_found(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             release='v1', maximum=1, src_cld2=['fi', '2'],
-            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
-            download_dir=self.tempdir1)
-        self.assertEqual(var,
-            '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n'
-            '\n================================\n')
-
-    def test_filtering_by_lang_labels_no_matches_found_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum=1, src_cld2=['fi', '2'], fast=True,
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             download_dir=self.tempdir1)
         self.assertEqual(var,
