@@ -1,16 +1,22 @@
 import os
+import sys
 import zipfile
 
 from .util import file_open
+from .opus_get import OpusGet
 
 class OpusFileHandler:
 
-    def __init__(self, download_dir, source_zip, target_zip,
-            directory, release, preprocess, verbose):
+    def __init__(self, download_dir, source_zip, target_zip, directory,
+            release, preprocess, fromto, verbose, suppress_prompts):
 
         self.directory = directory
+        self.release = release
         self.preprocess = preprocess
+        self.fromto = fromto
+
         self.verbose = verbose
+        self.suppress_prompts = suppress_prompts
 
         self.download_dir = download_dir
 
@@ -18,6 +24,37 @@ class OpusFileHandler:
         self.trg_zip_name = target_zip
 
         self.zip_opened = False
+
+    def open_alignment_file(self, alignment):
+        if self.verbose: print('Reading alignment file ', end='')
+        try:
+            if self.verbose: print('"{}"'.format(alignment))
+            alignment = file_open(alignment, mode='r', encoding='utf-8')
+        except FileNotFoundError:
+            arguments = {'source': self.fromto[0],
+                    'target': self.fromto[1], 'directory': self.directory,
+                    'release': self.release, 'preprocess': self.preprocess,
+                    'download_dir': self.download_dir, 'list_resources': True}
+            og = OpusGet(**arguments)
+            og.get_files()
+            arguments['list_resources'] = False
+            if self.suppress_prompts:
+                arguments['suppress_prompts'] = True
+            og = OpusGet(**arguments)
+            og.get_files()
+            local_align_name = os.path.join(self.download_dir,
+                    self.directory+'_'+ self.release+'_xml_'+self.fromto[0]+'-'+
+                    self.fromto[1]+'.xml.gz')
+            if os.path.isfile(local_align_name):
+                if self.verbose: print('"{}"'.format(local_align_name))
+                alignment = file_open(
+                    local_align_name, mode='r', encoding='utf-8')
+            else:
+                raise FileNotFoundError('No alignment file "{default}" or'
+                        ' "{downloaded}" found'.format(
+                        default=alignment, downloaded=local_align_name))
+
+        return alignment
 
     def open_zipfiles(self):
         if self.verbose:
@@ -35,7 +72,6 @@ class OpusFileHandler:
         self.zip_opened = True
 
     def open_sentence_file(self, doc_name, direction):
-
         local_doc = os.path.join(self.download_dir, doc_name)
         try:
             return file_open(local_doc)
@@ -68,3 +104,4 @@ class OpusFileHandler:
         if self.zip_opened:
             self.src_zip.close()
             self.trg_zip.close()
+

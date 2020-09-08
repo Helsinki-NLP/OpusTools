@@ -113,9 +113,10 @@ class OpusRead:
 
         lang_filters = [src_cld2, src_langid, trg_cld2, trg_langid]
 
-        if alignment_file == -1:
-            self.alignment = os.path.join(root_directory, directory, release,
+        default_alignment = os.path.join(root_directory, directory, release,
                 'xml', self.fromto[0]+'-'+self.fromto[1]+'.xml.gz')
+        if alignment_file == -1:
+            self.alignment = default_alignment
         else:
             self.alignment = alignment_file
 
@@ -150,10 +151,6 @@ class OpusRead:
                 self.resultfile = file_open(write[0], mode='w',
                     encoding='utf-8')
 
-        if self.verbose: print('Reading alignment file "{}"'.format(self.alignment))
-        self.alignment = file_open(self.alignment, mode='r', encoding='utf-8')
-        self.alignmentParser = AlignmentParser(self.alignment, (src_range, tgt_range))
-
         self.write_mode = write_mode
         self.change_moses_delimiter = change_moses_delimiter
         self.write = write
@@ -180,7 +177,10 @@ class OpusRead:
 
         self.of_handler = OpusFileHandler(
                 download_dir, source_zip, target_zip, directory, release,
-                preprocess, self.verbose)
+                preprocess, self.fromto, self.verbose, suppress_prompts)
+
+        self.alignment = self.of_handler.open_alignment_file(self.alignment)
+        self.alignmentParser = AlignmentParser(self.alignment, (src_range, tgt_range))
 
     def printPair(self, sPair):
         """Return sentence pair in printing format."""
