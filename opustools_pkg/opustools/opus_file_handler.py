@@ -25,26 +25,40 @@ class OpusFileHandler:
 
         self.zip_opened = False
 
-    def open_alignment_file(self, alignment):
+    def download_files(self):
+        print('The following files are available for downloading:\n')
+        arguments = {'source': self.fromto[0],
+                'target': self.fromto[1], 'directory': self.directory,
+                'release': self.release, 'preprocess': self.preprocess,
+                'download_dir': self.download_dir, 'list_resources': True}
+        og = OpusGet(**arguments)
+        og.get_files()
+        arguments['list_resources'] = False
+        if self.suppress_prompts:
+            arguments['suppress_prompts'] = True
+        og = OpusGet(**arguments)
+        og.get_files()
+
+    def open_alignment_file(self, align_name):
+        """Open alignment file. Look first for specified file, then
+        look for pre-downloaded local file, and finally, download
+        missing files"""
+
+        local_align_name = os.path.join(self.download_dir,
+                self.directory+'_'+ self.release+'_xml_'+self.fromto[0]+'-'+
+                self.fromto[1]+'.xml.gz')
         if self.verbose: print('Reading alignment file ', end='')
-        try:
-            if self.verbose: print('"{}"'.format(alignment))
-            alignment = file_open(alignment, mode='r', encoding='utf-8')
-        except FileNotFoundError:
-            arguments = {'source': self.fromto[0],
-                    'target': self.fromto[1], 'directory': self.directory,
-                    'release': self.release, 'preprocess': self.preprocess,
-                    'download_dir': self.download_dir, 'list_resources': True}
-            og = OpusGet(**arguments)
-            og.get_files()
-            arguments['list_resources'] = False
-            if self.suppress_prompts:
-                arguments['suppress_prompts'] = True
-            og = OpusGet(**arguments)
-            og.get_files()
-            local_align_name = os.path.join(self.download_dir,
-                    self.directory+'_'+ self.release+'_xml_'+self.fromto[0]+'-'+
-                    self.fromto[1]+'.xml.gz')
+
+        if os.path.isfile(align_name):
+            if self.verbose: print('"{}"'.format(align_name))
+            alignment = file_open(align_name, mode='r', encoding='utf-8')
+        elif os.path.isfile(local_align_name):
+            if self.verbose: print('"{}"'.format(local_align_name))
+            alignment = file_open(local_align_name, mode='r', encoding='utf-8')
+        else:
+            print('No alignment file "{default}" or "{downloaded}" found'.format(
+                default=align_name, downloaded=local_align_name))
+            self.download_files()
             if os.path.isfile(local_align_name):
                 if self.verbose: print('"{}"'.format(local_align_name))
                 alignment = file_open(
@@ -52,22 +66,51 @@ class OpusFileHandler:
             else:
                 raise FileNotFoundError('No alignment file "{default}" or'
                         ' "{downloaded}" found'.format(
-                        default=alignment, downloaded=local_align_name))
+                        default=align_name, downloaded=local_align_name))
 
         return alignment
 
+    def open_specific_zips(self, src_zip_name, trg_zip_name):
+        if self.verbose:
+            print('Opening zip archive "{}" ... '.format(src_zip_name),
+                    end='')
+        src_zip = zipfile.ZipFile(src_zip_name, 'r')
+        if self.verbose:
+            print('Done')
+            print('Opening zip archive "{}" ... '.format(trg_zip_name),
+                    end='')
+        trg_zip = zipfile.ZipFile(trg_zip_name, 'r')
+        if self.verbose:
+            print('Done')
+        return src_zip, trg_zip
+
     def open_zipfiles(self):
-        if self.verbose:
-            print('Opening zip archive "{}" ... '.format(self.src_zip_name),
-                    end='')
-        self.src_zip = zipfile.ZipFile(self.src_zip_name, 'r')
-        if self.verbose:
-            print('Done')
-            print('Opening zip archive "{}" ... '.format(self.trg_zip_name),
-                    end='')
-        self.trg_zip = zipfile.ZipFile(self.trg_zip_name, 'r')
-        if self.verbose:
-            print('Done')
+        """Open zip files. Look first for specified zip files, then
+        look for pre-downloaded local files, and finally, download
+        missing files"""
+
+        local_src_name = os.path.join(self.download_dir, self.directory+'_'+
+                self.release+'_'+ self.preprocess+'_'+self.fromto[0]+'.zip')
+        local_trg_name = os.path.join(self.download_dir, self.directory+'_'+
+                self.release+'_'+ self.preprocess+'_'+self.fromto[1]+'.zip')
+
+        if os.path.isfile(self.src_zip_name) and os.path.isfile(self.trg_zip_name):
+            self.src_zip, self.trg_zip = self.open_specific_zips(
+                    self.src_zip_name, self.trg_zip_name)
+        elif os.path.isfile(local_src_name) and os.path.isfile(local_trg_name):
+            self.src_zip, self.trg_zip = self.open_specific_zips(
+                    local_src_name, local_trg_name)
+        else:
+            print('No zip files found.')
+            self.download_files()
+            if os.path.isfile(local_src_name) and os.path.isfile(local_src_name):
+                self.src_zip, self.trg_zip = self.open_specific_zips(
+                        local_src_name, local_trg_name)
+            else:
+                raise FileNotFoundError('No zip files "{}" and "{}" OR'
+                        ' "{}" and "{}" found'.format(
+                        self.src_zip_name, self.trg_zip_name,
+                        local_src_name, local_trg_name))
 
         self.zip_opened = True
 

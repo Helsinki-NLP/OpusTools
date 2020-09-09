@@ -109,7 +109,7 @@ class TestSentenceParser(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_store_sentences(self):
-        sp = ExhaustiveSentenceParser(file_open(self.books_path))
+        sp = ExhaustiveSentenceParser(file_open(self.books_path), preprocessing='xml')
         sp.store_sentences({'s1'})
         self.assertEqual(sp.sentences['s1'][0],
                 'Source : Project GutenbergTranslation')
@@ -118,7 +118,7 @@ class TestSentenceParser(unittest.TestCase):
         self.assertEqual(sp.sentences['s1'][0],
                 'Source: Project GutenbergTranslation: Isabel F. '
                 'HapgoodAudiobook available here')
-        sp = ExhaustiveSentenceParser(file_open(self.os_path))
+        sp = ExhaustiveSentenceParser(file_open(self.os_path), preprocessing='xml')
         sp.store_sentences({'1'})
         self.assertEqual(sp.sentences['1'][0], "- How 'd you score that ?")
         sp = ExhaustiveSentenceParser(file_open(self.os_raw_path), preprocessing='raw')

@@ -101,3 +101,4 @@ class AlignmentParser:
                 last = link
                 break
         return attrs, src_id_set, trg_id_set, last
+

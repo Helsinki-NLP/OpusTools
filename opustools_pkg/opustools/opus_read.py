@@ -165,6 +165,8 @@ class OpusRead:
         self.suppress_prompts = suppress_prompts
         self.write_ids=write_ids
 
+        self.preserve = preserve_inline_tags
+
         self.src_annot = source_annotations
         self.trg_annot = target_annotations
 
@@ -390,10 +392,12 @@ class OpusRead:
                 trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
 
                 src_parser = ExhaustiveSentenceParser(src_doc, wmode='new',
-                        preprocessing=self.preprocess, anno_attrs=self.src_annot)
+                        preprocessing=self.preprocess, anno_attrs=self.src_annot,
+                        preserve = self.preserve)
                 src_parser.store_sentences(src_set)
                 trg_parser = ExhaustiveSentenceParser(trg_doc, wmode='new',
-                        preprocessing=self.preprocess, anno_attrs=self.trg_annot)
+                        preprocessing=self.preprocess, anno_attrs=self.trg_annot,
+                        preserve = self.preserve)
                 trg_parser.store_sentences(trg_set)
 
             for link_a in link_attrs:
@@ -406,7 +410,6 @@ class OpusRead:
                 self.out_put_pair(src_result, trg_result, self.resultfile,
                         self.mosessrc, self.mosestrg, link_a, self.id_file,
                         src_doc_name, trg_doc_name)
-
                 total +=1
                 if total == self.maximum:
                     stop = True

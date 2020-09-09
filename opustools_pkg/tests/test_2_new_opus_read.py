@@ -1694,6 +1694,7 @@ class TestOpusRead(unittest.TestCase):
             self.assertEqual(id_file.read(),
                 'file_name1\tfile_name2\tid1 id2\tid1\tvalue\n')
 
+    '''
     def test_writing_time_tags_xml(self):
         var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
             target='tl', maximum=1, preserve_inline_tags=True,
@@ -1715,7 +1716,7 @@ class TestOpusRead(unittest.TestCase):
             '\n# eo/2009/1187043/6483790.xml.gz\n'
             '# tl/2009/1187043/6934998.xml.gz\n\n'
             '================================\n(src)="1"><time id="T1'
-            'S" value="00:00:06,849" />Ĉiuj nomoj, roluloj kaj evento'
+            'S" value="00:00:06,849" /> Ĉiuj nomoj, roluloj kaj evento'
             'j reprezentitaj en ĉi tiu filmo estas fikciaj.\n\n========'
             '========================\n')
 
@@ -1745,11 +1746,13 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s1">Source : Project Gutenberg'
             '\n================================\n')
 
+    '''
     def test_no_plain_xml_alingment_file_found(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             alignment_file='unfound.xml')
         self.assertEqual(var, 'No alignment file "unfound.xml" found\n')
 
+    '''
     def test_download_zip_files_no_prompt(self):
         var = pairPrinterToVariable(directory='RF', source='fr', target='sv',
             maximum=1, download_dir=self.tempdir1, suppress_prompts=True,
@@ -1775,6 +1778,7 @@ class TestOpusRead(unittest.TestCase):
                 maximum=1, download_dir=self.tempdir1, suppress_prompts=True,
                 root_directory=self.root_directory).printPairs()
 
+    '''
     def test_alignment_file_could_not_be_parsed(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
                 'w') as f:

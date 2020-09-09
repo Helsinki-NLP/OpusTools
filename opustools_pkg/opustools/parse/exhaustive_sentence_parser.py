@@ -2,6 +2,115 @@ import html
 
 from .block_parser import BlockParser
 
+def parse_type(preprocess, preserve, get_annotations):
+    """Select function to be used for parsing"""
+
+    def parse_s(block, sentence, sentences):
+        sid = block.attributes['id']
+        sentence = ' '.join(sentence)
+        sentences[sid] = (sentence, block.attributes)
+        sentence = []
+        return sentence
+
+    def parse_s_raw(block, sentence, sentences):
+        sid = block.attributes['id']
+        sentence.append(block.data.strip())
+        sentence = ' '.join(sentence)
+        sentences[sid] = (sentence, block.attributes)
+        sentence = []
+        return sentence
+
+    def parse_w(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent and s_parent.attributes['id'] in id_set:
+            data = block.data.strip()
+            sentence.append(data)
+        return sentence
+
+    def parse_w_parsed(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent and s_parent.attributes['id'] in id_set:
+            data = block.data.strip()
+            data += get_annotations(block)
+            sentence.append(data)
+        return sentence
+
+    def parse_time(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent and s_parent.attributes['id'] in id_set:
+            sentence.append(block.get_raw_tag())
+        return sentence
+
+
+    def xml(bp, block, sentence, sentences, id_set):
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w(bp, block, sentence, id_set)
+        return sentence
+
+    def raw(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s_raw(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w(bp, block, sentence, id_set)
+        return sentence
+
+    def parsed(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w_parsed(bp, block, sentence, id_set)
+        return sentence
+
+    def xml_preserve(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w(bp, block, sentence, id_set)
+        elif block.name == 'time':
+            sentence = parse_time(bp, block, sentence, id_set)
+        return sentence
+
+    def raw_preserve(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s_raw(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w(bp, block, sentence, id_set)
+        elif block.name == 'time':
+            sentence = parse_time(bp, block, sentence, id_set)
+        return sentence
+
+    def parsed_preserve(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w_parsed(bp, block, sentence, id_set)
+        elif block.name == 'time':
+            sentence = parse_time(bp, block, sentence, id_set)
+        return sentence
+
+    if preserve:
+        if preprocess == 'xml':
+            return xml_preserve
+        if preprocess == 'raw':
+            return raw_preserve
+        if preprocess == 'parsed':
+            return parsed_preserve
+    else:
+        if preprocess == 'xml':
+            return xml
+        if preprocess == 'raw':
+            return raw
+        if preprocess == 'parsed':
+            return parsed
+
+
 class ExhaustiveSentenceParser:
 
     def __init__(self, document, preprocessing=None, direction='src',
@@ -36,6 +145,8 @@ class ExhaustiveSentenceParser:
                             'moses': self.read_sentence_moses,
                             'new': self.read_sentence_new}
 
+        self.parse_block = parse_type(preprocessing, preserve, self.get_annotations)
+
         self.sentences = {}
         self.done = False
 
@@ -47,24 +158,8 @@ class ExhaustiveSentenceParser:
         blocks = bp.get_complete_blocks()
         while blocks:
             for block in blocks:
-                s_parent = bp.tag_in_parents('s', block)
-                if block.name == 's' and block.attributes['id'] in id_set:
-                    sid = block.attributes['id']
-                    if self.pre in ['raw', 'rawos']:
-                        sentence.append(block.data.strip())
-                    sentence = ' '.join(sentence)
-                    self.sentences[sid] = (sentence, block.attributes)
-                    sentence = []
-                    sid = None
-                elif (block.name == 'w' and s_parent
-                        and s_parent.attributes['id'] in id_set):
-                    data = block.data.strip()
-                    if self.pre == 'parsed':
-                        data += self.get_annotations(block)
-                    sentence.append(data)
-                elif (self.preserve and block.name == 'time' and s_parent and
-                        s_parent.attributes['id'] in id_set):
-                    sentence.append(block.get_raw_tag())
+                sentence = self.parse_block(
+                        bp, block, sentence, self.sentences, id_set)
             blocks = bp.get_complete_blocks()
         bp.close_document()
 

@@ -1,3 +1,4 @@
+import html
 
 def doc_name_type(wmode, write, print_file_names):
     """Select function for adding doc names"""
@@ -201,7 +202,7 @@ def sentence_format_type(wmode):
                 result += '\t\t<tu>'
             result += ('\n\t\t\t<tuv xml:lang="' + language +
                     '"><seg>')
-            result += sentence + '</seg></tuv>'
+            result += html.escape(sentence, quote=False) + '</seg></tuv>'
             if direction == 'trg':
                 result += '\n\t\t</tu>\n'
         return result
