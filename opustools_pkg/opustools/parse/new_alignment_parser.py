@@ -1,34 +1,53 @@
 from .block_parser import BlockParser
 
-def range_filter(*args):
-    """Flag if number of ids is outside given ranges"""
+def range_filter_type(src_range, trg_range):
+    def range_filter(*args):
+        """Flag if number of ids is outside given ranges"""
 
-    #args = (s_id, t_id, src_range, trg_range)
-    if args[2] != 'all':
-        if len(args[0]) not in args[2]:
+        #args = (s_id, t_id, link_attr)
+        if src_range != 'all':
+            if len(args[0]) not in src_range:
+                return True
+        if trg_range != 'all':
+            if len(args[1]) not in trg_range:
+                return True
+        return False
+    return range_filter
+
+def attribute_filter_type(attribute, threshold):
+    def attribute_filter(*args):
+        """Flag if attribute score doesn't cross threshold"""
+
+        #args = (s_id, t_id, link_attr)
+        if attribute not in args[2].keys():
+            #if attribute is not included in link_attr, should this return True or False?
             return True
-    if args[3] != 'all':
-        if len(args[1]) not in args[3]:
+        if float(args[2][attribute]) < threshold:
             return True
-    return False
+        return False
+    return attribute_filter
 
 class AlignmentParser:
 
-    def __init__(self, alignment_file, src_trg_range=('all', 'all')):
+    def __init__(self, alignment_file, src_trg_range=('all', 'all'),
+            attr=None, thres=None):
         """Parse xces alignment files and output sentence ids."""
 
         self.bp = BlockParser(alignment_file)
         self.filters = []
 
-        self.src_range, self.trg_range = src_trg_range
+        src_range, trg_range = src_trg_range
         if src_trg_range != ('all', 'all'):
-            if self.src_range.split('-')[0].isnumeric():
-                nums = self.src_range.split('-')
-                self.src_range = {i for i in range(int(nums[0]), int(nums[-1])+1)}
-            if self.trg_range.split('-')[0].isnumeric():
-                nums = self.trg_range.split('-')
-                self.trg_range = {i for i in range(int(nums[0]), int(nums[-1])+1)}
-            self.filters.append(range_filter)
+            nums = src_range.split('-')
+            if nums[0].isnumeric():
+                src_range = {i for i in range(int(nums[0]), int(nums[-1])+1)}
+            nums = trg_range.split('-')
+            if nums[0].isnumeric():
+                trg_range = {i for i in range(int(nums[0]), int(nums[-1])+1)}
+            self.filters.append(range_filter_type(src_range, trg_range))
+
+        if attr and thres:
+            self.filters.append(attribute_filter_type(attr, float(thres)))
 
     def get_tag(self, tag):
         blocks = self.bp.get_complete_blocks()
@@ -45,7 +64,7 @@ class AlignmentParser:
         t_id = ids[1].split(' ')
 
         for f in self.filters:
-            if f(s_id, t_id, self.src_range, self.trg_range):
+            if f(s_id, t_id, link.attributes):
                 return attrs, src_id_set, trg_id_set
 
         attrs.append(link.attributes)

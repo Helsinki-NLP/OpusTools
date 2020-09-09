@@ -27,7 +27,7 @@ class OpusRead:
 
     def __init__(self, directory=None, source=None, target=None,
             release='latest', preprocess='xml', maximum=-1, src_range='all',
-            tgt_range='all', attribute='any', threshold=None,
+            tgt_range='all', attribute=None, threshold=None,
             leave_non_alignments_out=False, write=None, write_mode='normal',
             print_file_names=False, fast=False,
             root_directory='/proj/nlpl/data/OPUS', alignment_file=-1,
@@ -141,7 +141,7 @@ class OpusRead:
         self.mosessrc = None
         self.mosestrg = None
         if write_ids != None:
-            self.id_file = open(write_ids, 'w', encoding='utf-8')
+            self.id_file = file_open(write_ids, 'w', encoding='utf-8')
 
         if write != None:
             if write_mode == 'moses' and len(write) == 2:
@@ -180,7 +180,9 @@ class OpusRead:
                 preprocess, self.fromto, self.verbose, suppress_prompts)
 
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
-        self.alignmentParser = AlignmentParser(self.alignment, (src_range, tgt_range))
+        self.alignmentParser = AlignmentParser(self.alignment,
+                (src_range, tgt_range),
+                attribute, threshold)
 
     def printPair(self, sPair):
         """Return sentence pair in printing format."""
@@ -426,6 +428,9 @@ class OpusRead:
                 self.mosestrg.close()
             else:
                 self.resultfile.close()
+
+        if self.write_ids:
+            self.id_file.close()
 
         self.of_handler.close_zipfiles()
 
