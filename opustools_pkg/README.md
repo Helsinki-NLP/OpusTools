@@ -22,7 +22,7 @@ Tools for accessing and processing OPUS data.
 usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [-p {raw,xml,parsed}] [-m M] [-S S] [-T T] [-a attribute]
                  [-tr TR] [-ln] [-w file_name [file_name ...]]
-                 [-wm {normal,moses,tmx,links}] [-pn] [-f] [-rd path_to_dir]
+                 [-wm {normal,moses,tmx,links}] [-pn] [-rd path_to_dir]
                  [-af path_to_file] [-sz path_to_zip] [-tz path_to_zip]
                  [-cm delimiter] [-pa] [-sa attribute [attribute ...]]
                  [-ta attribute [attribute ...]] [-ca delimiter]
@@ -66,9 +66,6 @@ arguments:
                     Set write mode
 -pn, --print_file_names
                     Print file names when using moses format
--f, --fast          Fast parsing. Faster than normal parsing, if you print
-                    a small part of the whole corpus, but requires the
-                    sentence ids in alignment files to be in sequence.
 -rd path_to_dir, --root_directory path_to_dir
                     Change root directory (default=/proj/nlpl/data/OPUS)
 -af path_to_file, --alignment_file path_to_file
@@ -133,10 +130,6 @@ Several parameters can be set to filter the alignments and to print only certain
 XCES align format. Set the "-wm" flag to "links" to enable this mode.
 
 `opus_read` reads the alignments from zip files. Starting up the script might take some time, if the zip files are large (for example OpenSubtitles in OPUS).
-
-`opus_read` uses `ExhaustiveSentenceParser` by default. This means that each time a `<linkGrp>` tag is found, the corresponding source and target documents are read through and each sentence is stored in a hashmap with the sentence id as the key. This allows the reader to read alignment files that have sentence ids in non-sequential order. Each time a `<linkGrp>` tag is found, the script pauses printing for a second to read through the source and target documents. The duration of the pause depends on the size of the source and target documents.
-
-Using the "-f" flag allows the usage of `SentenceParser`, which is faster than ExhaustiveSentenceParser in cases where only a small part of a corpus is read. `SentenceParser` does not store the sentences in a hashmap. Rather, when it finds a `<link>` tag, it iterates through a sentence file until a sentence id is matched with the sentence id found in the `<link>` tag. SentenceParser can't go backwards, which means that if the ids are not in sequential order in the alignment file, the parser will not find alignment pairs after the sentence id sequence breaks. `SentenceParser` is less reliable than `ExhaustiveSentenceParser`, but using the "-f" flag is beneficial when the whole corpus does not need to be scanned, in other words, when using the "-m" flag.
 
 **Examples:**
 

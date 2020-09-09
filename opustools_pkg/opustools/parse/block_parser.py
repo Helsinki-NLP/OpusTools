@@ -1,7 +1,15 @@
 import xml.parsers.expat
 from ..util import file_open
 
-from .sentence_parser import SentenceParserError
+class BlockParserError(Exception):
+
+    def __init__(self, message):
+        """Raise error when block parsing fails.
+
+        Keyword arguments:
+        message -- Error message to be printed
+        """
+        self.message = message
 
 class Block:
 
@@ -71,8 +79,8 @@ class BlockParser:
             self.p.Parse(line)
         except xml.parsers.expat.ExpatError as e:
             self.close_document()
-            raise SentenceParserError(
-                'Sentence file "{document}" could not be parsed: '
+            raise BlockParserError(
+                'Document "{document}" could not be parsed: '
                 '{error}'.format(document=self.document.name, error=e.args[0]))
 
     def close_document(self):

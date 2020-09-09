@@ -11,8 +11,9 @@ import tempfile
 import bz2
 
 from opustools import OpusRead, OpusCat, OpusGet
-from opustools.opus_read import AlignmentParserError
+from opustools.parse.block_parser import BlockParserError
 from opustools.parse.sentence_parser import SentenceParserError
+from opustools.parse.alignment_parser import AlignmentParserError
 
 def pairPrinterToVariable(**kwargs):
     old_stdout = sys.stdout
@@ -20,7 +21,6 @@ def pairPrinterToVariable(**kwargs):
     sys.stdout = printout
     oprinter = OpusRead(**kwargs)
     oprinter.printPairs()
-    oprinter.par.closeFiles()
     sys.stdout = old_stdout
     return printout.getvalue()
 
@@ -238,23 +238,11 @@ class TestOpusRead(unittest.TestCase):
 
         self.opr = OpusRead(directory='RF', source='en', target='sv',
             root_directory=self.root_directory)
-        self.opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.fastopr = OpusRead(directory='RF', source='en', target='sv',
-            root_directory=self.root_directory, fast=True)
-        self.fastopr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
 
         self.maxDiff= None
 
     @classmethod
     def tearDownClass(self):
-        self.opr.par.sPar.document.close()
-        self.opr.par.tPar.document.close()
-        self.opr.par.closeFiles()
-        self.fastopr.par.sPar.document.close()
-        self.fastopr.par.tPar.document.close()
-        self.fastopr.par.closeFiles()
         if ('OPUSREAD_TEST_SAVE' in os.environ.keys() and
                 os.environ['OPUSREAD_TEST_SAVE'] == 'true'):
             print('\nTEMPDIR:', self.tempdir1)
@@ -264,512 +252,7 @@ class TestOpusRead(unittest.TestCase):
             shutil.rmtree(self.root_directory)
 
     def tearDown(self):
-        self.opr.par.write_mode='normal'
-        self.opr.par.slim=['all']
-        self.opr.par.tlim=['all']
-        self.opr.par.attribute = 'any'
-        #self.opr.par.nonAlignments = self.opr.par.leave_non_alignments_out
-        self.opr.par.nonAlignments = False
-        self.opr.par.maximum = -1
-        self.opr.par.alignParser = xml.parsers.expat.ParserCreate()
-        self.opr.par.alignParser.StartElementHandler = \
-            self.opr.par.start_element
-        self.opr.write_mode='normal'
-        self.opr.par.sPar.wmode = 'normal'
-        self.opr.par.sPar.pre = 'xml'
-        self.opr.par.tPar.wmode = 'normal'
-        self.opr.par.tPar.pre = 'xml'
-        self.opr.par.sPar.annotations = False
-        self.opr.par.tPar.annotations = False
-        self.opr.change_moses_delimiter = '\t'
-        self.fastopr.par.write_mode='normal'
-        self.fastopr.par.slim=['all']
-        self.fastopr.par.tlim=['all']
-        self.fastopr.par.attribute = 'any'
-        self.fastopr.par.nonAlignments = False
-        #self.fastopr.par.leave_non_alignments_out
-        self.fastopr.par.maximum = -1
-        self.fastopr.par.alignParser = xml.parsers.expat.ParserCreate()
-        self.fastopr.par.alignParser.StartElementHandler = \
-            self.fastopr.par.start_element
-        self.fastopr.par.sPar.wmode = 'normal'
-        self.fastopr.par.sPar.pre = 'xml'
-        self.fastopr.par.tPar.wmode = 'normal'
-        self.fastopr.par.tPar.pre = 'xml'
-        self.fastopr.par.sPar.annotations = False
-        self.fastopr.par.tPar.annotations = False
-
-    def test_ExhaustiveSentenceParser_initializing(self):
-        self.assertEqual(len(self.opr.par.sPar.sentences), 29)
-        self.assertEqual(len(self.opr.par.tPar.sentences), 68)
-
-    def test_ExhaustiveSentenceParser_getSentence(self):
-        self.assertEqual(self.opr.par.sPar.getSentence('s3.1')[0],
-            '( Unofficial translation )')
-        self.assertEqual(self.opr.par.tPar.getSentence('s3.1')[0],
-            'Fru talman , ärade ledamöter av Sveriges riksdag !')
-
-        self.assertEqual(self.opr.par.sPar.getSentence('s8.1')[0],
-            ("The Government 's policy to combat unemployment will re"
-            "st on four corner- stones :"))
-        self.assertEqual(self.opr.par.tPar.getSentence('s8.1')[0],
-            'Goda statsfinanser är grunden för alla politiska ambitioner .')
-
-        self.assertEqual(self.opr.par.sPar.getSentence('s10.1')[0],
-            'Sound public finances are the basis for all political a'
-            'mbitions .')
-        self.assertEqual(self.opr.par.tPar.getSentence('s10.1')[0],
-            'Den andra hörnstenen är goda villkor för företag och fö'
-            'retagande .')
-
-    def test_ExhaustiveSentenceParser_readSentence_format(self):
-        self.assertEqual(self.opr.par.sPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">( Unofficial translation )')
-        self.assertEqual(self.opr.par.tPar.readSentence(['s3.1'])[0],
-            '(trg)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
-        self.assertEqual(self.opr.par.sPar.readSentence(['s3.1', 's10.1'])[0],
-            '(src)="s3.1">( Unofficial translation )\n'
-            '(src)="s10.1">Sound public finances are the basis for all'
-            ' political ambitions .')
-
-    def test_ExhaustiveSentenceParser_readSentence_moses(self):
-        self.opr.par.sPar.wmode = 'moses'
-        self.assertEqual(self.opr.par.sPar.readSentence(['s3.1'])[0],
-            '( Unofficial translation )')
-
-    def test_ExhaustiveSentenceParser_readSentence_tmx(self):
-        self.opr.par.sPar.wmode = 'tmx'
-        self.assertEqual(self.opr.par.sPar.readSentence(['s3.1'])[0],
-            '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>( Unofficial tr'
-            'anslation )</seg></tuv>')
-        self.opr.par.tPar.wmode = 'tmx'
-        self.assertEqual(self.opr.par.tPar.readSentence(['s5.1', 's5.2'])[0],
-            '\t\t\t<tuv xml:lang="sv"><seg>Fundamenten för ett gott '
-            'samhälle undergrävs av dagens höga arbetslöshet . Såväl '
-            'samhällsekonomi som moral och vilja försvagas .</seg></t'
-            'uv>\n\t\t</tu>')
-
-    def test_ExhaustiveSentenceParser_readSentence_empty(self):
-        self.assertEqual(self.opr.par.sPar.readSentence([''])[0], '')
-
-    def test_SentenceParser_readSentence_format(self):
-        self.assertEqual(self.fastopr.par.sPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">( Unofficial translation )')
-        self.assertEqual(self.fastopr.par.tPar.readSentence(['s3.1'])[0],
-            '(trg)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
-        self.assertEqual(self.fastopr.par.sPar.readSentence(
-            ['s8.1', 's10.1'])[0],
-            """(src)="s8.1">The Government 's policy to combat unemp"""
-            """loyment will rest on four corner- stones :\n(src)="s10"""
-            """.1">Sound public finances are the basis for all politi"""
-            """cal ambitions .""")
-
-    def test_SentenceParser_readSentence_moses(self):
-        self.fastopr.par.sPar.wmode = 'moses'
-        self.assertEqual(self.fastopr.par.sPar.readSentence(['s13.1'])[0],
-            'Sweden is a good country for enterprise .')
-
-    def test_SentenceParser_readSentence_tmx(self):
-        self.fastopr.par.sPar.wmode = 'tmx'
-        self.assertEqual(self.fastopr.par.sPar.readSentence(['s15.1'])[0],
-            '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>The local and r'
-            'egional role of economic policy will be emphasized .</se'
-            'g></tuv>')
-        self.fastopr.par.tPar.wmode = 'tmx'
-        self.assertEqual(self.fastopr.par.tPar.readSentence(
-            ['s11.1', 's11.2'])[0],
-            '\t\t\t<tuv xml:lang="sv"><seg>Sverige är ett bra land f'
-            'ör företagsamhet . Här finns en flexibel ekonomi , ett k'
-            'onstruktivt samarbetsklimat och en kunnig och välutbilda'
-            'd arbetskraft .</seg></tuv>\n\t\t</tu>')
-
-    def test_SentenceParser_readSentence_empty(self):
-        self.assertEqual(self.fastopr.par.sPar.readSentence([''])[0], '')
-
-    def test_AlignmentParser_readPair_returns_1_if_tag_is_not_link_and_write_mode_is_links(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            write_mode='links', root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        opr.par.parseLine('<s>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, 1)
-        opr.par.closeFiles()
-
-    def test_AlignmentParser_readPair_returns_minus_1_if_tag_is_not_link_and_write_mode_id_not_links(self):
-        self.opr.par.parseLine('<s>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-    def test_AlignmentParser_readPair_returns_minus_1_if_number_of_sentences_is_outside_limit(self):
-        self.opr.par.slim = ['0']
-        self.opr.par.parseLine('<s>')
-        self.opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        self.opr.par.slim = ['1']
-        self.opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        self.opr.par.tlim = ['3', '4']
-        self.opr.par.parseLine('<link xtargets="s1;s1 s2" id="SL1"/>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        self.opr.par.parseLine('<link xtargets="s1;s1 s2 s3" id="SL1"/>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        self.opr.par.parseLine('<link xtargets="s1;s1 s2 s3 s4" id="SL1"/>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        self.opr.par.parseLine('<link xtargets="s1 s2;s1 s2 s3 s4" id="SL1"/>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        self.opr.par.parseLine('<link xtargets=";s1 s2 s3 s4" id="SL1"/>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        self.opr.par.parseLine('<link xtargets="s1;s1 s2 s3 s4 s5" id="SL1"/>')
-        ret = self.opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-    def test_AlignmentParser_readPair_returns_minus_1_if_attribute_values_is_not_over_threshold(self):
-        self.opr.par.attribute = 'certainty'
-        self.opr.par.threshold = 0.6
-        self.opr.par.parseLine('<s>')
-        self.opr.par.parseLine(
-            '<link xtargets="s1;s1" id="SL1" certainty="0.5"/> ')
-        ret = self.opr.par.readPair()
-        self.assertEqual(ret, -1)
-        self.opr.par.parseLine(
-            '<link xtargets="s1;s1" id="SL1" certainty="0.7"/> ')
-        ret = self.opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-    def test_AlignmentParser_readPair_returns_minus_1_if_nonAlignments_is_on_and_source_or_target_is_empty(self):
-        self.opr.par.parseLine('<s>')
-        self.opr.par.parseLine('<link xtargets="s1;" id="SL1"/> ')
-        ret = self.opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-        self.opr.par.nonAlignments = True
-        self.opr.par.parseLine('<link xtargets="s1;" id="SL1"/> ')
-        ret = self.opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-    def test_AlignmentParser_readPair_returns_1_if_alignment_is_valid_and_write_mode_is_links(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            write_mode='links', root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-
-        opr.par.parseLine('<s>')
-        opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/> ')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, 1)
-
-    def test_AlignmentParser_readPair_returns_minus_1_if_nonAlignments_is_on_and_source_or_target_is_empty_and_write_mode_is_links(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            leave_non_alignments_out=True, write_mode='links',
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-
-        opr.par.parseLine('<s>')
-        opr.par.parseLine('<link xtargets="s1;" id="SL1"/> ')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-    def test_PairPrinter_printPair_normal(self):
-        sPair = ('(src)="s4">Chapter 1 Mr. Sherlock Holmes',
-                '(trg)="s4">Herra Sherlock Holmes .')
-        self.assertEqual(self.opr.printPair(sPair),
-            '(src)="s4">Chapter 1 Mr. Sherlock Holmes\n(trg)="s4">Herra '
-            'Sherlock Holmes .\n================================')
-
-    def test_PairPrinter_printPair_tmx(self):
-        self.opr.write_mode = 'tmx'
-        sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
-                'Sherlock Holmes</seg></tuv>', '\t\t\t<tuv xml:lang="fi">'
-                '<seg>Herra Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
-        self.assertEqual(self.opr.printPair(sPair),
-            '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock'
-            ' Holmes</seg></tuv>\n\t\t\t<tuv xml:lang="fi"><seg>Herra '
-            'Sherlock Holmes .</seg></tuv>\n\t\t</tu>')
-
-    def test_PairPrinter_printPair_moses(self):
-        self.opr.write_mode = 'moses'
-        sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
-        self.assertEqual(self.opr.printPair(sPair),
-            """Chapter 1 Mr. Sherlock Holmes\tHerra Sherlock Holmes .""")
-
-    def test_PairPrinter_printPair_moses_change_delimiter(self):
-        self.opr.write_mode = 'moses'
-        self.opr.change_moses_delimiter = '@'
-        sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
-        self.assertEqual(self.opr.printPair(sPair),
-            """Chapter 1 Mr. Sherlock Holmes@Herra Sherlock Holmes .""")
-
-    def test_PairPrinter_printPair_links(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            root_directory=self.root_directory, write_mode='links')
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        sPair = '<link xtargets="s4;s4" id="SL4"/>'
-        self.assertEqual(opr.printPair(sPair),
-            '<link xtargets="s4;s4" id="SL4"/>')
-
-    def test_PairPrinter_printPair_empty(self):
-        sPair = ('(src)="3">Director PARK Jae-sik', '')
-        self.assertEqual(self.opr.printPair(sPair),
-            '(src)="3">Director PARK Jae-sik\n\n'
-            '================================')
-
-    def test_PairPrinter_writePair_normal(self):
-        sPair = ('(src)="s4">Chapter 1 Mr. Sherlock Holmes',
-                '(trg)="s4">Herra Sherlock Holmes .')
-        self.assertEqual(self.opr.writePair(sPair),
-            ('(src)="s4">Chapter 1 Mr. Sherlock Holmes\n(trg)="s4">Herra '
-            'Sherlock Holmes .\n================================\n', ''))
-
-    def test_PairPrinter_writePair_tmx(self):
-        self.opr.write_mode = 'tmx'
-        sPair = ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. '
-                'Sherlock Holmes</seg></tuv>',
-                '\t\t\t<tuv xml:lang="fi"><seg>Herra Sherlock Holmes .'
-                '</seg></tuv>\n\t\t</tu>')
-        self.assertEqual(self.opr.writePair(sPair),
-            ('\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Chapter 1 Mr. Sherlock'
-            ' Holmes</seg></tuv>\n\t\t\t<tuv xml:lang="fi"><seg>Herra '
-            'Sherlock Holmes .</seg></tuv>\n\t\t</tu>\n', ''))
-
-    def test_PairPrinter_writePair_moses(self):
-        self.opr.write_mode = 'moses'
-        self.opr.write = os.path.join(self.tempdir1, 'test_files',
-            'test.src')
-        sPair = ('Chapter 1 Mr. Sherlock Holmes', 'Herra Sherlock Holmes .')
-        self.assertEqual(self.opr.writePair(sPair),
-            ('Chapter 1 Mr. Sherlock Holmes\nHerra Sherlock Holmes .\n', ''))
-
-    def test_PairPrinter_writePair_links(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            root_directory=self.root_directory, write_mode='links')
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        sPair = '<link xtargets="s4;s4" id="SL4"/>'
-        self.assertEqual(opr.writePair(sPair),
-            ('<link xtargets="s4;s4" id="SL4"/>\n', ''))
-
-    def test_PairPrinter_writePair_empty(self):
-        sPair = ('(src)="3">Director PARK Jae-sik', '')
-        self.assertEqual(self.opr.writePair(sPair),
-            ('(src)="3">Director PARK Jae-sik\n\n'
-            '================================\n', ''))
-
-    def test_switch_labels_when_languages_are_in_unalphabetical_order(self):
-        opr = OpusRead(directory='RF', source='sv', target='en',
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            '(trg)="s3.1">( Unofficial translation )')
-        self.assertEqual(opr.par.tPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
-
-        opr.par.closeFiles()
-        fastopr = OpusRead(directory='RF', source='sv', target='en',
-            fast=True, root_directory=self.root_directory)
-        fastopr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(fastopr.par.sPar.readSentence(['s3.1'])[0],
-            '(trg)="s3.1">( Unofficial translation )')
-        self.assertEqual(fastopr.par.tPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">Fru talman , ärade ledamöter av Sveriges riksdag !')
-        fastopr.par.closeFiles()
-
-    def test_ExhaustiveSentenceParser_readSentence_annotations(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            print_annotations=True, root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
-            'n|NN|translation )|)|)')
-        opr.par.closeFiles()
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            print_annotations=True, change_annotation_delimiter='@',
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">(@(@( Unofficial@NNP@unofficial translatio'
-            'n@NN@translation )@)@)')
-        opr.par.closeFiles()
-
-    def test_ExhaustiveSentenceParser_readSentence_raw(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            preprocess='raw', root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">(Unofficial translation)')
-        opr.par.closeFiles()
-
-    def test_SentenceParser_readSentence_annotations(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            print_annotations=True, fast=True,
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">(|(|( Unofficial|NNP|unofficial translatio'
-            'n|NN|translation )|)|)')
-        opr.par.closeFiles()
-
-    def test_SentenceParser_readSentence_annotations_change_delimiter(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            print_annotations=True, fast=True,
-            change_annotation_delimiter='@',
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">(@(@( Unofficial@NNP@unofficial translatio'
-            'n@NN@translation )@)@)')
-        opr.par.closeFiles()
-
-    def test_SentenceParser_readSentence_raw(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            preprocess='raw', fast=True, root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sPar.readSentence(['s3.1'])[0],
-            '(src)="s3.1">(Unofficial translation)')
-        opr.par.closeFiles()
-
-    def test_AlignmentParser_readPair_sentence_limits(self):
-        opr = OpusRead(directory='RF', source='en', target='sv', tgt_range='0',
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-
-        opr.par.parseLine('<s>')
-        opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.closeFiles()
-
-        opr = OpusRead(directory='RF', source='en', target='sv', tgt_range='1',
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-
-        opr.par.parseLine('<s>')
-        opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        opr.par.closeFiles()
-
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            src_range='3-4', tgt_range='1', root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-
-        opr.par.parseLine('<s>')
-        opr.par.parseLine('<link xtargets="s1;s1 s2" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.parseLine('<link xtargets="s1 s2 s3;s1" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        opr.par.parseLine('<link xtargets="s1 s2 s3 s4;s1" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        opr.par.parseLine('<link xtargets="s1 s2 s3 s4;s1 s2" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.parseLine('<link xtargets="s1 s2 s3 s4;" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.parseLine('<link xtargets="s1 s2 s3 s4 s5;s1" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.closeFiles()
-
-    def test_AlignmentParser_readPair_sentence_limits_when_languages_in_unalphabetical_order(self):
-        opr = OpusRead(directory='RF', source='sv', target='en', tgt_range='0',
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-
-        opr.par.parseLine('<s>')
-        opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.closeFiles()
-
-        opr = OpusRead(directory='RF', source='sv', target='en', tgt_range='1',
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-
-        opr.par.parseLine('<s>')
-        opr.par.parseLine('<link xtargets="s1;s1" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        opr.par.closeFiles()
-
-        opr = OpusRead(directory='RF', source='sv', target='en',
-            src_range='3-4', tgt_range='1', root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-
-        opr.par.parseLine('<s>')
-        opr.par.parseLine('<link xtargets="s1;s1 s2" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.parseLine('<link xtargets="s1;s1 s2 s3" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        opr.par.parseLine('<link xtargets="s1;s1 s2 s3 s4" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(type(ret[0]), str)
-
-        opr.par.parseLine('<link xtargets="s1 s2;s1 s2 s3 s4" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.parseLine('<link xtargets=";s1 s2 s3 s4" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.parseLine('<link xtargets="s1;s1 s2 s3 s4 s5" id="SL1"/>')
-        ret = opr.par.readPair()
-        self.assertEqual(ret, -1)
-
-        opr.par.closeFiles()
-
-    def test_AlignmentParser_previous_document_is_closed_before_next_is_opened(self):
-        printer = OpusRead(directory='RF', source='en', target='sv',
-            root_directory=self.root_directory)
-        printer.printPairs()
-        self.assertEqual(True, True)
+        pass
 
     def test_normal_xml_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -796,8 +279,8 @@ class TestOpusRead(unittest.TestCase):
             'Reading alignment file "{alignment}"\n'
             'Opening zip archive "{source}" ... Done\n'
             'Opening zip archive "{target}" ... Done\n'
-            'Reading source file "RF/xml/en/1988.xml" and target file '
-            '"RF/xml/sv/1988.xml"\nDone\n'.format(
+            'Reading src_file "RF/xml/en/1988.xml"\n'
+            'Reading trg_file "RF/xml/sv/1988.xml"\nDone\n'.format(
                 alignment=os.path.join(self.root_directory, 'RF', 'latest',
                     'xml', 'en-sv.xml.gz'),
                 source=os.path.join(self.root_directory, 'RF', 'latest',
@@ -805,22 +288,6 @@ class TestOpusRead(unittest.TestCase):
                 target=os.path.join(self.root_directory, 'RF', 'latest',
                     'xml', 'sv.zip')
                 ))
-
-    def test_normal_xml_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            fast=True, root_directory=self.root_directory).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
-                'r') as f:
-            self.assertEqual(f.read(),
-                '\n# en/1988.xml.gz\n'
-                '# sv/1988.xml.gz\n\n'
-                '================================\n(src)="s1.1">State'
-                'ment of Government Policy by the Prime Minister , Mr'
-                ' Ingvar Carlsson , at the Opening of the Swedish Parl'
-                'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
-                '>REGERINGSFÖRKLARING .\n============================'
-                '====\n')
 
     def test_normal_xml_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -835,22 +302,10 @@ class TestOpusRead(unittest.TestCase):
             '>REGERINGSFÖRKLARING .\n============================'
             '====\n')
 
+
     def test_normal_xml_print_verbose(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, root_directory=self.root_directory, verbose=True)
-        self.assertEqual(var,
-            '\n# en/1988.xml.gz\n'
-            '# sv/1988.xml.gz\n\n'
-            '================================\n(src)="s1.1">State'
-            'ment of Government Policy by the Prime Minister , Mr'
-            ' Ingvar Carlsson , at the Opening of the Swedish Parl'
-            'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
-            '>REGERINGSFÖRKLARING .\n============================'
-            '====\n')
-
-    def test_normal_xml_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, fast=True, root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
@@ -877,40 +332,10 @@ class TestOpusRead(unittest.TestCase):
                 '>REGERINGSFÖRKLARING.\n============================'
                 '====\n')
 
-    def test_normal_raw_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            preprocess='raw', fast=True, root_directory=self.root_directory
-            ).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
-                'r') as f:
-            self.assertEqual(f.read(),
-                '\n# en/1988.xml.gz\n'
-                '# sv/1988.xml.gz\n\n'
-                '================================\n(src)="s1.1">State'
-                'ment of Government Policy by the Prime Minister, Mr'
-                ' Ingvar Carlsson, at the Opening of the Swedish Parl'
-                'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
-                '>REGERINGSFÖRKLARING.\n============================'
-                '====\n')
 
     def test_normal_raw_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, preprocess='raw', root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# en/1988.xml.gz\n'
-            '# sv/1988.xml.gz\n\n'
-            '================================\n(src)="s1.1">State'
-            'ment of Government Policy by the Prime Minister, Mr'
-            ' Ingvar Carlsson, at the Opening of the Swedish Parl'
-            'iament on Tuesday, 4 October, 1988.\n(trg)="s1.1"'
-            '>REGERINGSFÖRKLARING.\n============================'
-            '====\n')
-
-    def test_normal_raw_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, preprocess='raw', fast=True,
-            root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
@@ -932,17 +357,6 @@ class TestOpusRead(unittest.TestCase):
              '(src)="1">Ĉiuj nomoj, roluloj kaj eventoj reprezentitaj en ĉi '
              'tiu filmo estas fikciaj.\n\n'
              '================================\n')
-
-    def test_normal_raw_print_OpenSubtitles_fast(self):
-        var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
-            target='tl', maximum=1, preprocess='raw', fast=True,
-            root_directory= self.root_directory)
-        self.assertEqual(var,
-            '\n# eo/2009/1187043/6483790.xml.gz\n'
-            '# tl/2009/1187043/6934998.xml.gz\n\n'
-             '================================\n(src)="1">Ĉiuj nomoj, '
-             'roluloj kaj eventoj reprezentitaj en ĉi tiu filmo estas '
-             'fikciaj.\n\n================================\n')
 
     def test_normal_parsed_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -974,35 +388,6 @@ class TestOpusRead(unittest.TestCase):
                 '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
                 '\n================================\n')
 
-    def test_normal_parsed_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            preprocess='parsed', print_annotations=True,
-            source_annotations=['upos', 'feats', 'lemma'],
-            target_annotations=['upos', 'feats', 'lemma'],
-            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            fast=True, root_directory=self.root_directory).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
-                'r') as f:
-            self.assertEqual(f.read(),
-                '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
-                '================================'
-                '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
-                'of|ADP|of Government|NOUN|Number=Sing|government Pol'
-                'icy|NOUN|Number=Sing|policy by|ADP|by the|DET|Defini'
-                'te=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prim'
-                'e Minister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|P'
-                'ROPN|Number=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar '
-                'Carlsson|PROPN|Number=Sing|Carlsson ,|PUNCT|, at|ADP'
-                '|at the|DET|Definite=Def|PronType=Art|the Opening|NO'
-                'UN|Number=Sing|opening of|ADP|of the|DET|Definite=De'
-                'f|PronType=Art|the Swedish|ADJ|Degree=Pos|swedish Pa'
-                'rliament|NOUN|Number=Sing|parliament on|ADP|on Tuesd'
-                'ay|PROPN|Number=Sing|Tuesday ,|PUNCT|, 4|NUM|NumType'
-                '=Card|4 October|PROPN|Number=Sing|October ,|PUNCT|, '
-                '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
-                'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
-                '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
-                '\n================================\n')
 
     def test_normal_parsed_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -1058,79 +443,12 @@ class TestOpusRead(unittest.TestCase):
             '1988|NUM|NumType=Card|1988 .|PUNCT|.'
             '\n================================\n')
 
-    def test_normal_parsed_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, preprocess='parsed', print_annotations=True,
-            source_annotations=['upos', 'feats', 'lemma'],
-            target_annotations=['upos', 'feats', 'lemma'],
-            fast=True, root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
-            '================================'
-            '\n(src)="s1.1">Statement|NOUN|Number=Sing|statement '
-            'of|ADP|of Government|NOUN|Number=Sing|government Pol'
-            'icy|NOUN|Number=Sing|policy by|ADP|by the|DET|Defini'
-            'te=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prim'
-            'e Minister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|P'
-            'ROPN|Number=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar '
-            'Carlsson|PROPN|Number=Sing|Carlsson ,|PUNCT|, at|ADP'
-            '|at the|DET|Definite=Def|PronType=Art|the Opening|NO'
-            'UN|Number=Sing|opening of|ADP|of the|DET|Definite=De'
-            'f|PronType=Art|the Swedish|ADJ|Degree=Pos|swedish Pa'
-            'rliament|NOUN|Number=Sing|parliament on|ADP|on Tuesd'
-            'ay|PROPN|Number=Sing|Tuesday ,|PUNCT|, 4|NUM|NumType'
-            '=Card|4 October|PROPN|Number=Sing|October ,|PUNCT|, '
-            '1988|NUM|NumType=Card|1988 .|PUNCT|.\n(trg)="s1.1">R'
-            'EGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender'
-            '=Neut|Number=Sing|Regeringsförklaring .|PUNCT|.'
-            '\n================================\n')
 
     def test_normal_parsed_print_all_attributes(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, preprocess='parsed', print_annotations=True,
             source_annotations=['all_attrs'], target_annotations=['all_attrs'],
             root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
-            '================================'
-            '\n(src)="s1.1">Statement|root|Number=Sing|0|w1.1.1|state'
-            'ment|NOUN|NOUN of|case|w1.1.4|w1.1.2|of|ADP|ADP Governme'
-            'nt|compound|Number=Sing|w1.1.4|w1.1.3|government|NOUN|NO'
-            'UN Policy|nmod|Number=Sing|w1.1.1|w1.1.4|policy|NOUN|NOU'
-            'N by|case|w1.1.8|w1.1.5|by|ADP|ADP the|det|Definite=Def|'
-            'PronType=Art|w1.1.8|w1.1.6|the|DET|DET Prime|compound|Nu'
-            'mber=Sing|w1.1.8|w1.1.7|Prime|PROPN|PROPN Minister|nmod|'
-            'Number=Sing|w1.1.1|w1.1.8|Minister|SpaceAfter=No|PROPN|P'
-            'ROPN ,|punct|w1.1.8|w1.1.9|,|PUNCT|PUNCT Mr|compound|Num'
-            'ber=Sing|w1.1.12|w1.1.10|Mr|PROPN|PROPN Ingvar|flat|Numb'
-            'er=Sing|w1.1.10|w1.1.11|Ingvar|PROPN|PROPN Carlsson|flat'
-            '|Number=Sing|w1.1.8|w1.1.12|Carlsson|SpaceAfter=No|PROPN'
-            '|PROPN ,|punct|w1.1.1|w1.1.13|,|PUNCT|PUNCT at|case|w1.1'
-            '.16|w1.1.14|at|ADP|ADP the|det|Definite=Def|PronType=Art'
-            '|w1.1.16|w1.1.15|the|DET|DET Opening|nmod|Number=Sing|w1'
-            '.1.1|w1.1.16|opening|NOUN|NOUN of|case|w1.1.20|w1.1.17|o'
-            'f|ADP|ADP the|det|Definite=Def|PronType=Art|w1.1.20|w1.1'
-            '.18|the|DET|DET Swedish|amod|Degree=Pos|w1.1.20|w1.1.19|'
-            'swedish|ADJ|ADJ Parliament|nmod|Number=Sing|w1.1.16|w1.1'
-            '.20|parliament|NOUN|NOUN on|case|w1.1.22|w1.1.21|on|ADP|'
-            'ADP Tuesday|nmod|Number=Sing|w1.1.16|w1.1.22|Tuesday|Spa'
-            'ceAfter=No|PROPN|PROPN ,|punct|w1.1.1|w1.1.23|,|PUNCT|PU'
-            'NCT 4|nummod|NumType=Card|w1.1.25|w1.1.24|4|NUM|NUM Octo'
-            'ber|appos|Number=Sing|w1.1.1|w1.1.25|October|SpaceAfter='
-            'No|PROPN|PROPN ,|punct|w1.1.25|w1.1.26|,|PUNCT|PUNCT 198'
-            '8|nummod|NumType=Card|w1.1.25|w1.1.27|1988|SpaceAfter=No'
-            '|NUM|NUM .|punct|w1.1.1|w1.1.28|.|SpaceAfter=No|PUNCT|PU'
-            'NCT\n(trg)="s1.1">REGERINGSFÖRKLARING|root|Case=Nom|Defini'
-            'te=Ind|Gender=Neut|Number=Sing|0|w1.1.1|Regeringsförklar'
-            'ing|SpaceAfter=No|NOUN|NOUN .|punct|w1.1.1|w1.1.2|.|Spac'
-            'eAfter=No|PUNCT|PUNCT'
-            '\n================================\n')
-
-    def test_normal_parsed_print_all_attributes_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, preprocess='parsed', print_annotations=True,
-            source_annotations=['all_attrs'], target_annotations=['all_attrs'],
-            fast=True, root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
             '================================'
@@ -1202,23 +520,6 @@ class TestOpusRead(unittest.TestCase):
                 'day , 4 October , 1988 .'
                 '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
 
-    def test_tmx_xml_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            write_mode='tmx', fast=True, root_directory=self.root_directory
-            ).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
-                'r') as f:
-            self.assertEqual(f.read(),
-                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-                '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
-                '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
-                'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
-                'n , at the Opening of the Swedish Parliament on Tues'
-                'day , 4 October , 1988 .'
-                '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
 
     def test_tmx_xml_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -1264,44 +565,12 @@ class TestOpusRead(unittest.TestCase):
             'day , 4 October , 1988 .'
             '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
-    def test_tmx_xml_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, write_mode='tmx', fast=True,
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-            '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
-            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-            '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
-            'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
-            'n , at the Opening of the Swedish Parliament on Tues'
-            'day , 4 October , 1988 .'
-            '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_raw_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
             write_mode='tmx',
             write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             preprocess='raw', root_directory=self.root_directory).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
-                'r') as f:
-            self.assertEqual(f.read(),
-                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-                '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
-                '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
-                'ent Policy by the Prime Minister, Mr Ingvar Carlsso'
-                'n, at the Opening of the Swedish Parliament on Tues'
-                'day, 4 October, 1988.'
-                '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
-
-    def test_tmx_raw_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            write_mode='tmx', preprocess='raw', fast=True,
-            root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
             self.assertEqual(f.read(),
@@ -1330,20 +599,6 @@ class TestOpusRead(unittest.TestCase):
             '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
             'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
-    def test_tmx_raw_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, write_mode='tmx', preprocess='raw', fast=True,
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-            '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
-            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-            '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
-            'ent Policy by the Prime Minister, Mr Ingvar Carlsso'
-            'n, at the Opening of the Swedish Parliament on Tues'
-            'day, 4 October, 1988.'
-            '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-            'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_parsed_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -1377,74 +632,12 @@ class TestOpusRead(unittest.TestCase):
                 'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
                 '\n\t\t</tu>\n\t</body>\n</tmx>')
 
-    def test_tmx_parsed_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test_results')],
-            write_mode='tmx', preprocess='parsed', print_annotations=True,
-            source_annotations=['upos', 'feats', 'lemma'],
-            target_annotations=['upos', 'feats', 'lemma'], fast=True,
-            root_directory=self.root_directory).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
-                'r') as f:
-            self.assertEqual(f.read(),
-                '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-                '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
-                '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-                '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
-                'r=Sing|statement of|ADP|of Government|NOUN|Number=Si'
-                'ng|government Policy|NOUN|Number=Sing|policy by|ADP|'
-                'by the|DET|Definite=Def|PronType=Art|the Prime|PROPN'
-                '|Number=Sing|Prime Minister|PROPN|Number=Sing|Minist'
-                'er ,|PUNCT|, Mr|PROPN|Number=Sing|Mr Ingvar|PROPN|Nu'
-                'mber=Sing|Ingvar Carlsson|PROPN|Number=Sing|Carlsson '
-                ',|PUNCT|, at|ADP|at the|DET|Definite=Def|PronType=Ar'
-                't|the Opening|NOUN|Number=Sing|opening of|ADP|of the'
-                '|DET|Definite=Def|PronType=Art|the Swedish|ADJ|Degre'
-                'e=Pos|swedish Parliament|NOUN|Number=Sing|parliament '
-                'on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PUNCT|'
-                ', 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
-                'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.<'
-                '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
-                'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
-                'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
-                '\n\t\t</tu>\n\t</body>\n</tmx>')
-
     def test_tmx_parsed_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write_mode='tmx', preprocess='parsed',
             print_annotations=True,
             source_annotations=['upos', 'feats', 'lemma'],
             target_annotations=['upos', 'feats', 'lemma'],
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
-            '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
-            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
-            '\n\t\t\t<tuv xml:lang="en"><seg>Statement|NOUN|Numbe'
-            'r=Sing|statement of|ADP|of Government|NOUN|Number=Si'
-            'ng|government Policy|NOUN|Number=Sing|policy by|ADP|'
-            'by the|DET|Definite=Def|PronType=Art|the Prime|PROPN'
-            '|Number=Sing|Prime Minister|PROPN|Number=Sing|Minist'
-            'er ,|PUNCT|, Mr|PROPN|Number=Sing|Mr Ingvar|PROPN|Nu'
-            'mber=Sing|Ingvar Carlsson|PROPN|Number=Sing|Carlsson '
-            ',|PUNCT|, at|ADP|at the|DET|Definite=Def|PronType=Ar'
-            't|the Opening|NOUN|Number=Sing|opening of|ADP|of the'
-            '|DET|Definite=Def|PronType=Art|the Swedish|ADJ|Degre'
-            'e=Pos|swedish Parliament|NOUN|Number=Sing|parliament '
-            'on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PUNCT|'
-            ', 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
-            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.<'
-            '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
-            'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
-            'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
-            '\n\t\t</tu>\n\t</body>\n</tmx>\n')
-
-    def test_tmx_parsed_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, write_mode='tmx', preprocess='parsed',
-            print_annotations=True,
-            source_annotations=['upos', 'feats', 'lemma'],
-            target_annotations=['upos', 'feats', 'lemma'], fast=True,
             root_directory=self.root_directory)
         self.assertEqual(var,
             '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
@@ -1572,22 +765,6 @@ class TestOpusRead(unittest.TestCase):
                 'ar Carlsson , at the Opening of the Swedish Parliame'
                 'nt on Tuesday , 4 October , 1988 .\n')
 
-    def test_moses_xml_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test.src'),
-                os.path.join(self.tempdir1, 'test_files', 'test.trg')],
-            write_mode='moses', fast=True, root_directory=self.root_directory
-            ).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test.src'),
-                'r') as f:
-            self.assertEqual(f.read(),
-            'Statement of Government Policy by the Prime Minister , '
-            'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
-            'ament on Tuesday , 4 October , 1988 .\n')
-        with open(os.path.join(self.tempdir1, 'test_files', 'test.trg'),
-                'r') as f:
-            self.assertEqual(f.read(), 'REGERINGSFÖRKLARING .\n')
-
     def test_moses_xml_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write_mode='moses', root_directory=self.root_directory)
@@ -1616,16 +793,6 @@ class TestOpusRead(unittest.TestCase):
             'ning of the Swedish Parliament on Tuesday , 4 Octobe'
             'r , 1988 .\tREGERINGSFÖRKLARING .\n')
 
-    def test_moses_xml_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, write_mode='moses', fast=True,
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            'Statement of Government Policy by the Prime Minister , '
-            'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
-            'ament on Tuesday , 4 October , 1988 .\t'
-            'REGERINGSFÖRKLARING .\n')
-
     def test_moses_raw_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
             write_mode='moses',
@@ -1642,22 +809,6 @@ class TestOpusRead(unittest.TestCase):
                 'test_files', 'test.trg'), 'r') as f:
             self.assertEqual(f.read(), 'REGERINGSFÖRKLARING.\n')
 
-    def test_moses_raw_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test.src'),
-                os.path.join(self.tempdir1, 'test_files', 'test.trg')],
-            write_mode='moses', preprocess='raw', fast=True,
-            root_directory=self.root_directory).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test.src'),
-                'r') as f:
-            self.assertEqual(f.read(),
-            'Statement of Government Policy by the Prime Minister, '
-            'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
-            'ament on Tuesday, 4 October, 1988.\n')
-        with open(os.path.join(self.tempdir1, 'test_files', 'test.trg'),
-                'r') as f:
-            self.assertEqual(f.read(), 'REGERINGSFÖRKLARING.\n')
-
     def test_moses_raw_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write_mode='moses', preprocess='raw',
@@ -1667,17 +818,6 @@ class TestOpusRead(unittest.TestCase):
             'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
             'ament on Tuesday, 4 October, 1988.\t'
             'REGERINGSFÖRKLARING.\n')
-
-    def test_moses_raw_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, write_mode='moses', preprocess='raw', fast=True,
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            'Statement of Government Policy by the Prime Minister, '
-            'Mr Ingvar Carlsson, at the Opening of the Swedish Parli'
-            'ament on Tuesday, 4 October, 1988.\t'
-            'REGERINGSFÖRKLARING.\n')
-
     def test_moses_parsed_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
             write=[os.path.join(self.tempdir1, 'test_files', 'test.src'),
@@ -1708,65 +848,12 @@ class TestOpusRead(unittest.TestCase):
             'REGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
             'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n')
 
-    def test_moses_parsed_write_fast(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            write=[os.path.join(self.tempdir1, 'test_files', 'test.src'),
-                os.path.join(self.tempdir1, 'test_files', 'test.trg')],
-            write_mode='moses', preprocess='parsed', print_annotations=True,
-            source_annotations=['upos', 'feats', 'lemma'],
-            target_annotations=['upos', 'feats', 'lemma'], fast=True,
-            root_directory=self.root_directory).printPairs()
-        with open(os.path.join(self.tempdir1, 'test_files', 'test.src'),
-                'r') as f:
-            self.assertEqual(f.read(), 'Statement|NOUN|Number=Sing|st'
-            'atement of|ADP|of Government|NOUN|Number=Sing|government'
-            ' Policy|NOUN|Number=Sing|policy by|ADP|by the|DET|Definit'
-            'e=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prime Min'
-            'ister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|PROPN|Numb'
-            'er=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar Carlsson|PROP'
-            'N|Number=Sing|Carlsson ,|PUNCT|, at|ADP|at the|DET|Defin'
-            'ite=Def|PronType=Art|the Opening|NOUN|Number=Sing|openin'
-            'g of|ADP|of the|DET|Definite=Def|PronType=Art|the Swedis'
-            'h|ADJ|Degree=Pos|swedish Parliament|NOUN|Number=Sing|par'
-            'liament on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PU'
-            'NCT|, 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
-            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.\n')
-        with open(os.path.join(self.tempdir1, 'test_files', 'test.trg'),
-                'r') as f:
-            self.assertEqual(f.read(),
-            'REGERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
-            'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n')
-
     def test_moses_parsed_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write_mode='moses', preprocess='parsed',
             print_annotations=True,
             source_annotations=['upos', 'feats', 'lemma'],
             target_annotations=['upos', 'feats', 'lemma'],
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            'Statement|NOUN|Number=Sing|st'
-            'atement of|ADP|of Government|NOUN|Number=Sing|government'
-            ' Policy|NOUN|Number=Sing|policy by|ADP|by the|DET|Definit'
-            'e=Def|PronType=Art|the Prime|PROPN|Number=Sing|Prime Min'
-            'ister|PROPN|Number=Sing|Minister ,|PUNCT|, Mr|PROPN|Numb'
-            'er=Sing|Mr Ingvar|PROPN|Number=Sing|Ingvar Carlsson|PROP'
-            'N|Number=Sing|Carlsson ,|PUNCT|, at|ADP|at the|DET|Defin'
-            'ite=Def|PronType=Art|the Opening|NOUN|Number=Sing|openin'
-            'g of|ADP|of the|DET|Definite=Def|PronType=Art|the Swedis'
-            'h|ADJ|Degree=Pos|swedish Parliament|NOUN|Number=Sing|par'
-            'liament on|ADP|on Tuesday|PROPN|Number=Sing|Tuesday ,|PU'
-            'NCT|, 4|NUM|NumType=Card|4 October|PROPN|Number=Sing|Oct'
-            'ober ,|PUNCT|, 1988|NUM|NumType=Card|1988 .|PUNCT|.\tREG'
-            'ERINGSFÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Ne'
-            'ut|Number=Sing|Regeringsförklaring .|PUNCT|.\n')
-
-    def test_moses_parsed_print_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1, write_mode='moses', preprocess='parsed',
-            print_annotations=True,
-            source_annotations=['upos', 'feats', 'lemma'],
-            target_annotations=['upos', 'feats', 'lemma'], fast=True,
             root_directory=self.root_directory)
         self.assertEqual(var,
             'Statement|NOUN|Number=Sing|st'
@@ -1795,15 +882,15 @@ class TestOpusRead(unittest.TestCase):
                 '<?xml version="1.0" encoding="utf-8"?>\n'
                 '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
                 ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
-                '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
-                ' fromDoc="en/1988.xml.gz">\n'
+                '<linkGrp targType="s" fromDoc="en/1988.xml.gz"'
+                ' toDoc="sv/1988.xml.gz">\n'
                 '<link certainty="-0.0636364" xtargets="s1.1;s1.1" id="SL1"'
-                ' />\n </linkGrp>\n</cesAlign>')
+                ' />\n </linkGrp>\n</cesAlign>\n')
 
     def test_links_write_unalphabetical(self):
         OpusRead(directory='RF', source='sv', target='en',
             write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
-            write_mode='links', src_range='1', tgt_range='2',
+            write_mode='links', src_range='1-5', tgt_range='2',
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
                 'r') as f:
@@ -1811,11 +898,11 @@ class TestOpusRead(unittest.TestCase):
                 '<?xml version="1.0" encoding="utf-8"?>\n'
                 '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
                 ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
-                '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
-                ' fromDoc="en/1988.xml.gz">\n'
+                '<linkGrp targType="s" fromDoc="en/1988.xml.gz"'
+                ' toDoc="sv/1988.xml.gz">\n'
                 '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" '
                 'id="SL10" />\n </linkGrp>\n <linkGrp targType="s" '
-                'toDoc="sv/1996.xml.gz" fromDoc="en/1996.xml.gz">\n '
+                'fromDoc="en/1996.xml.gz" toDoc="sv/1996.xml.gz">\n '
                 '</linkGrp>\n</cesAlign>\n')
 
     def test_links_print(self):
@@ -1825,8 +912,8 @@ class TestOpusRead(unittest.TestCase):
             '<?xml version="1.0" encoding="utf-8"?>\n'
             '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
             ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
-            '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
-            ' fromDoc="en/1988.xml.gz">\n'
+            '<linkGrp targType="s" fromDoc="en/1988.xml.gz"'
+            ' toDoc="sv/1988.xml.gz">\n'
             '<link certainty="-0.0636364" xtargets="s1.1;s1.1" id="SL1"'
             ' />\n </linkGrp>\n</cesAlign>\n')
 
@@ -1838,11 +925,11 @@ class TestOpusRead(unittest.TestCase):
             '<?xml version="1.0" encoding="utf-8"?>\n'
             '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD'
             ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
-            '<linkGrp targType="s" toDoc="sv/1988.xml.gz"'
-            ' fromDoc="en/1988.xml.gz">\n'
+            '<linkGrp targType="s" fromDoc="en/1988.xml.gz"'
+            ' toDoc="sv/1988.xml.gz">\n'
             '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10"'
-            ' />\n </linkGrp>\n <linkGrp targType="s" toDoc="sv/1996.xml.gz"'
-            ' fromDoc="en/1996.xml.gz">\n </linkGrp>\n</cesAlign>\n')
+            ' />\n </linkGrp>\n <linkGrp targType="s" fromDoc="en/1996.xml.gz"'
+            ' toDoc="sv/1996.xml.gz">\n </linkGrp>\n</cesAlign>\n')
 
     def test_iteration_stops_at_the_end_of_the_document_even_if_max_is_not_filled(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -1858,8 +945,7 @@ class TestOpusRead(unittest.TestCase):
             """ns föresats att söka breda lösningar i frågor som är a"""
             """v betydelse för vår nationella säkerhet .\n=========="""
             """======================\n\n# en/1996.xml.gz\n# sv/1996."""
-            """xml.gz\n\n================================\n""")
-
+            """xml.gz\n\n""")
 
     def test_use_given_sentence_alignment_file(self):
         OpusRead(directory='Books', source='eo', target='pt', src_range='2',
@@ -1913,8 +999,7 @@ class TestOpusRead(unittest.TestCase):
             """ur national security .\n(trg)="s4.4">Det är regeringe"""
             """ns föresats att söka breda lösningar i frågor som är a"""
             """v betydelse för vår nationella säkerhet .\n=========="""
-            """======================\n\n# en/1996.xml.gz\n# sv/1996."""
-            """xml.gz\n\n================================\n""")
+            """======================\n""")
 
     def test_use_given_sentence_alignment_file_and_print_links(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -1928,8 +1013,8 @@ class TestOpusRead(unittest.TestCase):
             root_directory=self.root_directory)
         self.assertEqual(var, '<?xml version="1.0" encoding="utf-8"?>'
         '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "'
-        '">\n<cesAlign version="1.0">\n <linkGrp targType="s" toDoc="'
-        'sv/1988.xml.gz" fromDoc="en/1988.xml.gz">\n<link certainty="'
+        '">\n<cesAlign version="1.0">\n <linkGrp targType="s" fromDoc'
+        '="en/1988.xml.gz" toDoc="sv/1988.xml.gz">\n<link certainty="'
         '-0.0636364" xtargets="s1.1;s1.1" id="SL1" />\n </linkGrp>\n<'
         '/cesAlign>\n')
 
@@ -1947,8 +1032,8 @@ class TestOpusRead(unittest.TestCase):
                 'r') as f:
             self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>'
             '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "'
-            '">\n<cesAlign version="1.0">\n <linkGrp targType="s" toDoc="'
-            'sv/1988.xml.gz" fromDoc="en/1988.xml.gz">\n<link certainty="'
+            '">\n<cesAlign version="1.0">\n <linkGrp targType="s" fromDoc="en/1988.xml.gz"'
+            ' toDoc="sv/1988.xml.gz">\n<link certainty="'
             '-0.0636364" xtargets="s1.1;s1.1" id="SL1" />\n </linkGrp>\n<'
             '/cesAlign>\n')
 
@@ -1964,10 +1049,10 @@ class TestOpusRead(unittest.TestCase):
             root_directory=self.root_directory)
         self.assertEqual(var, '<?xml version="1.0" encoding="utf-8"?>'
         '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "'
-        '">\n<cesAlign version="1.0">\n<linkGrp targType="s" fromDoc='
+        '">\n<cesAlign version="1.0">\n <linkGrp targType="s" fromDoc='
         '"eo/Carroll_Lewis-Alice_in_wonderland.xml.gz" toDoc="pt/Carr'
-        'oll_Lewis-Alice_in_wonderland.xml.gz" >\n<link xtargets="s1;'
-        's1" id="SL1"/>\n </linkGrp>\n</cesAlign>\n')
+        'oll_Lewis-Alice_in_wonderland.xml.gz">\n<link xtargets="s1;'
+        's1" id="SL1" />\n </linkGrp>\n</cesAlign>\n')
 
     def test_use_given_sentence_alignment_file_and_write_links_Books(self):
         OpusRead(directory='Books', source='eo', target='pt', maximum=1,
@@ -1983,10 +1068,10 @@ class TestOpusRead(unittest.TestCase):
                 'r') as f:
             self.assertEqual(f.read(), '<?xml version="1.0" encoding="utf-8"?>'
             '\n<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "'
-            '">\n<cesAlign version="1.0">\n<linkGrp targType="s" from'
+            '">\n<cesAlign version="1.0">\n <linkGrp targType="s" from'
             'Doc="eo/Carroll_Lewis-Alice_in_wonderland.xml.gz" toDoc='
-            '"pt/Carroll_Lewis-Alice_in_wonderland.xml.gz" >\n<link x'
-            'targets="s1;s1" id="SL1"/>\n </linkGrp>\n</cesAlign>\n')
+            '"pt/Carroll_Lewis-Alice_in_wonderland.xml.gz">\n<link x'
+            'targets="s1;s1" id="SL1" />\n </linkGrp>\n</cesAlign>\n')
 
     def test_checks_first_whether_documents_are_in_path(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
@@ -2091,7 +1176,7 @@ class TestOpusRead(unittest.TestCase):
             zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
                 arcname=os.path.join('test_files', 'test_fi'))
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             OpusRead(directory='Books', source='en',
                     target='fi', alignment_file=os.path.join(self.tempdir1,
                         'test_files', 'testlinks'),
@@ -2129,7 +1214,7 @@ class TestOpusRead(unittest.TestCase):
             zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
                 arcname=os.path.join('test_files', 'test_un'))
 
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(KeyError):
             OpusRead(directory='Books', source='en',
                     target='fi', alignment_file=os.path.join(self.tempdir1,
                         'test_files', 'testlinks'),
@@ -2246,41 +1331,11 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s8.1">Luulenpa että sinulla'
             '\n================================\n')
 
-    def test_filtering_by_lang_labels_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum=1, src_cld2=['un', '0'],
-            trg_cld2=['fi', '0.97'], src_langid=['en', '0.17'],
-            trg_langid=['fi', '1'], fast=True,
-            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
-            download_dir=self.tempdir1)
-        self.assertEqual(var,
-            '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n'
-            '\n================================'
-            '\n(src)="s8.1">I believe'
-            '\n(trg)="s8.1">Luulenpa että sinulla'
-            '\n================================\n')
-
     def test_filtering_by_lang_labels_nonalphabetical_lang_order(self):
         var = pairPrinterToVariable(directory='RF', source='sv', target='en',
             release='v1', maximum=1, trg_cld2=['un', '0'],
             src_cld2=['fi', '0.97'], trg_langid=['en', '0.17'],
             src_langid=['fi', '1'],
-            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
-            download_dir=self.tempdir1)
-        self.assertEqual(var,
-            '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n'
-            '\n================================'
-            '\n(src)="s8.1">Luulenpa että sinulla'
-            '\n(trg)="s8.1">I believe'
-            '\n================================\n')
-
-    def test_filtering_by_lang_labels_nonalphabetical_lang_order_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='sv', target='en',
-            release='v1', maximum=1, trg_cld2=['un', '0'],
-            src_cld2=['fi', '0.97'], trg_langid=['en', '0.17'],
-            src_langid=['fi', '1'], fast=True,
             alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
             download_dir=self.tempdir1)
         self.assertEqual(var,
@@ -2298,18 +1353,7 @@ class TestOpusRead(unittest.TestCase):
             download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n'
-            '\n================================\n')
-
-    def test_filtering_by_lang_labels_no_matches_found_fast(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            release='v1', maximum=1, src_cld2=['fi', '2'], fast=True,
-            alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
-            download_dir=self.tempdir1)
-        self.assertEqual(var,
-            '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n'
-            '\n================================\n')
+            '# sv/1996.xml.gz\n\n')
 
     def test_filtering_by_src_cld2_print_links(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -2320,8 +1364,8 @@ class TestOpusRead(unittest.TestCase):
             '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
             'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
             'version="1.0">\n'
-            '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
-            '/1996.xml.gz" >\n<link xtargets="s5.0;s5.0" id="SL5.0"/>'
+            ' <linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+            '/1996.xml.gz">\n<link xtargets="s5.0;s5.0" id="SL5.0" />'
             '\n </linkGrp>\n</cesAlign>\n')
 
     def test_filtering_by_lang_labels_print_links(self):
@@ -2335,8 +1379,8 @@ class TestOpusRead(unittest.TestCase):
             '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
             'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
             'version="1.0">\n'
-            '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
-            '/1996.xml.gz" >\n<link xtargets="s8.1;s8.1" id="SL8.1"/>'
+            ' <linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+            '/1996.xml.gz">\n<link xtargets="s8.1;s8.1" id="SL8.1" />'
             '\n </linkGrp>\n</cesAlign>\n')
 
     def test_filtering_by_lang_labels_write_links(self):
@@ -2353,9 +1397,9 @@ class TestOpusRead(unittest.TestCase):
                 '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAli'
                 'gn PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n<cesAlign '
                 'version="1.0">\n'
-                '<linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
-                '/1996.xml.gz" >\n<link xtargets="s8.1;s8.1" id="SL8.1"/>'
-                '\n </linkGrp>\n</cesAlign>')
+                ' <linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv'
+                '/1996.xml.gz">\n<link xtargets="s8.1;s8.1" id="SL8.1" />'
+                '\n </linkGrp>\n</cesAlign>\n')
 
     def test_use_given_zip_files(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -2385,119 +1429,6 @@ class TestOpusRead(unittest.TestCase):
             '\n(trg)="s1">Source&<>"\' : manybooks.netAudiobook available here'
             '\n================================\n')
 
-    def test_source_zip_given_and_target_automatic(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            source_zip=os.path.join(self.tempdir1, 'en.zip'),
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.tempdir1, 'en.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.root_directory, 'RF', 'latest', 'xml', 'sv.zip'))
-
-    def test_source_zip_given_and_target_automatic_unalphabetical(self):
-        opr = OpusRead(directory='RF', target='en', source='sv',
-            source_zip=os.path.join(self.tempdir1, 'sv.zip'),
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.root_directory, 'RF', 'latest', 'xml', 'en.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.tempdir1, 'sv.zip'))
-
-    def test_target_zip_given_and_source_automatic(self):
-        opr = OpusRead(directory='RF', source='en', target='sv',
-            target_zip=os.path.join(self.tempdir1, 'sv.zip'),
-            root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.root_directory, 'RF', 'latest', 'xml', 'en.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.tempdir1, 'sv.zip'))
-
-    def test_target_zip_given_and_source_local(self):
-        opr = OpusRead(directory='RF', source='en', target='sv', release='v1',
-            target_zip=os.path.join(self.tempdir1, 'sv.zip'),
-            download_dir=self.tempdir1)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.tempdir1, 'RF_v1_xml_en.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.tempdir1, 'sv.zip'))
-
-    def test_target_zip_given_and_source_local_unalphabetical(self):
-        opr = OpusRead(directory='RF', target='en', source='sv', release='v1',
-            target_zip=os.path.join(self.tempdir1, 'en.zip'),
-            download_dir=self.tempdir1)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.tempdir1, 'en.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
-
-    def test_source_zip_given_and_target_local(self):
-        opr = OpusRead(directory='RF', source='en', target='sv', release='v1',
-            source_zip=os.path.join(self.tempdir1, 'en.zip'),
-            download_dir=self.tempdir1)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.tempdir1, 'en.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
-
-    def test_source_zip_local_and_target_automatic(self):
-        opr = OpusRead(directory='RF', source='en', target='es', release='v1',
-            download_dir=self.tempdir1, root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'en/1996.xml.gz', 'toDoc': 'es/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.tempdir1, 'RF_v1_xml_en.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.root_directory, 'RF', 'v1', 'xml', 'es.zip'))
-
-    def test_source_zip_local_and_target_automatic_unalphabetical(self):
-        opr = OpusRead(directory='RF', source='sv', target='es', release='v1',
-            download_dir=self.tempdir1, root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'es/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.root_directory, 'RF', 'v1', 'xml', 'es.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
-
-    def test_target_zip_local_and_source_automatic(self):
-        opr = OpusRead(directory='RF', source='es', target='sv', release='v1',
-            download_dir=self.tempdir1, root_directory=self.root_directory)
-        opr.par.initializeSentenceParsers(
-            {'fromDoc': 'es/1996.xml.gz', 'toDoc': 'sv/1996.xml.gz'})
-        self.assertEqual(opr.par.sourcezip.filename,
-            os.path.join(self.root_directory, 'RF', 'v1', 'xml', 'es.zip'))
-        self.assertEqual(opr.par.targetzip.filename,
-            os.path.join(self.tempdir1, 'RF_v1_xml_sv.zip'))
-
-    '''
-    def test_empty_argument_list(self):
-        temp_args = sys.argv.copy()
-        arguments = '-d RF -s en -t sv -m 1 -f -rd'.split()
-        arguments.append(self.root_directory)
-        sys.argv = [temp_args[0]] + arguments
-        var = pairPrinterToVariable([])
-        self.assertEqual(var,
-            '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n================'
-            '================\n(src)="s1.1">Statement of Government P'
-            'olicy by the Prime Minister , Mr Ingvar Carlsson , at th'
-            'e Opening of the Swedish Parliament on Tuesday , 4 Octob'
-            'er , 1988 .\n(trg)="s1.1">REGERINGSFÖRKLARING .\n======='
-            '=========================\n')
-        sys.argv = temp_args.copy()
-    '''
-
     @mock.patch('opustools.opus_get.input', create=True)
     def test_alignment_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y', 'n']
@@ -2508,10 +1439,12 @@ class TestOpusRead(unittest.TestCase):
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en-sv.xml.gz'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            maximum=1,
-            alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'))
-        self.assertTrue('No alignment file' in var)
+
+        with self.assertRaises(FileNotFoundError):
+            opr = OpusRead(directory='RF', source='en', target='sv',
+                maximum=1,
+                alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'))
+            opr.printPairs()
 
     def test_alignment_file_not_found_no_prompt(self):
         opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -2528,33 +1461,6 @@ class TestOpusRead(unittest.TestCase):
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en-sv.xml.gz'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
-
-    @mock.patch('opustools.opus_get.input', create=True)
-    def test_zip_file_not_found(self, mocked_input):
-        mocked_input.side_effect = ['y']
-        opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
-            download_dir=self.tempdir1, root_directory=self.root_directory)
-        opr.par.source = ''
-
-        old_stdout = sys.stdout
-        printout = io.StringIO()
-        sys.stdout = printout
-        opr.printPairs()
-        sys.stdout = old_stdout
-
-        os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en-sv.xml.gz'))
-        os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
-        os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
-
-        self.assertEqual(printout.getvalue()[-230:],
-            '(src)="s1.1">S'
-            'tatement of Government Policy by the Prime Minister , Mr'
-            ' Ingvar Carlsson , at the Opening of the Swedish Parliame'
-            'nt on Tuesday , 4 October , 1988 .\n(trg)="s1.1">REGERIN'
-            'GSFÖRKLARING .\n================================\n')
-
-    def test_testConfidence_with_empty_attrsList(self):
-        self.assertFalse(self.opr.par.testConfidence('', [], ''))
 
     def test_id_file_printing(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -2616,63 +1522,9 @@ class TestOpusRead(unittest.TestCase):
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
                 '.xml.gz\ts1.1\ts1.1\tNone\n')
 
-    def test_pair_output_sending_with_single_output_file(self):
-        self.opr.write_mode = 'moses'
-        self.opr.write = [os.path.join(
-            self.tempdir1, 'test_files', 'moses.txt')]
-        self.opr.resultfile = open(self.opr.write[0], 'w')
-        wpair = ('sentence 1\tsentence 2\n', '')
-        self.opr.sendPairOutput(wpair)
-        self.opr.resultfile.close()
-        with open(os.path.join(
-                self.tempdir1, 'test_files', 'moses.txt')) as mosesf:
-            self.assertEqual(mosesf.read(), 'sentence 1\tsentence 2\n')
-
-    def test_pair_output_sending_with_two_output_files(self):
-        self.opr.write_mode = 'moses'
-        self.opr.write = [
-            os.path.join(self.tempdir1, 'test_files', 'moses.src'),
-            os.path.join(self.tempdir1, 'test_files', 'moses.trg')]
-        self.opr.mosessrc = open(self.opr.write[0], 'w')
-        self.opr.mosestrg = open(self.opr.write[1], 'w')
-        wpair = ('sentence 1\t', 'sentence 2\n')
-        self.opr.sendPairOutput(wpair)
-        self.opr.mosessrc.close()
-        self.opr.mosestrg.close()
-        with open(os.path.join(
-                self.tempdir1, 'test_files', 'moses.src')) as mosessrc:
-            self.assertEqual(mosessrc.read(), 'sentence 1\t')
-        with open(os.path.join(
-                self.tempdir1, 'test_files', 'moses.trg')) as mosestrg:
-            self.assertEqual(mosestrg.read(), 'sentence 2\n')
-
-    def test_writing_id_file_line(self):
-        self.opr.id_file = open(os.path.join(
-            self.tempdir1, 'test_files', 'id_file'), 'w')
-        id_details = ('file_name1', 'file_name2',
-            ['id1', 'id2'], ['id1'], 'value')
-        self.opr.sendIdOutput(id_details)
-        self.opr.id_file.close()
-        with open(os.path.join(
-                self.tempdir1, 'test_files', 'id_file')) as id_file:
-            self.assertEqual(id_file.read(),
-                'file_name1\tfile_name2\tid1 id2\tid1\tvalue\n')
-
     def test_writing_time_tags_xml(self):
         var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
             target='tl', maximum=1, preserve_inline_tags=True,
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# eo/2009/1187043/6483790.xml.gz\n'
-            '# tl/2009/1187043/6934998.xml.gz\n\n'
-            '================================\n(src)="1"><time id="T1'
-            'S" value="00:00:06,849" /> Ĉiuj nomoj , roluloj kaj evento'
-            'j reprezentitaj en ĉi tiu filmo estas fikciaj .\n\n========'
-            '========================\n')
-
-    def test_writing_time_tags_xml_fast(self):
-        var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
-            target='tl', maximum=1, preserve_inline_tags=True, fast=True,
             root_directory=self.root_directory)
         self.assertEqual(var,
             '\n# eo/2009/1187043/6483790.xml.gz\n'
@@ -2691,29 +1543,9 @@ class TestOpusRead(unittest.TestCase):
             '\n# eo/2009/1187043/6483790.xml.gz\n'
             '# tl/2009/1187043/6934998.xml.gz\n\n'
             '================================\n(src)="1"><time id="T1'
-            'S" value="00:00:06,849" />Ĉiuj nomoj, roluloj kaj evento'
+            'S" value="00:00:06,849" /> Ĉiuj nomoj, roluloj kaj evento'
             'j reprezentitaj en ĉi tiu filmo estas fikciaj.\n\n========'
             '========================\n')
-
-    def test_writing_time_tags_raw_fast(self):
-        var = pairPrinterToVariable(directory='OpenSubtitles', source='eo',
-            target='tl', maximum=1, preserve_inline_tags=True,
-            preprocess='raw',
-            fast=True, root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# eo/2009/1187043/6483790.xml.gz\n'
-            '# tl/2009/1187043/6934998.xml.gz\n\n'
-            '================================\n(src)="1"><time id="T1'
-            'S" value="00:00:06,849" />Ĉiuj nomoj, roluloj kaj evento'
-            'j reprezentitaj en ĉi tiu filmo estas fikciaj.\n\n========'
-            '========================\n')
-
-    def test_addSentence_escapes_characters_when_write_mode_tmx(self):
-        sentence = self.opr.par.sPar.addSentence('', ' &<>"\'', '1')
-        self.assertEqual(sentence, '\n(src)="1"> &<>"\'')
-        self.opr.par.sPar.wmode='tmx'
-        sentence = self.opr.par.sPar.addSentence('', '&<>"\'', '')
-        self.assertEqual(sentence, ' &amp;&lt;&gt;"\'')
 
     def test_escape_characters_when_write_mode_tmx(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -2740,11 +1572,6 @@ class TestOpusRead(unittest.TestCase):
             '\n(src)="s1">Source&<>"\' : manybooks.netAudiobook available here'
             '\n(trg)="s1">Source : Project Gutenberg'
             '\n================================\n')
-
-    def test_no_plain_xml_alingment_file_found(self):
-        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
-            alignment_file='unfound.xml')
-        self.assertEqual(var, 'No alignment file "unfound.xml" found\n')
 
     def test_download_zip_files_no_prompt(self):
         var = pairPrinterToVariable(directory='RF', source='fr', target='sv',
@@ -2881,390 +1708,15 @@ class TestOpusRead(unittest.TestCase):
                     target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
                 ).printPairs()
 
+    def test_leave_non_alignments_out(self):
+        self.assertTrue(False)
 
-class TestOpusCat(unittest.TestCase):
+    def test_change_moses_delimiter(self):
+        self.assertTrue(False)
 
-    @classmethod
-    def setUpClass(self):
-        self.maxDiff = None
+    def test_change_annotation_delimiter(self):
+        self.assertTrue(False)
 
-        if ('OPUSCAT_TEST_TEMPDIR' in os.environ.keys() and
-            os.path.exists(os.environ['OPUSCAT_TEST_TEMPDIR'])):
-                self.tempdir1 = os.environ['OPUSCAT_TEST_TEMPDIR']
-        else:
-            self.tempdir1 = tempfile.mkdtemp()
-            os.mkdir(os.path.join(self.tempdir1, 'test_files'))
-
-        if ('OPUSCAT_TEST_ROOTDIR' in os.environ.keys() and
-            os.path.exists(os.environ['OPUSCAT_TEST_ROOTDIR'])):
-            self.root_directory = os.environ['OPUSCAT_TEST_ROOTDIR']
-        else:
-            self.root_directory = tempfile.mkdtemp()
-
-            os.makedirs(os.path.join(self.root_directory, 'RF', 'latest',
-                'xml'))
-
-            add_to_root_dir(corpus='RF', source='en', target='sv',
-                preprocess='xml', root_dir=self.root_directory)
-
-    @classmethod
-    def tearDownClass(self):
-        if ('OPUSCAT_TEST_SAVE' in os.environ.keys() and
-                os.environ['OPUSCAT_TEST_SAVE'] == 'true'):
-            print('\nTEMPDIR:', self.tempdir1)
-            print('ROOTDIR:', self.root_directory)
-        else:
-            shutil.rmtree(self.tempdir1)
-            shutil.rmtree(self.root_directory)
-
-    def printSentencesToVariable(self, **kwargs):
-        old_stdout = sys.stdout
-        printout = io.StringIO()
-        sys.stdout = printout
-        oprinter = OpusCat(**kwargs)
-        oprinter.printSentences()
-        sys.stdout = old_stdout
-        return printout.getvalue()
-
-    def test_printing_sentences(self):
-        var = self.printSentencesToVariable(directory='RF', language='en',
-            plain=True, root_directory=self.root_directory)
-        self.assertEqual(var[-183:],
-            """("s72.1")>It is the Government 's resposibility and ai"""
-            """m to put to use all good initiatives , to work for bro"""
-            """ad solutions and to pursue a policy in the interests o"""
-            """f the whole nation .\n""")
-
-    def test_printing_sentences_with_limit(self):
-        var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum=1, plain=True, root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN'
-            ' AFFAIRS Press Section Check against delivery\n')
-
-    def test_printing_sentences_without_ids(self):
-        var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum=1, no_ids=True, plain=True,
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# RF/xml/en/1996.xml\n\nMINISTRY FOR FOREIGN'
-            ' AFFAIRS Press Section Check against delivery\n')
-
-    def test_print_annotations(self):
-        var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum=1, no_ids=True, plain=True, print_annotations=True,
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# RF/xml/en/1996.xml\n\nMINISTRY|NNP|ministry FOR|NNP'
-            '|for FOREIGN|NNP|FOREIGN AFFAIRS|NNP Press|NNP|Press Sec'
-            'tion|NNP|Section Check|NNP|Check against|IN|against deli'
-            'very|NN|delivery\n')
-
-    def test_print_annotations_all_attributes(self):
-        var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum=1, no_ids=True, plain=True, print_annotations=True,
-            set_attribute=['all_attrs'], root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# RF/xml/en/1996.xml\n\nMINISTRY|null|0|NN|w1.1.1|mini'
-            'stry|NNP|NN FOR|prep|1|IN|w1.1.2|for|NNP|IN FOREIGN|nn|7'
-            '|NNP|w1.1.3|FOREIGN|NNP|NP AFFAIRS|nn|7|NNP|w1.1.4|NNP|N'
-            'P Press|nn|7|NNP|w1.1.5|Press|NNP|NP Section|nn|7|NNP|w1'
-            '.1.6|Section|NNP|NP Check|pobj|2|NNP|w1.1.7|Check|NNP|NP'
-            ' against|prep|1|IN|w1.1.8|against|IN|IN delivery|pobj|8|N'
-            'N|w1.1.9|delivery|NN|NN\n')
-
-    def test_print_xml(self):
-        var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum=1, root_directory=self.root_directory)
-        self.assertEqual(var[-38:],
-            '<w id="w2.10">1996</w>\n</p><p id="3">\n')
-
-    def test_printing_specific_file(self):
-        var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum=1, no_ids=True, plain=True, file_name='RF/xml/en/1988.xml',
-            root_directory=self.root_directory)
-        self.assertEqual(var,
-            '\n# RF/xml/en/1988.xml\n\nStatement of Government Policy'
-            ' by the Prime Minister , Mr Ingvar Carlsson , at the Open'
-            'ing of the Swedish Parliament on Tuesday , 4 October , 1'
-            '988 .\n')
-
-    '''
-    def test_empty_argument_list(self):
-        temp_args = sys.argv.copy()
-        sys.argv = [temp_args[0]] + '-d RF -l en -m 1 -p -rd {rootdir}'.format(
-            rootdir=self.root_directory).split()
-        var = self.printSentencesToVariable([])
-        self.assertEqual(var,
-            '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN '
-            'AFFAIRS Press Section Check against delivery\n')
-        sys.argv = temp_args.copy()
-    '''
-
-    @mock.patch('opustools.opus_get.input', create=True)
-    def test_file_not_found(self, mocked_input):
-        mocked_input.side_effect = ['y']
-        var = self.printSentencesToVariable(directory='RFOSIAJ', language='en',
-            maximum=1, plain=True, root_directory=self.root_directory)
-
-        self.assertEqual(var[-28:],
-            '\nNecessary files not found.\n')
-
-    @mock.patch('opustools.opus_get.input', create=True)
-    def test_download_necessary_files(self, mocked_input):
-        mocked_input.side_effect = ['y', 'n', 'n']
-
-        old_stdout = sys.stdout
-        printout = io.StringIO()
-        sys.stdout = printout
-        OpusCat.openFiles(
-            OpusCat(directory='RF', language='en', download_dir=self.tempdir1),
-            os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'), '')
-        os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
-        OpusCat.openFiles(
-            OpusCat(directory='RF', language='en', download_dir=self.tempdir1),
-            os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'), '')
-        sys.stdout = old_stdout
-        print(printout.getvalue())
-        self.assertTrue('No file found' in printout.getvalue())
-
-class TestOpusGet(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(self):
-        self.tempdir = tempfile.mkdtemp()
-        self.maxDiff = None
-
-    @classmethod
-    def tearDownClass(self):
-        shutil.rmtree(self.tempdir)
-
-    '''
-    def test_empty_argument_list(self):
-        temp_args = sys.argv.copy()
-        sys.argv = [temp_args[0]] + '-s eo'.split()
-        opg = OpusGet([])
-        params = ['source=eo', 'version=latest', 'preprocessing=xml', '']
-        for param in opg.url.split('?')[1].split('&'):
-            self.assertTrue(param in params)
-        sys.argv = temp_args.copy()
-    '''
-
-    def test_format_size(self):
-        opg = OpusGet(source='eo')
-        self.assertEqual(opg.format_size(1), '1 KB')
-        self.assertEqual(opg.format_size(291), '291 KB')
-        self.assertEqual(opg.format_size(1000), '1 MB')
-        self.assertEqual(opg.format_size(2514), '3 MB')
-        self.assertEqual(opg.format_size(1000000), '1 GB')
-        self.assertEqual(opg.format_size(3385993), '3 GB')
-        self.assertEqual(opg.format_size(1000000000), '1 TB')
-        self.assertEqual(opg.format_size(2304006273), '2 TB')
-
-    def test_remove_data_with_no_alignment(self):
-        opg = OpusGet(source='en', target='sv', list_resources=True)
-        data = {'corpora':
-                [{'alignment_pairs': 219,
-                    'corpus': 'RF',
-                    'documents': 2,
-                    'id': 321123,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 4,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': 'sv',
-                    'target_tokens': 2905,
-                    'url': ('https://object.pouta.csc.fi/OPUS-RF/v1/xml/'
-                        'en-sv.xml.gz'),
-                    'version': 'v1'},
-                {'alignment_pairs': 181,
-                    'corpus': 'RF',
-                    'documents': 2,
-                    'id': 321124,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 60,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-RF/v1/xml/en.zip',
-                    'version': 'v1'},
-                {'alignment_pairs': 298,
-                    'corpus': 'RF',
-                    'documents': 4,
-                    'id': 321130,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 64,
-                    'source': 'sv',
-                    'source_tokens': 3456,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-RF/v1/xml/sv.zip',
-                    'version': 'v1'},
-                {'alignment_pairs': 181,
-                    'corpus': 'Test',
-                    'documents': 2,
-                    'id': 321124,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 60,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-T/v1/xml/en.zip',
-                    'version': 'v1'},
-                {'alignment_pairs': 298,
-                    'corpus': 'Test',
-                    'documents': 4,
-                    'id': 321130,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 64,
-                    'source': 'sv',
-                    'source_tokens': 3456,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-T/v1/xml/sv.zip',
-                    'version': 'v1'}]}
-
-        new_data = opg.remove_data_with_no_alignment(data)
-        self.assertEqual(len(new_data), 3)
-        data['corpora'].pop(0)
-        new_data = opg.remove_data_with_no_alignment(data)
-        self.assertEqual(len(new_data), 0)
-
-    def test_add_data_with_alignment(self):
-        opg = OpusGet(directory= 'RF', source='en', target='sv',
-            list_resources=True)
-        data = [{'alignment_pairs': 219,
-                    'corpus': 'RF',
-                    'documents': 2,
-                    'id': 321123,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 4,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': 'sv',
-                    'target_tokens': 2905,
-                    'url': ('https://object.pouta.csc.fi/OPUS-RF/v1/xml/'
-                        'en-sv.xml.gz'),
-                    'version': 'v1'},
-                {'alignment_pairs': 181,
-                    'corpus': 'RF',
-                    'documents': 2,
-                    'id': 321124,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 60,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-RF/v1/xml/en.zip',
-                    'version': 'v1'},
-                {'alignment_pairs': 298,
-                    'corpus': 'RF',
-                    'documents': 4,
-                    'id': 321130,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 64,
-                    'source': 'sv',
-                    'source_tokens': 3456,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-RF/v1/xml/sv.zip',
-                    'version': 'v1'}]
-        new_data = opg.add_data_with_aligment(data, [])
-        self.assertEqual(len(new_data), 3)
-        data.pop(0)
-        new_data = opg.add_data_with_aligment(data, [])
-        self.assertEqual(len(new_data),0 )
-
-    def test_remove_data_with_no_alignment_from_OPUS(self):
-        opg = OpusGet(source='en', target='sv', list_resources=True)
-        data = opg.get_response(opg.url)
-        new_data = opg.remove_data_with_no_alignment(data)
-        self.assertLess(len(new_data), len(data['corpora']))
-
-    def test_get_files_invalid_url(self):
-        opg = OpusGet(directory='RF', source='en', target='sv',
-            list_resources=True)
-        opg.url = 'http://slkdfjlks'
-        old_stdout = sys.stdout
-        printout = io.StringIO()
-        sys.stdout = printout
-        opg.get_files()
-        sys.stdout = old_stdout
-
-        self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
-
-    @mock.patch('opustools.opus_get.input', create=True)
-    def test_download_invalid_url(self, mocked_input):
-        mocked_input.side_effect = ['y']
-        opg = OpusGet(directory='RF', source='en', target='sv',
-            list_resources=True)
-        corpora, file_n, total_size = opg.get_corpora_data()
-        corpora[0]['url'] = 'http://alskdjfl'
-        old_stdout = sys.stdout
-        printout = io.StringIO()
-        sys.stdout = printout
-        opg.download(corpora, file_n, total_size)
-        sys.stdout = old_stdout
-
-        self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
-
-    @mock.patch('opustools.opus_get.input', create=True)
-    def test_dont_list_files_that_are_already_in_path(self, mocked_input):
-        mocked_input.side_effect = ['y']
-        OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
-            download_dir=self.tempdir).get_files()
-        old_stdout = sys.stdout
-        printout = io.StringIO()
-        sys.stdout = printout
-        OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
-            download_dir=self.tempdir, list_resources=True).get_files()
-        sys.stdout = old_stdout
-        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en-sv.xml.gz'))
-        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en.zip'))
-        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_sv.zip'))
-
-        self.assertEqual(printout.getvalue(),
-            '        {tempdir}/RF_latest_xml_en-sv.xml.gz already exi'
-            'sts\n        {tempdir}/RF_latest_xml_en.zip already exis'
-            'ts\n        {tempdir}/RF_latest_xml_sv.zip already exist'
-            's\n\n   0 KB Total size\n'.format(tempdir=self.tempdir))
-
-    @mock.patch('opustools.opus_get.input', create=True)
-    def test_dont_download_files_that_are_already_in_path(self, mocked_input):
-        mocked_input.side_effect = ['y', 'y']
-        OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
-            download_dir=self.tempdir).get_files()
-        old_stdout = sys.stdout
-        printout = io.StringIO()
-        sys.stdout = printout
-        OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
-            download_dir=self.tempdir).get_files()
-        sys.stdout = old_stdout
-        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en-sv.xml.gz'))
-        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en.zip'))
-        os.remove(os.path.join(self.tempdir, 'RF_latest_xml_sv.zip'))
-
-        self.assertEqual(printout.getvalue(), '')
-
-    def test_download_everything_from_a_corpus(self):
-        old_stdout = sys.stdout
-        printout = io.StringIO()
-        sys.stdout = printout
-        files = OpusGet(directory='RF', release='v1', preprocess='xml',
-            list_resources=True).get_files()
-        sys.stdout = old_stdout
-        self.assertEqual(len(printout.getvalue().split('\n')), 18)
 
 if __name__ == '__main__':
     unittest.main()

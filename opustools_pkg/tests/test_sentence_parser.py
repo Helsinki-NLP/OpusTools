@@ -4,7 +4,7 @@ import shutil
 import os
 
 from opustools.parse.block_parser import BlockParser
-from opustools.parse.exhaustive_sentence_parser import ExhaustiveSentenceParser
+from opustools.parse.sentence_parser import SentenceParser
 from opustools.util import file_open
 
 class TestSentenceParser(unittest.TestCase):
@@ -109,79 +109,55 @@ class TestSentenceParser(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_store_sentences(self):
-        sp = ExhaustiveSentenceParser(file_open(self.books_path), preprocessing='xml')
+        sp = SentenceParser(file_open(self.books_path), preprocessing='xml')
         sp.store_sentences({'s1'})
         self.assertEqual(sp.sentences['s1'][0],
                 'Source : Project GutenbergTranslation')
-        sp = ExhaustiveSentenceParser(file_open(self.books_raw_path), preprocessing='raw')
+        sp = SentenceParser(file_open(self.books_raw_path), preprocessing='raw')
         sp.store_sentences({'s1'})
         self.assertEqual(sp.sentences['s1'][0],
                 'Source: Project GutenbergTranslation: Isabel F. '
                 'HapgoodAudiobook available here')
-        sp = ExhaustiveSentenceParser(file_open(self.os_path), preprocessing='xml')
+        sp = SentenceParser(file_open(self.os_path), preprocessing='xml')
         sp.store_sentences({'1'})
         self.assertEqual(sp.sentences['1'][0], "- How 'd you score that ?")
-        sp = ExhaustiveSentenceParser(file_open(self.os_raw_path), preprocessing='raw')
+        sp = SentenceParser(file_open(self.os_raw_path), preprocessing='raw')
         sp.store_sentences({'1'})
         self.assertEqual(sp.sentences['1'][0], "- How'd you score that?")
 
     def test_get_annotations(self):
         bp = BlockParser(file_open(self.books_path))
-        sp = ExhaustiveSentenceParser(file_open(self.books_path))
+        sp = SentenceParser(file_open(self.books_path))
         for i in range(19):
             blocks = bp.get_complete_blocks()
         self.assertEqual(sp.get_annotations(blocks[0]), '|NN|w1.1|source|NN|NN')
         bp.close_document()
         bp = BlockParser(file_open(self.books_path))
-        sp = ExhaustiveSentenceParser(file_open(self.books_path), anno_attrs=['pos'])
+        sp = SentenceParser(file_open(self.books_path), anno_attrs=['pos'])
         for i in range(19):
             blocks = bp.get_complete_blocks()
         self.assertEqual(sp.get_annotations(blocks[0]), '|NN')
         bp.close_document()
 
     def test_get_sentence(self):
-        sp = ExhaustiveSentenceParser(file_open(self.books_raw_path), preprocessing='raw')
+        sp = SentenceParser(file_open(self.books_raw_path), preprocessing='raw')
         sp.store_sentences({'s2', '0'})
         self.assertEqual(sp.get_sentence('s2')[0], 'Hunchback of Notre-Dame')
         self.assertEqual(sp.get_sentence('0'), ('', {}))
 
     def test_read_sentence(self):
-        sp = ExhaustiveSentenceParser(file_open(self.books_raw_path), preprocessing='raw')
+        sp = SentenceParser(file_open(self.books_raw_path), preprocessing='raw')
         sp.store_sentences({'s1', 's2'})
         self.assertEqual(sp.read_sentence(['s2'])[0],
-                '(src)="s2">Hunchback of Notre-Dame')
+                ['Hunchback of Notre-Dame'])
         self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
-                '(src)="s1">Source: Project GutenbergTranslation: Isabel F. '
-                'HapgoodAudiobook available here\n(src)="s2">Hunchback of '
-                'Notre-Dame')
-
-    def test_read_sentence_moses(self):
-        sp = ExhaustiveSentenceParser(file_open(self.books_raw_path),
-                preprocessing='raw', wmode='moses')
-        sp.store_sentences({'s1', 's2'})
-        self.assertEqual(sp.read_sentence(['s2'])[0],
-                'Hunchback of Notre-Dame')
-        self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
-                'Source: Project GutenbergTranslation: Isabel F. '
-                'HapgoodAudiobook available here Hunchback of '
-                'Notre-Dame')
-
-    def test_read_sentence_tmx(self):
-        sp = ExhaustiveSentenceParser(file_open(self.books_raw_path),
-                preprocessing='raw', wmode='tmx', language='en')
-        sp.store_sentences({'s1', 's2'})
-        self.assertEqual(sp.read_sentence(['s2'])[0],
-                '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Hunchback of '
-                'Notre-Dame</seg></tuv>')
-        self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
-                '\t\t<tu>\n\t\t\t<tuv xml:lang="en"><seg>Source: Project '
-                'GutenbergTranslation: Isabel F. '
-                'HapgoodAudiobook available here Hunchback of '
-                'Notre-Dame</seg></tuv>')
+                ['Source: Project GutenbergTranslation: Isabel F. '
+                'HapgoodAudiobook available here', 'Hunchback of '
+                'Notre-Dame'])
 
     def test_read_sentence_new(self):
-        sp = ExhaustiveSentenceParser(file_open(self.books_raw_path),
-                preprocessing='raw', wmode='new')
+        sp = SentenceParser(file_open(self.books_raw_path),
+                preprocessing='raw')
         sp.store_sentences({'s1', 's2'})
         self.assertEqual(sp.read_sentence(['s2']),
                 (['Hunchback of Notre-Dame'], [{'id': 's2'}]))

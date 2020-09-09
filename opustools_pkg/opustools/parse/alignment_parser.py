@@ -1,408 +1,118 @@
-import zipfile
-import gzip
-import xml.parsers.expat
-import re
-import os
+from .block_parser import BlockParser, BlockParserError
 
-from .block_parser import BlockParser
-from .exhaustive_sentence_parser import ExhaustiveSentenceParser
+class AlignmentParserError(Exception):
+
+    def __init__(self, message):
+        """Raise error when alignment parsing fails.
+
+        Keyword arguments:
+        message -- Error message to be printed
+        """
+        self.message = message
+
+def range_filter_type(src_range, trg_range):
+    def range_filter(*args):
+        """Flag if number of ids is outside given ranges"""
+
+        #args = (s_id, t_id, link_attr)
+        if src_range != 'all':
+            if len(args[0]) not in src_range:
+                return True
+        if trg_range != 'all':
+            if len(args[1]) not in trg_range:
+                return True
+        return False
+    return range_filter
+
+def attribute_filter_type(attribute, threshold):
+    def attribute_filter(*args):
+        """Flag if attribute score doesn't cross threshold"""
+
+        #args = (s_id, t_id, link_attr)
+        if attribute not in args[2].keys():
+            #if attribute is not included in link_attr, should this return True or False?
+            return True
+        if float(args[2][attribute]) < threshold:
+            return True
+        return False
+    return attribute_filter
 
 class AlignmentParser:
 
-    def __init__(self, source=None, target=None, result=None, mosessrc=None,
-            mosestrg=None, fromto=None, switch_langs=None, src_cld2=None,
-            trg_cld2=None, src_langid=None, trg_langid=None,
-            leave_non_alignments_out=None, src_range=None, tgt_range=None,
-            download_dir=None, directory=None, release=None, preprocess=None,
-            source_zip=None, target_zip=None, suppress_prompts=None,
-            fast=None, write_mode=None, print_file_names=None, write=None,
-            attribute=None, print_annotations=None, target_annotations=None,
-            source_annotations=None, change_annotation_delimiter=None,
-            preserve_inline_tags=None, threshold=None, verbose=False):
-        """Parse xces alignment files and output sentence pairs.
+    def __init__(self, alignment_file, src_trg_range=('all', 'all'),
+            attr=None, thres=None):
+        """Parse xces alignment files and output sentence ids."""
 
-        source -- Source zip file name
-        target -- Target zip file name
-        result -- Result file name
-        mosessrc -- Moses source result file name
-        mosestrg -- Moses target result file name
-        fromto -- Language direction
-        switch_langs -- Switch language direction
-        src_cld2 -- Filter source sentence by cld2 language ids and confidence
-        trg_cld2 -- Filter target sentence by cld2 language ids and confidence
-        src_langid -- Filter source sentence by langid.py language ids and
-            confidence
-        trg_langid -- Filter target sentence by langid.py language ids and
-            confidence
-        leave_non_alignment_out -- Leave non-alignments out
-        src_range -- Number of source sentences in alignment (default all)
-        trg_range -- Number of target sentences in alignment (default all)
-        download_dir -- Set directory where files will be downloaded
-        directory -- Corpus directory name
-        release -- Corpus release version (default latest)
-        preprocess -- Corpus preprocessing type (default xml)
-        source_zip -- Source zip file
-        target_zip -- Target zip file
-        suppress_prompts -- Download necessary files without prompting "(y/n)"
-        fast -- Use fast parsing (unstable)
-        write_mode -- Set write mode (default normal)
-        print_file_names -- Print file names when using moses format
-        write -- Write to a given file name. Give two file names to write
-            moses format to two files.
-        attribute -- Set attribute for filtering
-        print_annotations -- Print annotations if they exist
-        source_annotations -- Set source annotations to be printed
-            (default pos,lem)
-        target_annotations -- Set target annotations to be printed
-            (default pos,lem)
-        change_annotation_delimiter -- Change annotation delimiter (default |)
-        preserve_inline_tags -- Preserve inline tags within sentences
-        threshold -- Set threshold for filtering attribute
-        verbose -- Print progress messages when writing results to files
-        """
+        self.bp = BlockParser(alignment_file)
+        self.filters = []
 
-        self.source = source
-        self.target = target
-        self.fromto = fromto
-        self.switch_langs = switch_langs
-        self.testConfidenceOn = False
-        self.download_dir = download_dir
-        self.directory = directory
-        self.release = release
-        self.preprocess = preprocess
-        self.source_zip = source_zip
-        self.target_zip = target_zip
-        self.suppress_prompts = suppress_prompts
-        self.fast = fast
-        self.write_mode = write_mode
-        self.print_file_names = print_file_names
-        self.write = write
-        self.attribute = attribute
-        self.print_annotations = print_annotations
-        self.target_annotations = target_annotations
-        self.source_annotations = source_annotations
-        self.change_annotation_delimiter = change_annotation_delimiter
-        self.preserve_inline_tags = preserve_inline_tags
-        self.threshold = threshold
-        self.src_cld2 = src_cld2
-        self.trg_cld2 = trg_cld2
-        self.src_langid = src_langid
-        self.trg_langid = trg_langid
-        self.verbose = verbose
+        src_range, trg_range = src_trg_range
+        if src_trg_range != ('all', 'all'):
+            nums = src_range.split('-')
+            if nums[0].isnumeric():
+                src_range = {i for i in range(int(nums[0]), int(nums[-1])+1)}
+            nums = trg_range.split('-')
+            if nums[0].isnumeric():
+                trg_range = {i for i in range(int(nums[0]), int(nums[-1])+1)}
+            self.filters.append(range_filter_type(src_range, trg_range))
 
-        for item in [src_cld2, trg_cld2, src_langid, trg_langid]:
-            if item:
-                self.testConfidenceOn = True
+        if attr and thres:
+            self.filters.append(attribute_filter_type(attr, float(thres)))
 
-        self.start = ''
+    def get_tag(self, tag):
+        try:
+            blocks = self.bp.get_complete_blocks()
+            while blocks:
+                for block in blocks:
+                    if block.name == tag:
+                        return block
+                blocks = self.bp.get_complete_blocks()
+        except BlockParserError as e:
+            raise AlignmentParserError(
+                'Error while parsing alignment file: {error}'.format(error=e.args[0]))
 
-        self.toids = []
-        self.fromids = []
-        self.ascore = None
-        self.fromDoc = ''
-        self.toDoc = ''
+    def add_link(self, link, attrs, src_id_set, trg_id_set):
+        """Add link to set of links to be returned"""
+        ids = link.attributes['xtargets'].split(';')
+        s_id = ids[0].split(' ')
+        t_id = ids[1].split(' ')
 
-        self.zipFilesOpened = False
+        for f in self.filters:
+            if f(s_id, t_id, link.attributes):
+                return attrs, src_id_set, trg_id_set
 
-        self.alignParser = xml.parsers.expat.ParserCreate()
+        attrs.append(link.attributes)
+        src_id_set.update(s_id)
+        trg_id_set.update(t_id)
 
-        self.alignParser.StartElementHandler = self.start_element
+        return attrs, src_id_set, trg_id_set
 
-        self.sPar = None
-        self.tPar = None
+    def collect_links(self, last=None):
+        """Collect links for a linkGrp"""
 
-        self.overThreshold = False
-        self.nonAlignments = leave_non_alignments_out
+        attrs = []
+        src_id_set, trg_id_set = set(), set()
+        if last:
+            self.add_link(last, attrs, src_id_set, trg_id_set)
 
-        self.result = result
-        self.mosessrc = mosessrc
-        self.mosestrg = mosestrg
+        last = None
 
-        self.slim = src_range.split('-')
-        self.slim.sort()
-        self.tlim = tgt_range.split('-')
-        self.tlim.sort()
+        ids = None
+        link = self.get_tag('link')
+        if not link:
+            return attrs, src_id_set, trg_id_set, last
 
-    def getZipFile(self, downloaded, default, localfile):
-        """Open zip file."""
-        if self.verbose: print('Opening zip archive ', end='')
-        if localfile != None and os.path.exists(localfile):
-            if self.verbose: print('"{}" ... '.format(localfile), end='')
-            return zipfile.ZipFile(localfile, 'r')
-        elif os.path.exists(downloaded):
-            if self.verbose: print('"{}" ... '.format(downloaded), end='')
-            return zipfile.ZipFile(downloaded, 'r')
-        elif os.path.exists(default):
-            if self.verbose: print('"{}" ... '.format(default), end='')
-            return zipfile.ZipFile(default, 'r')
+        src_doc = link.parent.attributes['fromDoc']
+        trg_doc = link.parent.attributes['toDoc']
 
-        return None
+        while link:
+            self.add_link(link, attrs, src_id_set, trg_id_set)
 
-    def openZipFiles(self):
-        """Open source and target zip files."""
-        self.sourcezip = self.getZipFile(
-            os.path.join(self.download_dir, self.directory+'_'+
-                self.release+'_'+ self.preprocess+'_'+self.fromto[0]+'.zip'),
-            self.source,
-            self.source_zip)
-        if self.verbose: print('Done')
-        self.targetzip = self.getZipFile(
-            os.path.join(self.download_dir, self.directory+'_'+
-                self.release+'_'+ self.preprocess+'_'+self.fromto[1]+'.zip'),
-            self.target,
-            self.target_zip)
-        if self.verbose: print('Done')
+            link = self.get_tag('link')
+            if (link and
+                    link.parent.attributes['fromDoc'] != src_doc and
+                        link.parent.attributes['toDoc'] != trg_doc):
+                last = link
+                break
+        return attrs, src_id_set, trg_id_set, last
 
-    def openSentenceParsers(self, attrs):
-        """Open sentence parsers."""
-        fromDoc = attrs['fromDoc']
-        toDoc = attrs['toDoc']
-        sourcefile_path = os.path.join(self.download_dir, fromDoc)
-        targetfile_path = os.path.join(self.download_dir, toDoc)
-
-        #See if source and target files exist locally outside zip archives
-        if os.path.exists(sourcefile_path) and os.path.exists(targetfile_path):
-            if sourcefile_path[-3:] == '.gz':
-                sourcefile = gzip.open(sourcefile_path, 'rb')
-            else:
-                sourcefile = open(sourcefile_path, 'r')
-
-            if targetfile_path[-3:] == '.gz':
-                targetfile = gzip.open(targetfile_path, 'rb')
-            else:
-                targetfile = open(targetfile_path, 'r')
-        #Else open local zip archives
-        else:
-            if self.zipFilesOpened == False:
-                self.openZipFiles()
-                if self.sourcezip and self.targetzip:
-                    self.zipFilesOpened = True
-                #If local zip archives don't exists, download them
-                else:
-                    print('\nZip files are not found. The following '
-                        'files are available for downloading:\n')
-
-                    arguments = {'source': self.fromto[0],
-                        'target': self.fromto[1], 'directory': self.directory,
-                        'release': self.release, 'preprocess': self.preprocess,
-                        'download_dir': self.download_dir,
-                        'list_resources': True}
-                    og = OpusGet(**arguments)
-                    og.get_files()
-                    arguments['list_resources'] = False
-                    if self.suppress_prompts:
-                        arguments['suppress_prompts'] = True
-                    og = OpusGet(**arguments)
-                    og.get_files()
-
-                    self.openZipFiles()
-
-                    emessage = []
-                    for zf in [(self.sourcezip, self.source),
-                            (self.targetzip, self.target)]:
-                        if zf[0] == None:
-                            emessage.append('Zip file "{}" not found.'.format(
-                                zf[1].split('/')[-1]))
-
-                    if len(emessage) == 0:
-                        self.zipFilesOpened = True
-                    else:
-                        raise FileNotFoundError(' '.join(emessage))
-
-            #Try OPUS style file names in zip archives first. In OPUS,
-            #directory and preprocessing information need to be added and
-            #the ".gz" ending needs to be removed.
-            opus_style_name_source = (self.directory+'/'+ self.preprocess+'/'+
-                fromDoc[:-3])
-            opus_style_name_target = (self.directory+'/'+ self.preprocess+'/'+
-                toDoc[:-3])
-
-            if opus_style_name_source in self.sourcezip.namelist():
-                sourcefile = self.sourcezip.open(opus_style_name_source, 'r')
-            elif fromDoc in self.sourcezip.namelist():
-                sourcefile = self.sourcezip.open(fromDoc, 'r')
-            else:
-                raise FileNotFoundError('No sentence file "{plain}" or '
-                    '"{opus}" (OPUS format) found in {zipfile}'.format(
-                        plain=fromDoc,
-                        opus=opus_style_name_source,
-                        zipfile=self.sourcezip.filename))
-
-            if opus_style_name_target in self.targetzip.namelist():
-                targetfile = self.targetzip.open(opus_style_name_target, 'r')
-            elif toDoc in self.targetzip.namelist():
-                targetfile = self.targetzip.open(toDoc, 'r')
-            else:
-                raise FileNotFoundError('No sentence file "{plain}" or '
-                    '"{opus}" (OPUS format) found in {zipfile}'.format(
-                        plain=toDoc,
-                        opus=opus_style_name_target,
-                        zipfile=self.targetzip.filename))
-
-        if self.sPar and self.tPar:
-            self.sPar.document.close()
-            self.tPar.document.close()
-
-        pre = self.preprocess
-        if pre == 'raw' and self.directory == 'OpenSubtitles':
-            pre = 'rawos'
-
-        st = ['src', 'trg']
-        if self.switch_langs:
-            st = ['trg', 'src']
-
-        if self.verbose: print('Reading source file "{source}" and target '
-            'file "{target}"'.format(
-                source=sourcefile.name,
-                target=targetfile.name))
-        if self.fast:
-            self.sPar = SentenceParser(sourcefile, st[0], pre,
-                self.write_mode, self.fromto[0], self.print_annotations,
-                self.source_annotations,
-                self.change_annotation_delimiter,
-                self.preserve_inline_tags)
-            self.tPar = SentenceParser(targetfile, st[1], pre,
-                self.write_mode, self.fromto[1], self.print_annotations,
-                self.target_annotations,
-                self.change_annotation_delimiter,
-                self.preserve_inline_tags)
-        else:
-            self.sPar = ExhaustiveSentenceParser(sourcefile, pre, st[0],
-                self.write_mode, self.fromto[0], self.print_annotations,
-                self.source_annotations,
-                self.change_annotation_delimiter,
-                self.preserve_inline_tags)
-            self.sPar.storeSentences()
-            self.tPar = ExhaustiveSentenceParser(targetfile, pre, st[1],
-                self.write_mode, self.fromto[1], self.print_annotations,
-                self.target_annotations,
-                self.change_annotation_delimiter,
-                self.preserve_inline_tags)
-            self.tPar.storeSentences()
-
-    def initializeSentenceParsers(self, attrs):
-        """Initialize sentence parsers."""
-        if self.write_mode == 'normal':
-            docnames = ('\n# ' + attrs['fromDoc'] + '\n# ' +
-                attrs['toDoc'] + '\n\n================================')
-            if self.write != None:
-                self.result.write(docnames + '\n')
-            else:
-                print(docnames)
-        elif self.write_mode == 'moses' and self.print_file_names:
-            sourceDoc = '\n<fromDoc>{}</fromDoc>'.format(attrs['fromDoc'])
-            targetDoc = '\n<toDoc>{}</toDoc>'.format(attrs['toDoc'])
-            if self.write != None:
-                if self.result:
-                    self.result.write(sourceDoc + targetDoc + '\n\n')
-                else:
-                    self.mosessrc.write(sourceDoc + '\n\n')
-                    self.mosestrg.write(targetDoc + '\n\n')
-            else:
-                print(sourceDoc + targetDoc + '\n')
-        self.openSentenceParsers(attrs)
-
-    def processLink(self, attrs):
-        """Process a link in a xces alignment file."""
-        self.ascore = None
-        if self.attribute in attrs.keys():
-            self.ascore = attrs[self.attribute]
-            if self.threshold != None:
-                if float(self.ascore) >= float(self.threshold):
-                    self.overThreshold = True
-            else:
-                self.overThreshold = True
-        else:
-            if self.threshold == None:
-                self.overThreshold = True
-        m = re.search('(.*);(.*)', attrs['xtargets'])
-        self.toids = m.group(2).split(' ')
-        self.fromids = m.group(1).split(' ')
-
-    def start_element(self, name, attrs):
-        self.start = name
-        if name == 'linkGrp':
-            self.fromDoc = attrs['fromDoc']
-            self.toDoc = attrs['toDoc']
-            self.initializeSentenceParsers(attrs)
-        elif name == 'link':
-            self.processLink(attrs)
-
-    def parseLine(self, line):
-        """Parse a line in alignment file."""
-        self.start = ''
-        self.alignParser.Parse(line)
-
-    def sentencesOutsideLimit(self):
-        """Test if numbers of sentences are outside specifed limits."""
-        snum = len(self.fromids)
-        tnum = len(self.toids)
-        if snum == 0 or self.fromids[0] == '':
-            snum = 0
-        if tnum == 0 or self.toids[0] == '':
-            tnum = 0
-
-        return ((self.slim[0] != 'all' and (snum < int(self.slim[0]) or
-            snum > int(self.slim[-1]))) or (self.tlim[0] != 'all' and
-            (tnum < int(self.tlim[0]) or tnum > int(self.tlim[-1]))))
-
-    def testConfidence(self, confidence, attrsList, ider):
-        """See if language id confidence is over spcified limit."""
-        if attrsList == []:
-            return False
-        if confidence:
-            lan, conf = confidence
-            for attrs in attrsList:
-                if (lan != attrs[ider] or
-                        float(conf) > float(attrs[ider+'conf'])):
-                    return False
-        return True
-
-    def langIdConfidence(self, srcAttrs, trgAttrs):
-        """Test language id confidence for all settings."""
-        return (self.testConfidence(self.src_cld2, srcAttrs, 'cld2')
-            and self.testConfidence(self.trg_cld2, trgAttrs, 'cld2')
-            and self.testConfidence(self.src_langid, srcAttrs, 'langid')
-            and self.testConfidence(self.trg_langid, trgAttrs, 'langid'))
-
-    def readPair(self):
-        """Read and output sentence pair based on a link in alignment file."""
-        #tags other than link are printed in link printing mode, 
-        #otherwise they are skipped
-        if self.start != 'link':
-            return -1
-
-        srcAttrs, trgAttrs = {}, {}
-
-        sourceSen, srcAttrs = self.sPar.readSentence(self.fromids)
-        targetSen, trgAttrs = self.tPar.readSentence(self.toids)
-
-        #if either side of the alignment is outside of the sentence limit, 
-        #or the attribute value is under the given attribute
-        #threshold, return -1, which skips printing of the alignment in 
-        #PairPrinter.outputPair()
-        if (self.sentencesOutsideLimit() or
-                (self.attribute != 'any' and
-                    self.overThreshold == False)):
-            return -1
-        elif (self.testConfidenceOn and
-                not self.langIdConfidence(srcAttrs, trgAttrs)):
-            return -1
-        #if filtering non-alignments is set to True and either side of 
-        #the alignment has no sentences:
-        #return -1
-        elif (self.nonAlignments and
-                (self.fromids[0] == '' or self.toids[0] == '')):
-            return -1
-        else:
-            self.overThreshold = False
-            return sourceSen, targetSen
-
-    def closeFiles(self):
-        """Close zip files and document files."""
-        if self.zipFilesOpened:
-            self.sourcezip.close()
-            self.targetzip.close()
-        if self.sPar and self.tPar:
-            self.sPar.document.close()
-            self.tPar.document.close()

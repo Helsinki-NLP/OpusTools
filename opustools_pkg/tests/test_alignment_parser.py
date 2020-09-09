@@ -5,7 +5,7 @@ import os
 import gzip
 
 from opustools.parse.block_parser import BlockParser
-from opustools.parse.new_alignment_parser import AlignmentParser
+from opustools.parse.alignment_parser import AlignmentParser
 from opustools.util import file_open
 
 class TestAlignmentParser(unittest.TestCase):

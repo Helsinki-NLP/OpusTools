@@ -51,13 +51,8 @@ parser.add_argument('-wm', '--write_mode',
 parser.add_argument('-pn', '--print_file_names',
     help='Print file names when using moses format',
     action='store_true')
-parser.add_argument('-f', '--fast',
-    help='Fast parsing. Faster than normal parsing, if you print '
-        'a small part of the whole corpus, but requires the sentence '
-        'ids in alignment files to be in sequence.',
-    action='store_true')
 parser.add_argument('-rd', '--root_directory',
-    help='Change root directory (default=/proj/nlpl/data/OPUS)',
+    help='Change root directory (default=/projappl/nlpl/data/OPUS)',
     metavar='path_to_dir',
     default='/proj/nlpl/data/OPUS')
 parser.add_argument('-af', '--alignment_file',

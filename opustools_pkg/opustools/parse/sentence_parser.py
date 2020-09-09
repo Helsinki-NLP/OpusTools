@@ -1,5 +1,4 @@
-import xml.parsers.expat
-import html
+from .block_parser import BlockParser, BlockParserError
 
 class SentenceParserError(Exception):
 
@@ -9,228 +8,188 @@ class SentenceParserError(Exception):
         Keyword arguments:
         message -- Error message to be printed
         """
-
         self.message = message
+
+def parse_type(preprocess, preserve, get_annotations):
+    """Select function to be used for parsing"""
+
+    def parse_s(block, sentence, sentences):
+        sid = block.attributes['id']
+        sentence = ' '.join(sentence)
+        sentences[sid] = (sentence, block.attributes)
+        sentence = []
+        return sentence
+
+    def parse_s_raw(block, sentence, sentences):
+        sid = block.attributes['id']
+        sentence.append(block.data.strip())
+        sentence = ' '.join(sentence)
+        sentences[sid] = (sentence, block.attributes)
+        sentence = []
+        return sentence
+
+    def parse_w(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent and s_parent.attributes['id'] in id_set:
+            data = block.data.strip()
+            sentence.append(data)
+        return sentence
+
+    def parse_w_parsed(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent and s_parent.attributes['id'] in id_set:
+            data = block.data.strip()
+            data += get_annotations(block)
+            sentence.append(data)
+        return sentence
+
+    def parse_time(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent and s_parent.attributes['id'] in id_set:
+            sentence.append(block.get_raw_tag())
+        return sentence
+
+
+    def xml(bp, block, sentence, sentences, id_set):
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w(bp, block, sentence, id_set)
+        return sentence
+
+    def raw(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s_raw(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w(bp, block, sentence, id_set)
+        return sentence
+
+    def parsed(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w_parsed(bp, block, sentence, id_set)
+        return sentence
+
+    def xml_preserve(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w(bp, block, sentence, id_set)
+        elif block.name == 'time':
+            sentence = parse_time(bp, block, sentence, id_set)
+        return sentence
+
+    def raw_preserve(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s_raw(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w(bp, block, sentence, id_set)
+        elif block.name == 'time':
+            sentence = parse_time(bp, block, sentence, id_set)
+        return sentence
+
+    def parsed_preserve(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's' and block.attributes['id'] in id_set:
+            sentence = parse_s(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w_parsed(bp, block, sentence, id_set)
+        elif block.name == 'time':
+            sentence = parse_time(bp, block, sentence, id_set)
+        return sentence
+
+    if preserve:
+        if preprocess == 'xml':
+            return xml_preserve
+        if preprocess == 'raw':
+            return raw_preserve
+        if preprocess == 'parsed':
+            return parsed_preserve
+    else:
+        if preprocess == 'xml':
+            return xml
+        if preprocess == 'raw':
+            return raw
+        if preprocess == 'parsed':
+            return parsed
+
 
 class SentenceParser:
 
-    def __init__(self, document, direction, preprocessing, wmode,
-            language, annotations, anno_attrs, delimiter, preserve):
-        """Parse xml sentence files that have sentence ids in sequential
-        order.
+    def __init__(self, document, preprocessing=None, anno_attrs=['all_attrs'],
+            delimiter='|', preserve=None):
+        """Parse xml sentence files that have sentence ids in any order.
 
         Positional arguments:
         document -- Xml file to be parsed
-        direction -- Source/target direction
         preprocessing -- Preprocessing type of the document
-        wmode -- Write mode
-        language -- Language id of the document
-        annotations -- Print annotations
         anno_attrs -- Which annotations will be printed
         delimiter -- Annotation attribute delimiter
         preserve -- Preserve inline tags
         """
 
         self.document = document
-        self.direction = direction
-        self.pre = preprocessing
-        self.annotations = annotations
-        if self.annotations:
-            self.anno_attrs = anno_attrs
         self.delimiter = delimiter
-        self.preserve = preserve
+        self.anno_attrs = anno_attrs
 
-        self.start = ''
-        self.sid = ''
-        self.chara = ''
-        self.end = ''
+        self.parse_block = parse_type(preprocessing, preserve, self.get_annotations)
 
-        self.posses = []
+        self.sentences = {}
+        self.done = False
 
-        self.parser = xml.parsers.expat.ParserCreate()
-        self.parser.StartElementHandler = self.start_element
-        self.parser.CharacterDataHandler = self.char_data
-        self.parser.EndElementHandler = self.end_element
-
-        self.sfound = False
-        self.efound = False
-
-        self.oneLineSStart = False
-        self.oneLineSEnd = False
-
-        self.wmode = wmode
-        self.language = language
-
-        self.attrs = {}
-
-        self.processSentence = {'parsed':self.processTokenizedSentence,
-                                'xml':self.processTokenizedSentence,
-                                'raw':self.processRawSentence,
-                                'rawos':self.processRawSentenceOS}
-
-    def start_element(self, name, attrs):
-        self.start = name
-        if 'id' in attrs.keys() and name == 's':
-            self.attrs = attrs
-            self.sfound = True
-            self.oneLineSStart = True
-            self.sid = attrs['id']
-        if name == 'w' and self.annotations:
-            self.posses = []
-            if self.anno_attrs[0] == 'all_attrs':
-                attributes = list(attrs.keys())
-                attributes.sort()
-                for a in attributes:
-                    self.posses.append(attrs[a])
-            for a in self.anno_attrs:
-                if a in attrs.keys():
-                    self.posses.append(attrs[a])
-
-    def char_data(self, data):
-        if self.sfound:
-            self.chara += data
-
-    def end_element(self, name):
-        self.end = name
-        if name == 's':
-            self.efound = True
-            self.oneLineSEnd = True
-
-    def parseLine(self, line):
-        """Parse a line of xml."""
+    def store_sentences(self, id_set):
+        """Read document and store sentences in a dictionary."""
+        bp = BlockParser(self.document)
+        sentence = []
+        sid = None
         try:
-            self.parser.Parse(line.strip())
-        except xml.parsers.expat.ExpatError as e:
+            blocks = bp.get_complete_blocks()
+            while blocks:
+                for block in blocks:
+                    sentence = self.parse_block(
+                            bp, block, sentence, self.sentences, id_set)
+                blocks = bp.get_complete_blocks()
+            bp.close_document()
+        except BlockParserError as e:
             raise SentenceParserError(
-                'Sentence file "{document}" could not be parsed: '
-                '{error}'.format(
-                    document=self.document.name,
-                    error=e.args[0]))
+                'Error while parsing sentence file: {error}'.format(error=e.args[0]))
 
-    def addToken(self, sentence):
-        """Add a token to the sentence that is being built."""
-        newSentence = sentence
-        if self.sfound and  self.start == 'w' and self.end == 'w':
-            newSentence = sentence + ' ' + self.chara
-            self.chara = ''
-            if self.annotations:
-                for a in self.posses:
-                    newSentence += self.delimiter + a
-                self.posses = []
-        return newSentence
-
-    def processTokenizedSentence(self, sentence, ids, line):
-        """Process and build a tokenized sentence."""
-        newSentence, stop = sentence, 0
-        if self.efound:
-            self.sfound = False
-            self.efound = False
-            if self.sid in ids:
-                stop = -1
-            self.chara = ''
-        if self.sid in ids:
-            newSentence = self.addToken(sentence)
-        if self.preserve and self.sfound and self.start not in ['s', 'w']:
-            if type(line) == bytes:
-                line = line.decode('utf-8')
-            newSentence += line.strip()
-
-        return newSentence, stop
-
-    def processRawSentenceOS(self, sentence, ids, line):
-        """Process and build a raw sentence in OpenSubtitles."""
-        newSentence, stop = sentence, 0
-        if self.efound:
-            self.sfound = False
-            self.efound = False
-            if self.sid in ids:
-                stop = -1
-                self.chara = ''
-        if self.sfound and self.sid in ids:
-            if self.preserve:
-                if self.start not in ['s', 'w']:
-                    if type(line) == bytes:
-                        line = line.decode('utf-8')
-                    newSentence += line.strip()
-            else:
-                if self.start == 's' or self.start == 'time':
-                    newSentence = self.chara
-        return newSentence, stop
-
-    def processRawSentence(self, sentence, ids, line):
-        """Process and build a raw sentence."""
-        if self.start == 's' and self.sid in ids:
-            newSentence = self.chara
-            self.chara = ''
-            return newSentence, -1
+    def get_annotations(self, block):
+        annotations = ''
+        if self.anno_attrs[0] == 'all_attrs':
+            attributes = list(block.attributes.keys())
+            attributes.sort()
+            for a in attributes:
+                annotations += self.delimiter + block.attributes[a]
         else:
-            self.chara = ''
-            return sentence, 0
+            for a in self.anno_attrs:
+                if a in block.attributes.keys():
+                    annotations += self.delimiter + block.attributes[a]
+        return annotations
 
-    def addTuBeginning(self):
-        """Add translation unit beginning to tmx."""
-        sentences = ' '
-        if self.direction == 'src':
-            sentences = sentences + '\t\t<tu>\n'
-        sentences = (sentences + '\t\t\t<tuv xml:lang="' + self.language +
-            '"><seg>')
-        return sentences
-
-    def addSentence(self, sentences, sentence, sid):
-        """Add a sentence to a sequence of sentences."""
-        if self.wmode == 'normal':
-            sentences = (sentences + '\n(' + self.direction + ')="' +
-                str(sid) + '">' + sentence)
-        elif self.wmode == 'tmx':
-            sentences = sentences + ' ' + html.escape(sentence, quote=False)
-            sentences = sentences.replace('<seg> ', '<seg>')
-        elif self.wmode == 'moses':
-            sentences = sentences + ' ' + sentence
-        return sentences
-
-    def addTuEnding(self, sentences):
-        """Add translation unit ending to tmx."""
-        sentences = sentences + '</seg></tuv>'
-        if self.direction == 'trg':
-            sentences = sentences + '\n\t\t</tu>'
-        return sentences
-
-    def readSentence(self, ids):
-        """Read document and output sentence based on given sentence ids."""
-        if len(ids) == 0 or ids[0] == '':
+    def get_sentence(self, sid):
+        """Return a sentence based on given sentence id."""
+        if sid in self.sentences.keys():
+            return self.sentences[sid]
+        else:
             return '', {}
-        sentences = ''
+
+    def read_sentence(self, ids):
+        """Return a sequence of sentences based on given sentence ids."""
+        if len(ids) == 0 or ids[0] == '':
+            return '', []
+
+        sentence = []
         attrsList = []
+        for sid in ids:
+            newSentence, attrs = self.get_sentence(sid)
+            sentence.append(newSentence)
+            attrsList.append(attrs)
 
-        if self.wmode == 'tmx':
-            sentences = self.addTuBeginning()
+        return sentence, attrsList
 
-        eof = False
-        for i in ids:
-            sentence = ''
-            while True:
-                line = self.document.readline()
-                if not line:
-                    eof = True
-                    break
-                self.parseLine(line)
-                newSentence, stop = self.processSentence[self.pre](
-                    sentence, ids, line)
-                sentence = newSentence
-                if stop == -1:
-                    break
-            if eof:
-                raise SentenceParserError(
-                    'Sentence file "{}" could not be parsed with fast '
-                    'parser'.format(self.document.name))
-
-            if self.pre == 'xml' or self.pre == 'parsed':
-                sentence = sentence.lstrip()
-
-            sentences = self.addSentence(sentences, sentence, self.sid)
-            attrsList.append(self.attrs)
-
-        if self.wmode == 'tmx':
-            sentences = self.addTuEnding(sentences)
-
-        return sentences[1:], attrsList
