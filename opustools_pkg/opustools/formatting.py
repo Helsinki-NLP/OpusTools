@@ -41,10 +41,55 @@ def doc_name_type(wmode, write, print_file_names):
         return links_print
     return nothing
 
-def out_put_type(wmode, write):
-    """Select function for outputting sentece pairs"""
+def write_id_line_type(switch_langs, attribute):
+    """Select function for writing id lines"""
 
-    #args = (src_result, trg_result, resultfile, mosessrc, mosestrg, link_a)
+    id_temp = '{}\t{}\t{}\t{}\t{}\n'
+
+    def normal(link_a, id_file, src_doc, trg_doc):
+        ids = link_a['xtargets'].split(';')
+        if attribute in link_a.keys():
+            id_file.write(id_temp.format(
+                src_doc, trg_doc, ids[0], ids[1], link_a[attribute]))
+        else:
+            id_file.write(id_temp.format(
+                src_doc, trg_doc, ids[0], ids[1], 'None'))
+
+    def normal_no_attr(link_a, id_file, src_doc, trg_doc):
+        ids = link_a['xtargets'].split(';')
+        id_file.write(id_temp.format(
+            src_doc, trg_doc, ids[0], ids[1], 'None'))
+
+    def switch(link_a, id_file, src_doc, trg_doc):
+        ids = link_a['xtargets'].split(';')
+        if attribute in link_a.keys():
+            id_file.write(id_temp.format(
+                trg_doc, src_doc, ids[1], ids[0], link_a[attribute]))
+        else:
+            id_file.write(id_temp.format(
+                trg_doc, src_doc, ids[1], ids[0], 'None'))
+
+    def switch_no_attr(link_a, id_file, src_doc, trg_doc):
+        ids = link_a['xtargets'].split(';')
+        id_file.write(id_temp.format(
+            trg_doc, src_doc, ids[1], ids[0], 'None'))
+
+    if switch_langs:
+        if attribute:
+            return switch
+        else:
+            return switch_no_attr
+    else:
+        if attribute:
+            return normal
+        else:
+            return normal_no_attr
+
+def out_put_type(wmode, write, write_ids, switch_langs, attribute):
+    """Select function for outputting sentence pairs"""
+
+    #args = (src_result, trg_result, resultfile, mosessrc, mosestrg, link_a,
+    #       id_file, src_doc_name, trg_doc_name)
     def normal_write(*args):
         args[2].write(args[0]+args[1])
     def normal_print(*args):
@@ -64,23 +109,74 @@ def out_put_type(wmode, write):
         str_link = '<link {} />\n'.format(' '.join(
             ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
         print(str_link, end='')
+
+    write_id_line = write_id_line_type(switch_langs, attribute)
+
+    def normal_write_id(*args):
+        args[2].write(args[0]+args[1])
+        write_id_line(args[5], args[6], args[7], args[8])
+    def normal_print_id(*args):
+        print(args[0]+args[1], end='')
+        write_id_line(args[5], args[6], args[7], args[8])
+    def moses_write_id(*args):
+        args[2].write(args[0][:-1]+'\t'+args[1])
+        write_id_line(args[5], args[6], args[7], args[8])
+    def moses_write_2_id(*args):
+        args[3].write(args[0])
+        args[4].write(args[1])
+        write_id_line(args[5], args[6], args[7], args[8])
+    def moses_print_id(*args):
+        print(args[0][:-1]+'\t'+args[1], end='')
+        write_id_line(args[5], args[6], args[7], args[8])
+    def links_write_id(*args):
+        str_link = '<link {} />\n'.format(' '.join(
+            ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
+        args[2].write(str_link)
+        write_id_line(args[5], args[6], args[7], args[8])
+    def links_print_id(*args):
+        str_link = '<link {} />\n'.format(' '.join(
+            ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
+        print(str_link, end='')
+        write_id_line(args[5], args[6], args[7], args[8])
+
     def nothing(*args):
         pass
 
     if wmode in ['normal', 'tmx'] and write:
-        return normal_write
+        if write_ids:
+            return normal_write_ids
+        else:
+            return normal_write
     if wmode in ['normal', 'tmx'] and not write:
-        return normal_print
+        if write_ids:
+            return normal_print_id
+        else:
+            return normal_print
     if wmode == 'moses' and not write:
-        return moses_print
+        if write_ids:
+            return moses_print_id
+        else:
+            return moses_print
     if wmode == 'moses' and len(write) == 1:
-        return moses_write
+        if write_ids:
+            return moses_write_id
+        else:
+            return moses_write
     if wmode == 'moses' and len(write) == 2:
-        return moses_write_2
+        if write_ids:
+            return moses_write_2_id
+        else:
+            return moses_write_2
     if wmode == 'links'and write:
-        return links_write
+        if write_ids:
+            return links_write_id
+        else:
+            return links_write
     if wmode == 'links'and not write:
-        return links_print
+        if write_ids:
+            return links_print_id
+        else:
+            return links_print
     return nothing
 
 def sentence_format_type(wmode):

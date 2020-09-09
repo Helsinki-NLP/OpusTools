@@ -1601,7 +1601,6 @@ class TestOpusRead(unittest.TestCase):
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
                 '.xml.gz\ts3.2\ts3.2\t1.14214\n')
 
-    '''
     def test_id_file_printing_unalphabetical(self):
         OpusRead(directory='RF', source='sv', target='en', maximum=1,
             src_range='1', tgt_range='2', attribute='certainty',
@@ -1651,6 +1650,7 @@ class TestOpusRead(unittest.TestCase):
             self.tempdir1, 'test_files/test.id')) as id_file:
             self.assertEqual(id_file.read(), 'en/1988.xml.gz\tsv/1988'
                 '.xml.gz\ts1.1\ts1.1\tNone\n')
+    '''
 
     def test_pair_output_sending_with_single_output_file(self):
         self.opr.write_mode = 'moses'

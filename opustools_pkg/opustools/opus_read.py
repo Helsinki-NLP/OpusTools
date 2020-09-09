@@ -140,10 +140,12 @@ class OpusRead:
         self.resultfile = None
         self.mosessrc = None
         self.mosestrg = None
-        if write_ids != None:
+
+        self.id_file = None
+        if write_ids:
             self.id_file = file_open(write_ids, 'w', encoding='utf-8')
 
-        if write != None:
+        if write:
             if write_mode == 'moses' and len(write) == 2:
                 self.mosessrc = file_open(write[0], mode='w', encoding='utf-8')
                 self.mosestrg = file_open(write[1], mode='w', encoding='utf-8')
@@ -167,7 +169,8 @@ class OpusRead:
         self.trg_annot = target_annotations
 
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
-        self.out_put_pair = out_put_type(write_mode, write)
+        self.out_put_pair = out_put_type(
+                write_mode, write, write_ids, self.switch_langs, attribute)
         format_sentences = sentence_format_type(write_mode)
 
         check_filters, self.check_lang = check_lang_conf_type(lang_filters)
@@ -397,11 +400,12 @@ class OpusRead:
                 src_result, trg_result = self.format_pair(
                         link_a, src_parser, trg_parser, self.fromto)
 
-                if src_result == -1 or trg_result == -1:
+                if src_result == -1:
                     continue
 
                 self.out_put_pair(src_result, trg_result, self.resultfile,
-                        self.mosessrc, self.mosestrg, link_a)
+                        self.mosessrc, self.mosestrg, link_a, self.id_file,
+                        src_doc_name, trg_doc_name)
 
                 total +=1
                 if total == self.maximum:
