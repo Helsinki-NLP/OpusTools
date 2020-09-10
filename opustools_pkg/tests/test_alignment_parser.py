@@ -111,13 +111,13 @@ class TestAlignmentParser(unittest.TestCase):
         attrs, src_set, trg_set, last = ap.collect_links()
         self.assertEqual(attrs, [{'id': 'SL1', 'xtargets': 's1;s1'},
             {'id': 'SL2', 'xtargets': ';s2'}])
-        self.assertEqual(src_set, {'s1', ''})
+        self.assertEqual(src_set, {'s1'})
         self.assertEqual(trg_set, {'s1', 's2'})
         attrs, src_set, trg_set, last = ap.collect_links(last)
         self.assertEqual(attrs, [{'id': 'SL1', 'xtargets': 's21;'},
             {'id': 'SL2', 'xtargets': 's0 s1;s2 s3'}])
         self.assertEqual(src_set, {'s21', 's0', 's1'})
-        self.assertEqual(trg_set, {'', 's2', 's3'})
+        self.assertEqual(trg_set, {'s2', 's3'})
         attrs, src_set, trg_set, last = ap.collect_links(last)
         self.assertEqual(attrs, [])
         self.assertEqual(src_set, set())

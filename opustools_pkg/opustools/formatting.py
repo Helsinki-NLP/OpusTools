@@ -3,7 +3,7 @@ import html
 def doc_name_type(wmode, write, print_file_names):
     """Select function for adding doc names"""
 
-    normal_temp = '\n# {}\n# {}\n\n'
+    normal_temp = '\n# {}\n# {}\n'
     moses_temp = '\n<fromDoc>{}</fromDoc>\n<toDoc>{}</toDoc>\n\n'
     link_temp = ' <linkGrp targType="s" fromDoc="{}" toDoc="{}">\n'
 
@@ -86,7 +86,7 @@ def write_id_line_type(switch_langs, attribute):
         else:
             return normal_no_attr
 
-def out_put_type(wmode, write, write_ids, switch_langs, attribute):
+def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
     """Select function for outputting sentence pairs"""
 
     #args = (src_result, trg_result, resultfile, mosessrc, mosestrg, link_a,
@@ -96,12 +96,12 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute):
     def normal_print(*args):
         print(args[0]+args[1], end='')
     def moses_write(*args):
-        args[2].write(args[0][:-1]+'\t'+args[1])
+        args[2].write(args[0][:-1]+moses_del+args[1])
     def moses_write_2(*args):
         args[3].write(args[0])
         args[4].write(args[1])
     def moses_print(*args):
-        print(args[0][:-1]+'\t'+args[1], end='')
+        print(args[0][:-1]+moses_del+args[1], end='')
     def links_write(*args):
         str_link = '<link {} />\n'.format(' '.join(
             ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
@@ -143,75 +143,78 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute):
     def nothing(*args):
         pass
 
-    if wmode in ['normal', 'tmx'] and write:
-        if write_ids:
+    if write_ids:
+        if wmode in ['normal', 'tmx'] and write:
             return normal_write_ids
-        else:
-            return normal_write
-    if wmode in ['normal', 'tmx'] and not write:
-        if write_ids:
+        if wmode in ['normal', 'tmx'] and not write:
             return normal_print_id
-        else:
-            return normal_print
-    if wmode == 'moses' and not write:
-        if write_ids:
+        if wmode == 'moses' and not write:
             return moses_print_id
-        else:
-            return moses_print
-    if wmode == 'moses' and len(write) == 1:
-        if write_ids:
+        if wmode == 'moses' and len(write) == 1:
             return moses_write_id
-        else:
-            return moses_write
-    if wmode == 'moses' and len(write) == 2:
-        if write_ids:
+        if wmode == 'moses' and len(write) == 2:
             return moses_write_2_id
-        else:
-            return moses_write_2
-    if wmode == 'links'and write:
-        if write_ids:
+        if wmode == 'links'and write:
             return links_write_id
-        else:
-            return links_write
-    if wmode == 'links'and not write:
-        if write_ids:
+        if wmode == 'links'and not write:
             return links_print_id
-        else:
+    else:
+        if wmode in ['normal', 'tmx'] and write:
+            return normal_write
+        if wmode in ['normal', 'tmx'] and not write:
+            return normal_print
+        if wmode == 'moses' and not write:
+            return moses_print
+        if wmode == 'moses' and len(write) == 1:
+            return moses_write
+        if wmode == 'moses' and len(write) == 2:
+            return moses_write_2
+        if wmode == 'links'and write:
+            return links_write
+        if wmode == 'links'and not write:
             return links_print
     return nothing
 
-def sentence_format_type(wmode):
+def sentence_format_type(wmode, fromto):
     """Select function for formatting sentences"""
 
-    def normal(sentences, ids, direction, language):
-        result = ''
-        if len(sentences) == 0:
-            result = '\n'
-        if direction == 'src':
-            result += '================================'
+    def normal_src(sentences, ids):
+        result = '\n================================'
         for i, sentence in enumerate(sentences):
-            result += ('\n('+direction+')="'+ids[i]+'">'+sentence)
-        if direction == 'trg':
-            result += '\n================================\n'
+            result += ('\n(src)="'+ids[i]+'">'+sentence)
         return result
 
-    def tmx(sentences, ids, direction, language):
+    def normal_trg(sentences, ids):
+        result = ''
+        for i, sentence in enumerate(sentences):
+            result += ('\n(trg)="'+ids[i]+'">'+sentence)
+        return result
+
+    def tmx_src(sentences, ids):
         result = ''
         for sentence in sentences:
-            if direction == 'src':
-                result += '\t\t<tu>'
-            result += ('\n\t\t\t<tuv xml:lang="' + language +
-                    '"><seg>')
+            result += '\t\t<tu>'
+            result += ('\n\t\t\t<tuv xml:lang="' + fromto[0] + '"><seg>')
             result += html.escape(sentence, quote=False) + '</seg></tuv>'
-            if direction == 'trg':
-                result += '\n\t\t</tu>\n'
         return result
 
-    def moses(sentences, ids, direction, language):
+    def tmx_trg(sentences, ids):
+        result = ''
+        for sentence in sentences:
+            result += ('\n\t\t\t<tuv xml:lang="' + fromto[1] + '"><seg>')
+            result += html.escape(sentence, quote=False) + '</seg></tuv>'
+            result += '\n\t\t</tu>\n'
+        return result
+
+    def moses(sentences, ids):
         result = ' '.join(sentences) + '\n'
         return result
 
-    format_fs = {'normal': normal, 'tmx': tmx, 'moses': moses, 'links': None}
+    format_fs = {'normal': (normal_src, normal_trg),
+            'tmx': (tmx_src, tmx_trg),
+            'moses': (moses, moses),
+            'links': (None, None)}
+
     return format_fs[wmode]
 
 def check_lang_confs(lang_filters, attrs):
@@ -257,10 +260,8 @@ def pair_format_type(wmode, switch_langs, check_filters, check_lang,
         if check_filters(src_attrs, trg_attrs):
             return -1, -1
 
-        src_result = format_sentences(
-                src_sentences, src_ids, 'src', args[3][0])
-        trg_result = format_sentences(
-                trg_sentences, trg_ids, 'trg', args[3][1])
+        src_result = format_sentences[0](src_sentences, src_ids)
+        trg_result = format_sentences[1](trg_sentences, trg_ids)
         return src_result, trg_result
 
     def switch(*args):
@@ -274,10 +275,8 @@ def pair_format_type(wmode, switch_langs, check_filters, check_lang,
         if check_filters(src_attrs, trg_attrs):
             return -1, -1
 
-        src_result = format_sentences(
-                trg_sentences, trg_ids, 'src', args[3][1])
-        trg_result = format_sentences(
-                src_sentences, src_ids, 'trg', args[3][0])
+        src_result = format_sentences[0](trg_sentences, trg_ids)
+        trg_result = format_sentences[1](src_sentences, src_ids)
         return src_result, trg_result
 
     def link_with_filter(*args):

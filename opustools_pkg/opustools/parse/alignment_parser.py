@@ -37,10 +37,19 @@ def attribute_filter_type(attribute, threshold):
         return False
     return attribute_filter
 
+def non_alignment_filter(*args):
+    """Flag if there are no source or target ids"""
+
+    #args = (s_id, t_id, link_attr)
+    if len(args[0]) == 0 or len(args[1]) == 0:
+        return True
+    return False
+
+
 class AlignmentParser:
 
     def __init__(self, alignment_file, src_trg_range=('all', 'all'),
-            attr=None, thres=None):
+            attr=None, thres=None, leave_non_alignments_out=False):
         """Parse xces alignment files and output sentence ids."""
 
         self.bp = BlockParser(alignment_file)
@@ -59,6 +68,9 @@ class AlignmentParser:
         if attr and thres:
             self.filters.append(attribute_filter_type(attr, float(thres)))
 
+        if leave_non_alignments_out:
+            self.filters.append(non_alignment_filter)
+
     def get_tag(self, tag):
         try:
             blocks = self.bp.get_complete_blocks()
@@ -74,8 +86,8 @@ class AlignmentParser:
     def add_link(self, link, attrs, src_id_set, trg_id_set):
         """Add link to set of links to be returned"""
         ids = link.attributes['xtargets'].split(';')
-        s_id = ids[0].split(' ')
-        t_id = ids[1].split(' ')
+        s_id = ids[0].split()
+        t_id = ids[1].split()
 
         for f in self.filters:
             if f(s_id, t_id, link.attributes):

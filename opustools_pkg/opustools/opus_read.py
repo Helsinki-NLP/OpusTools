@@ -146,11 +146,17 @@ class OpusRead:
 
         self.src_annot = source_annotations
         self.trg_annot = target_annotations
+        self.annot_delimiter = change_annotation_delimiter
 
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
         self.out_put_pair = out_put_type(
-                write_mode, write, write_ids, self.switch_langs, attribute)
-        format_sentences = sentence_format_type(write_mode)
+                write_mode, write, write_ids, self.switch_langs, attribute,
+                change_moses_delimiter)
+
+        form_sent_langs = self.fromto.copy()
+        if self.switch_langs:
+            form_sent_langs = [self.fromto[1], self.fromto[0]]
+        format_sentences = sentence_format_type(write_mode, form_sent_langs)
 
         check_filters, self.check_lang = check_lang_conf_type(lang_filters)
         self.format_pair = pair_format_type(
@@ -163,8 +169,8 @@ class OpusRead:
 
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
         self.alignmentParser = AlignmentParser(self.alignment,
-                (src_range, tgt_range),
-                attribute, threshold)
+                (src_range, tgt_range), attribute, threshold,
+                leave_non_alignments_out)
 
     def addTmxHeader(self):
         tmxheader = ('<?xml version="1.0" encoding="utf-8"?>\n<tmx '
@@ -205,18 +211,12 @@ class OpusRead:
         else:
             print(linkend, end='')
 
-    def addLinkGrpEnding(self):
+    def addNormalGrpEnding(self):
+        normalend = '\n================================\n'
         if self.write != None:
-            self.resultfile.write(' </linkGrp>\n')
+            self.resultfile.write(normalend)
         else:
-            print(' </linkGrp>')
-
-    def closeResultFiles(self):
-        if self.write_mode == 'moses' and len(self.write) == 2:
-            self.mosessrc.close()
-            self.mosestrg.close()
-        else:
-            self.resultfile.close()
+            print(normalend, end='')
 
     def printPairs(self):
 
@@ -251,11 +251,11 @@ class OpusRead:
 
                 src_parser = SentenceParser(src_doc,
                         preprocessing=self.preprocess, anno_attrs=self.src_annot,
-                        preserve = self.preserve)
+                        preserve=self.preserve, delimiter=self.annot_delimiter)
                 src_parser.store_sentences(src_set)
                 trg_parser = SentenceParser(trg_doc,
                         preprocessing=self.preprocess, anno_attrs=self.trg_annot,
-                        preserve = self.preserve)
+                        preserve=self.preserve, delimiter=self.annot_delimiter)
                 trg_parser.store_sentences(trg_set)
 
             for link_a in link_attrs:
@@ -274,7 +274,9 @@ class OpusRead:
                     stop = True
                     break
 
-            if self.write_mode == 'links':
+            if self.write_mode == 'normal':
+                self.addNormalGrpEnding()
+            elif self.write_mode == 'links':
                 self.addLinkGrpEnding()
 
             if stop:

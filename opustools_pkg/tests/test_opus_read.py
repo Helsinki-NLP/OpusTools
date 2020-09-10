@@ -167,6 +167,17 @@ class TestOpusRead(unittest.TestCase):
                         'rb') as b:
                     f.write(b.read())
 
+            with open(os.path.join(self.tempdir1, 'non_alignment.xml'),
+                    'w') as f:
+                f.write('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE '
+                'cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+                '<cesAlign version="1.0">\n<linkGrp targType="s" fromDoc="en/'
+                '1996.xml.gz" '
+                'toDoc="sv/1996.xml.gz" '
+                '>\n<link xtargets=";s1" id="SL1"/>\n<link xtargets="s4;" '
+                'id="SL4"/>\n<link xtargets="s5.0;s5.0" id="SL5.0"/>\n  '
+                '</linkGrp>\n</cesAlign>\n')
+
         if ('OPUSREAD_TEST_ROOTDIR' in os.environ.keys() and
             os.path.exists(os.environ['OPUSREAD_TEST_ROOTDIR'])):
             self.root_directory = os.environ['OPUSREAD_TEST_ROOTDIR']
@@ -255,7 +266,7 @@ class TestOpusRead(unittest.TestCase):
         pass
 
     def test_normal_xml_write(self):
-        OpusRead(directory='RF', source='en', target='sv', maximum=1,
+        OpusRead(directory='RF', source='en', target='sv', maximum=2,
             write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
             root_directory=self.root_directory).printPairs()
         with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
@@ -268,7 +279,11 @@ class TestOpusRead(unittest.TestCase):
                 ' Ingvar Carlsson , at the Opening of the Swedish Parl'
                 'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
                 '>REGERINGSFÖRKLARING .\n============================'
-                '====\n')
+                '====\n(src)="s2.1">Your Majesties , Your Royal Highn'
+                'esses , Mr Speaker , Members of the Swedish Parliame'
+                'nt .\n(trg)="s2.1">Eders Majestäter , Eders Kungliga'
+                ' Högheter , herr talman , ledamöter av Sveriges riks'
+                'dag !\n================================\n')
 
     def test_normal_xml_write_verbose(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -355,7 +370,7 @@ class TestOpusRead(unittest.TestCase):
             '# tl/2009/1187043/6934998.xml.gz\n\n'
              '================================\n'
              '(src)="1">Ĉiuj nomoj, roluloj kaj eventoj reprezentitaj en ĉi '
-             'tiu filmo estas fikciaj.\n\n'
+             'tiu filmo estas fikciaj.\n'
              '================================\n')
 
     def test_normal_parsed_write(self):
@@ -945,7 +960,7 @@ class TestOpusRead(unittest.TestCase):
             """ns föresats att söka breda lösningar i frågor som är a"""
             """v betydelse för vår nationella säkerhet .\n=========="""
             """======================\n\n# en/1996.xml.gz\n# sv/1996."""
-            """xml.gz\n\n""")
+            """xml.gz\n\n================================\n""")
 
     def test_use_given_sentence_alignment_file(self):
         OpusRead(directory='Books', source='eo', target='pt', src_range='2',
@@ -1353,7 +1368,8 @@ class TestOpusRead(unittest.TestCase):
             download_dir=self.tempdir1)
         self.assertEqual(var,
             '\n# en/1996.xml.gz\n'
-            '# sv/1996.xml.gz\n\n')
+            '# sv/1996.xml.gz\n'
+            '\n================================\n')
 
     def test_filtering_by_src_cld2_print_links(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -1531,7 +1547,7 @@ class TestOpusRead(unittest.TestCase):
             '# tl/2009/1187043/6934998.xml.gz\n\n'
             '================================\n(src)="1"><time id="T1'
             'S" value="00:00:06,849" /> Ĉiuj nomoj , roluloj kaj evento'
-            'j reprezentitaj en ĉi tiu filmo estas fikciaj .\n\n========'
+            'j reprezentitaj en ĉi tiu filmo estas fikciaj .\n========'
             '========================\n')
 
     def test_writing_time_tags_raw(self):
@@ -1544,7 +1560,7 @@ class TestOpusRead(unittest.TestCase):
             '# tl/2009/1187043/6934998.xml.gz\n\n'
             '================================\n(src)="1"><time id="T1'
             'S" value="00:00:06,849" /> Ĉiuj nomoj, roluloj kaj evento'
-            'j reprezentitaj en ĉi tiu filmo estas fikciaj.\n\n========'
+            'j reprezentitaj en ĉi tiu filmo estas fikciaj.\n========'
             '========================\n')
 
     def test_escape_characters_when_write_mode_tmx(self):
@@ -1709,13 +1725,61 @@ class TestOpusRead(unittest.TestCase):
                 ).printPairs()
 
     def test_leave_non_alignments_out(self):
-        self.assertTrue(False)
+        var = pairPrinterToVariable(directory='RF', target='en', source='sv',
+            alignment_file=os.path.join(self.tempdir1, 'non_alignment.xml'),
+            leave_non_alignments_out=True,
+            root_directory=self.root_directory)
+        self.assertEqual(var,
+            '\n# en/1996.xml.gz'
+            '\n# sv/1996.xml.gz'
+            '\n\n================================'
+            '\n(src)="s5.0">'
+            '\n(trg)="s5.0">'
+            '\n================================\n')
 
     def test_change_moses_delimiter(self):
-        self.assertTrue(False)
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
+            write=[os.path.join(self.tempdir1, 'test_files', 'test.src')],
+            write_mode='moses', root_directory=self.root_directory,
+            change_moses_delimiter=' ||| ').printPairs()
+        with open(os.path.join(self.tempdir1, 'test_files', 'test.src'),
+                'r') as f:
+            self.assertEqual(f.read(),
+                'Statement of Government Policy by the Prime Minister , '
+                'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+                'ament on Tuesday , 4 October , 1988 . ||| REGERINGSFÖRK'
+                'LARING .\n')
 
     def test_change_annotation_delimiter(self):
-        self.assertTrue(False)
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
+            preprocess='parsed', print_annotations=True,
+            source_annotations=['upos', 'feats', 'lemma'],
+            target_annotations=['upos', 'feats', 'lemma'],
+            change_annotation_delimiter='#',
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
+            root_directory=self.root_directory).printPairs()
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
+                'r') as f:
+            self.assertEqual(f.read(),
+                '\n# en/1988.xml.gz\n# sv/1988.xml.gz\n\n'
+                '================================'
+                '\n(src)="s1.1">Statement#NOUN#Number=Sing#statement '
+                'of#ADP#of Government#NOUN#Number=Sing#government Pol'
+                'icy#NOUN#Number=Sing#policy by#ADP#by the#DET#Defini'
+                'te=Def|PronType=Art#the Prime#PROPN#Number=Sing#Prim'
+                'e Minister#PROPN#Number=Sing#Minister ,#PUNCT#, Mr#P'
+                'ROPN#Number=Sing#Mr Ingvar#PROPN#Number=Sing#Ingvar '
+                'Carlsson#PROPN#Number=Sing#Carlsson ,#PUNCT#, at#ADP'
+                '#at the#DET#Definite=Def|PronType=Art#the Opening#NO'
+                'UN#Number=Sing#opening of#ADP#of the#DET#Definite=De'
+                'f|PronType=Art#the Swedish#ADJ#Degree=Pos#swedish Pa'
+                'rliament#NOUN#Number=Sing#parliament on#ADP#on Tuesd'
+                'ay#PROPN#Number=Sing#Tuesday ,#PUNCT#, 4#NUM#NumType'
+                '=Card#4 October#PROPN#Number=Sing#October ,#PUNCT#, '
+                '1988#NUM#NumType=Card#1988 .#PUNCT#.\n(trg)="s1.1">R'
+                'EGERINGSFÖRKLARING#NOUN#Case=Nom|Definite=Ind|Gender'
+                '=Neut|Number=Sing#Regeringsförklaring .#PUNCT#.'
+                '\n================================\n')
 
 
 if __name__ == '__main__':
