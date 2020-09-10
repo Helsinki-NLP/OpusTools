@@ -1187,13 +1187,14 @@ class TestOpusRead(unittest.TestCase):
             zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
                 arcname=os.path.join('test_files', 'test_fi'))
 
-        with self.assertRaises(KeyError):
-            OpusRead(directory='Books', source='en',
-                    target='fi', alignment_file=os.path.join(self.tempdir1,
-                        'test_files', 'testlinks'),
-                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
-                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
-                ).printPairs()
+        var = pairPrinterToVariable(directory='Books', source='en',
+                target='fi', alignment_file=os.path.join(self.tempdir1,
+                    'test_files', 'testlinks'),
+                source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                target_zip = os.path.join(self.tempdir1, 'test_fi.zip'))
+
+        self.assertEqual(var, "\nThere is no item named 'test_files/test_en' "
+        "in the archive '"+os.path.join(self.tempdir1, 'test_en.zip')+"'\n")
 
     def test_try_to_open_wrongly_named_docs_from_specifed_target_zip(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
@@ -1225,13 +1226,14 @@ class TestOpusRead(unittest.TestCase):
             zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
                 arcname=os.path.join('test_files', 'test_un'))
 
-        with self.assertRaises(KeyError):
-            OpusRead(directory='Books', source='en',
-                    target='fi', alignment_file=os.path.join(self.tempdir1,
-                        'test_files', 'testlinks'),
-                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
-                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
-                ).printPairs()
+        var = pairPrinterToVariable(directory='Books', source='en',
+                target='fi', alignment_file=os.path.join(self.tempdir1,
+                    'test_files', 'testlinks'),
+                source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                target_zip = os.path.join(self.tempdir1, 'test_fi.zip'))
+
+        self.assertEqual(var, "\nThere is no item named 'test_files/test_fi' "
+        "in the archive '"+os.path.join(self.tempdir1, 'test_fi.zip')+"'\n")
 
     def test_checks_first_whether_documents_are_in_path_gz(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
@@ -1679,6 +1681,12 @@ class TestOpusRead(unittest.TestCase):
                 '<linkGrp fromDoc="test_files/test_en" toDoc="test_files/test_fi" >\n'
                 '<link xtargets="s1;s1"/>\n'
                 ' </linkGrp>\n'
+                '<linkGrp fromDoc="test_files/no_file" toDoc="test_files/test_fi" >\n'
+                '<link xtargets="s1;s1"/>\n'
+                ' </linkGrp>\n'
+                '<linkGrp fromDoc="test_files/test_en" toDoc="test_files/test_fi" >\n'
+                '<link xtargets="s1;s1"/>\n'
+                ' </linkGrp>\n'
                 '</cesAlign>')
 
         with open(os.path.join(self.tempdir1, 'test_files', 'test_en'),
@@ -1714,13 +1722,36 @@ class TestOpusRead(unittest.TestCase):
             zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
                 arcname=os.path.join('test_files', 'test_fi'))
 
-        with self.assertRaises(SentenceParserError):
-            OpusRead(directory='Books', source='en',
-                    target='fi', alignment_file=os.path.join(self.tempdir1,
-                        'test_files', 'testlinks'),
-                    source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
-                    target_zip = os.path.join(self.tempdir1, 'test_fi.zip')
-                ).printPairs()
+        var = pairPrinterToVariable(directory='Books', source='en',
+                target='fi', alignment_file=os.path.join(self.tempdir1,
+                    'test_files', 'testlinks'),
+                source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                target_zip = os.path.join(self.tempdir1, 'test_fi.zip'))
+
+        self.assertEqual(var, '\n# test_files/test_en\n'
+                '# test_files/test_fi\n\n'
+                '================================\n'
+                '(src)="s1">test_en1 test_en2\n'
+                '(trg)="s1">test_fi1 test_fi2\n'
+                '================================\n\n'
+                'Error while parsing sentence file: Document '
+                "'test_files/invalid_en' could not be parsed: mismatched "
+                'tag: line 8, column 3\n\n'
+                '# test_files/test_en\n'
+                '# test_files/test_fi\n\n'
+                '================================\n'
+                '(src)="s1">test_en1 test_en2\n'
+                '(trg)="s1">test_fi1 test_fi2\n'
+                '================================\n\n'
+                "There is no item named 'test_files/no_file' in the archive "
+                "'"+os.path.join(self.tempdir1, 'test_en.zip')+"'\n\n"
+                '# test_files/test_en\n'
+                '# test_files/test_fi\n\n'
+                '================================\n'
+                '(src)="s1">test_en1 test_en2\n'
+                '(trg)="s1">test_fi1 test_fi2\n'
+                '================================\n')
+
 
     def test_leave_non_alignments_out(self):
         var = pairPrinterToVariable(directory='RF', target='en', source='sv',

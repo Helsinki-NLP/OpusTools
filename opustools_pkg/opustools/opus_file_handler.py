@@ -131,16 +131,22 @@ class OpusFileHandler:
         if self.verbose: print('Reading {}_file "{}"'.format(
             direction, opus_doc_name))
 
-        if direction == 'src':
-            if opus_doc_name in self.src_zip.namelist():
-                doc = self.src_zip.open(opus_doc_name, 'r')
-            else:
-                doc = self.src_zip.open(doc_name, 'r')
-        if direction == 'trg':
-            if opus_doc_name in self.trg_zip.namelist():
-                doc = self.trg_zip.open(opus_doc_name, 'r')
-            else:
-                doc = self.trg_zip.open(doc_name, 'r')
+        try:
+            if direction == 'src':
+                if opus_doc_name in self.src_zip.namelist():
+                    doc = self.src_zip.open(opus_doc_name, 'r')
+                else:
+                    doc = self.src_zip.open(doc_name, 'r')
+        except KeyError as e:
+            raise KeyError(e.args[0]+" '"+self.src_zip_name+"'")
+        try:
+            if direction == 'trg':
+                if opus_doc_name in self.trg_zip.namelist():
+                    doc = self.trg_zip.open(opus_doc_name, 'r')
+                else:
+                    doc = self.trg_zip.open(doc_name, 'r')
+        except KeyError as e:
+            raise KeyError(e.args[0]+" '"+self.trg_zip_name+"'")
         return doc
 
     def close_zipfiles(self):

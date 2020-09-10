@@ -6,7 +6,7 @@ class BlockParserError(Exception):
     def __init__(self, message):
         """Raise error when block parsing fails.
 
-        Keyword arguments:
+        Arguments:
         message -- Error message to be printed
         """
         self.message = message
@@ -80,8 +80,8 @@ class BlockParser:
         except xml.parsers.expat.ExpatError as e:
             self.close_document()
             raise BlockParserError(
-                'Document "{document}" could not be parsed: '
-                '{error}'.format(document=self.document.name, error=e.args[0]))
+                "Document '{document}' could not be parsed: "
+                "{error}".format(document=self.document.name, error=e.args[0]))
 
     def close_document(self):
         self.document.close()

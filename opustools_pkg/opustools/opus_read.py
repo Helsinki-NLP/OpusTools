@@ -1,7 +1,7 @@
 import os
 
 from .parse.alignment_parser import AlignmentParser
-from .parse.sentence_parser import SentenceParser
+from .parse.sentence_parser import SentenceParser, SentenceParserError
 from .util import file_open
 from .formatting import *
 from .opus_file_handler import OpusFileHandler
@@ -193,22 +193,30 @@ class OpusRead:
             if len(link_attrs) == 0:
                 break
 
-            self.add_doc_names(src_doc_name, trg_doc_name,
-                    self.resultfile, self.mosessrc, self.mosestrg)
-
             if (self.write_mode != 'links' or
                     (self.write_mode == 'links' and self.check_lang)):
-                src_doc = self.of_handler.open_sentence_file(src_doc_name, 'src')
-                trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
+                try:
+                    src_doc = self.of_handler.open_sentence_file(src_doc_name, 'src')
+                    trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
+                except KeyError as e:
+                    print('\n'+e.args[0])
+                    continue
 
-                src_parser = SentenceParser(src_doc,
-                        preprocessing=self.preprocess, anno_attrs=self.src_annot,
-                        preserve=self.preserve, delimiter=self.annot_delimiter)
-                src_parser.store_sentences(src_set)
-                trg_parser = SentenceParser(trg_doc,
-                        preprocessing=self.preprocess, anno_attrs=self.trg_annot,
-                        preserve=self.preserve, delimiter=self.annot_delimiter)
-                trg_parser.store_sentences(trg_set)
+                try:
+                    src_parser = SentenceParser(src_doc,
+                            preprocessing=self.preprocess, anno_attrs=self.src_annot,
+                            preserve=self.preserve, delimiter=self.annot_delimiter)
+                    src_parser.store_sentences(src_set)
+                    trg_parser = SentenceParser(trg_doc,
+                            preprocessing=self.preprocess, anno_attrs=self.trg_annot,
+                            preserve=self.preserve, delimiter=self.annot_delimiter)
+                    trg_parser.store_sentences(trg_set)
+                except SentenceParserError as e:
+                    print('\n'+e.message)
+                    continue
+
+            self.add_doc_names(src_doc_name, trg_doc_name,
+                    self.resultfile, self.mosessrc, self.mosestrg)
 
             for link_a in link_attrs:
                 src_result, trg_result = self.format_pair(
