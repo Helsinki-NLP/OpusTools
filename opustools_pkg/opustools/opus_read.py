@@ -24,7 +24,7 @@ class OpusRead:
         """Read xces alignment files and xml sentence files and output in
         desired format.
 
-        Keyword arguments:
+        Arguments:
         directory -- Corpus directory name
         source -- Source language
         target -- Target language
@@ -132,12 +132,10 @@ class OpusRead:
                 self.mosessrc = file_open(write[0], mode='w', encoding='utf-8')
                 self.mosestrg = file_open(write[1], mode='w', encoding='utf-8')
             else:
-                self.resultfile = file_open(write[0], mode='w',
-                    encoding='utf-8')
+                self.resultfile = file_open(write[0], mode='w', encoding='utf-8')
 
         self.write_mode = write_mode
         self.write = write
-        self.source_lang = source
         self.maximum = maximum
         self.preprocess = preprocess
         self.write_ids=write_ids
@@ -148,7 +146,11 @@ class OpusRead:
         self.trg_annot = target_annotations
         self.annot_delimiter = change_annotation_delimiter
 
+        self.add_file_header = file_header_type(write_mode, write, source)
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
+        self.add_doc_ending = doc_ending_type(write_mode, write)
+        self.add_file_ending = file_ending_type(write_mode, write)
+
         self.out_put_pair = out_put_type(
                 write_mode, write, write_ids, self.switch_langs, attribute,
                 change_moses_delimiter)
@@ -172,58 +174,9 @@ class OpusRead:
                 (src_range, tgt_range), attribute, threshold,
                 leave_non_alignments_out)
 
-    def addTmxHeader(self):
-        tmxheader = ('<?xml version="1.0" encoding="utf-8"?>\n<tmx '
-            'version="1.4.">\n<header srclang="' + self.source_lang +
-            '"\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype='
-            '"PlainText" />\n\t<body>')
-        if self.write != None:
-            self.resultfile.write(tmxheader + '\n')
-        else:
-            print(tmxheader)
-
-    def addTmxEnding(self):
-        if self.write != None:
-            self.resultfile.write('\t</body>\n</tmx>')
-        else:
-            print('\t</body>\n</tmx>')
-
-    def addLinkFileHeader(self):
-        linkheader = ('<?xml version="1.0" encoding="utf-8"?>\n'
-            '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
-            '<cesAlign version="1.0">\n')
-        if self.write:
-            self.resultfile.write(linkheader)
-        else:
-            print(linkheader, end='')
-
-    def addLinkFileEnding(self):
-        linkend = '</cesAlign>\n'
-        if self.write != None:
-            self.resultfile.write(linkend)
-        else:
-            print(linkend, end='')
-
-    def addLinkGrpEnding(self):
-        linkend = ' </linkGrp>\n'
-        if self.write != None:
-            self.resultfile.write(linkend)
-        else:
-            print(linkend, end='')
-
-    def addNormalGrpEnding(self):
-        normalend = '\n================================\n'
-        if self.write != None:
-            self.resultfile.write(normalend)
-        else:
-            print(normalend, end='')
-
     def printPairs(self):
 
-        if self.write_mode == 'tmx':
-            self.addTmxHeader()
-        if self.write_mode == 'links':
-            self.addLinkFileHeader()
+        self.add_file_header(self.resultfile)
 
         prev_src_doc_name = None
         prev_trg_doc_name = None
@@ -274,21 +227,12 @@ class OpusRead:
                     stop = True
                     break
 
-            if self.write_mode == 'normal':
-                self.addNormalGrpEnding()
-            elif self.write_mode == 'links':
-                self.addLinkGrpEnding()
+            self.add_doc_ending(self.resultfile)
 
             if stop:
                 break
 
-        if self.write_mode == 'links':
-            self.addLinkFileEnding()
-
-        if self.write_mode == 'tmx':
-            self.addTmxEnding()
-
-        self.alignment.close()
+        self.add_file_ending(self.resultfile)
 
         if self.write:
             if self.write_mode == 'moses' and self.mosessrc:

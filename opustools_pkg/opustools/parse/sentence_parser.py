@@ -5,7 +5,7 @@ class SentenceParserError(Exception):
     def __init__(self, message):
         """Raise error when sentence parsing fails.
 
-        Keyword arguments:
+        Arguments:
         message -- Error message to be printed
         """
         self.message = message
@@ -125,7 +125,7 @@ class SentenceParser:
             delimiter='|', preserve=None):
         """Parse xml sentence files that have sentence ids in any order.
 
-        Positional arguments:
+        Arguments:
         document -- Xml file to be parsed
         preprocessing -- Preprocessing type of the document
         anno_attrs -- Which annotations will be printed

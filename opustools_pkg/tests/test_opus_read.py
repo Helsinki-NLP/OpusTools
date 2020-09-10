@@ -515,7 +515,7 @@ class TestOpusRead(unittest.TestCase):
                 'n , at the Opening of the Swedish Parliament on Tues'
                 'day , 4 October , 1988 .'
                 '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
+                'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_xml_write_unalphabetical(self):
         OpusRead(directory='RF', source='sv', target='en', maximum=1,
@@ -533,7 +533,7 @@ class TestOpusRead(unittest.TestCase):
                 'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
                 'n , at the Opening of the Swedish Parliament on Tues'
                 'day , 4 October , 1988 .'
-                '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
+                '</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
 
     def test_tmx_xml_print(self):
@@ -597,7 +597,7 @@ class TestOpusRead(unittest.TestCase):
                 'n, at the Opening of the Swedish Parliament on Tues'
                 'day, 4 October, 1988.'
                 '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>')
+                'SFÖRKLARING.</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_raw_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -645,7 +645,7 @@ class TestOpusRead(unittest.TestCase):
                 '/seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERINGS'
                 'FÖRKLARING|NOUN|Case=Nom|Definite=Ind|Gender=Neut|Nu'
                 'mber=Sing|Regeringsförklaring .|PUNCT|.</seg></tuv>'
-                '\n\t\t</tu>\n\t</body>\n</tmx>')
+                '\n\t\t</tu>\n\t</body>\n</tmx>\n')
 
     def test_tmx_parsed_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',

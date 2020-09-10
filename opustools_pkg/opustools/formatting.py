@@ -1,5 +1,39 @@
 import html
 
+def file_header_type(wmode, write, source_lang):
+    """Select function for adding file header"""
+
+    tmxheader = ('<?xml version="1.0" encoding="utf-8"?>\n<tmx '
+        'version="1.4.">\n<header srclang="' + source_lang +
+        '"\n\tadminlang="en"\n\tsegtype="sentence"\n\tdatatype='
+        '"PlainText" />\n\t<body>\n')
+    linkheader = ('<?xml version="1.0" encoding="utf-8"?>\n'
+        '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+        '<cesAlign version="1.0">\n')
+
+    def tmx_write(resultfile):
+        resultfile.write(tmxheader)
+    def tmx_print(resultfile):
+        print(tmxheader, end='')
+    def link_write(resultfile):
+        resultfile.write(linkheader)
+    def link_print(resultfile):
+        print(linkheader, end='')
+    def nothing(resultfile):
+        pass
+
+    if write:
+        if wmode == 'tmx':
+            return tmx_write
+        if wmode == 'links':
+            return link_write
+    else:
+        if wmode == 'tmx':
+            return tmx_print
+        if wmode == 'links':
+            return link_print
+    return nothing
+
 def doc_name_type(wmode, write, print_file_names):
     """Select function for adding doc names"""
 
@@ -41,6 +75,65 @@ def doc_name_type(wmode, write, print_file_names):
     if wmode == 'links'and not write:
         return links_print
     return nothing
+
+def doc_ending_type(wmode, write):
+    """Select function for adding document ending"""
+
+    linkend = ' </linkGrp>\n'
+    normalend = '\n================================\n'
+
+    def normal_write(resultfile):
+        resultfile.write(normalend)
+    def normal_print(resultfile):
+        print(normalend, end='')
+    def link_write(resultfile):
+        resultfile.write(linkend)
+    def link_print(resultfile):
+        print(linkend, end='')
+    def nothing(resultfile):
+        pass
+
+    if write:
+        if wmode == 'normal':
+            return normal_write
+        if wmode == 'links':
+            return link_write
+    else:
+        if wmode == 'normal':
+            return normal_print
+        if wmode == 'links':
+            return link_print
+    return nothing
+
+def file_ending_type(wmode, write):
+    """Select function for adding file ending"""
+    tmxend = '\t</body>\n</tmx>\n'
+    linkend = '</cesAlign>\n'
+
+    def tmx_write(resultfile):
+        resultfile.write(tmxend)
+    def tmx_print(resultfile):
+        print(tmxend, end='')
+    def link_write(resultfile):
+        resultfile.write(linkend)
+    def link_print(resultfile):
+        print(linkend, end='')
+    def nothing(resultfile):
+        pass
+
+    if write:
+        if wmode == 'tmx':
+            return tmx_write
+        if wmode == 'links':
+            return link_write
+    else:
+        if wmode == 'tmx':
+            return tmx_print
+        if wmode == 'links':
+            return link_print
+    return nothing
+
+
 
 def write_id_line_type(switch_langs, attribute):
     """Select function for writing id lines"""
@@ -303,3 +396,4 @@ def pair_format_type(wmode, switch_langs, check_filters, check_lang,
         return switch
     else:
         return normal
+

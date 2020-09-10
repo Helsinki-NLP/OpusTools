@@ -5,7 +5,7 @@ class AlignmentParserError(Exception):
     def __init__(self, message):
         """Raise error when alignment parsing fails.
 
-        Keyword arguments:
+        Arguments:
         message -- Error message to be printed
         """
         self.message = message
