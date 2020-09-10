@@ -71,12 +71,15 @@ class AlignmentParser:
         if leave_non_alignments_out:
             self.filters.append(non_alignment_filter)
 
-    def get_tag(self, tag):
+    def get_link(self):
+        """Find next link or linkGrp block"""
         try:
             blocks = self.bp.get_complete_blocks()
             while blocks:
                 for block in blocks:
-                    if block.name == tag:
+                    if block.name == 'link':
+                        return block
+                    elif block.name == 'linkGrp':
                         return block
                 blocks = self.bp.get_complete_blocks()
         except BlockParserError as e:
@@ -99,32 +102,26 @@ class AlignmentParser:
 
         return attrs, src_id_set, trg_id_set
 
-    def collect_links(self, last=None):
+    def collect_links(self):
         """Collect links for a linkGrp"""
 
         attrs = []
         src_id_set, trg_id_set = set(), set()
-        if last:
-            self.add_link(last, attrs, src_id_set, trg_id_set)
+        src_doc, trg_doc = None, None
 
-        last = None
+        link = self.get_link()
 
-        ids = None
-        link = self.get_tag('link')
         if not link:
-            return attrs, src_id_set, trg_id_set, last
+            return attrs, src_id_set, trg_id_set, src_doc, trg_doc
 
         src_doc = link.parent.attributes['fromDoc']
         trg_doc = link.parent.attributes['toDoc']
 
         while link:
-            self.add_link(link, attrs, src_id_set, trg_id_set)
-
-            link = self.get_tag('link')
-            if (link and
-                    link.parent.attributes['fromDoc'] != src_doc and
-                        link.parent.attributes['toDoc'] != trg_doc):
-                last = link
+            if link.name == 'linkGrp':
                 break
-        return attrs, src_id_set, trg_id_set, last
+            self.add_link(link, attrs, src_id_set, trg_id_set)
+            link = self.get_link()
+
+        return attrs, src_id_set, trg_id_set, src_doc, trg_doc
 

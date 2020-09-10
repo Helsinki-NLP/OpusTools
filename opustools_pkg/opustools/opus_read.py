@@ -184,18 +184,17 @@ class OpusRead:
         src_parser = None
         trg_parser = None
 
-        link = self.alignmentParser.get_tag('link')
         total = 0
         stop = False
-        while link:
-            src_doc_name = link.parent.attributes['fromDoc']
-            trg_doc_name = link.parent.attributes['toDoc']
+        while True:
+            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name = \
+                self.alignmentParser.collect_links()
+
+            if len(link_attrs) == 0:
+                break
 
             self.add_doc_names(src_doc_name, trg_doc_name,
                     self.resultfile, self.mosessrc, self.mosestrg)
-
-            link_attrs, src_set, trg_set, link = \
-                self.alignmentParser.collect_links(last=link)
 
             if (self.write_mode != 'links' or
                     (self.write_mode == 'links' and self.check_lang)):
