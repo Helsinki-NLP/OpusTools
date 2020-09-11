@@ -10,7 +10,7 @@ import zipfile
 import tempfile
 import bz2
 
-from opustools import OpusRead, OpusCat, OpusGet
+from opustools import OpusRead, OpusGet
 from opustools.parse.block_parser import BlockParserError
 from opustools.parse.sentence_parser import SentenceParserError
 from opustools.parse.alignment_parser import AlignmentParserError
@@ -1194,7 +1194,8 @@ class TestOpusRead(unittest.TestCase):
                 target_zip = os.path.join(self.tempdir1, 'test_fi.zip'))
 
         self.assertEqual(var, "\nThere is no item named 'test_files/test_en' "
-        "in the archive '"+os.path.join(self.tempdir1, 'test_en.zip')+"'\n")
+        "in the archive '"+os.path.join(self.tempdir1, 'test_en.zip')+"'\n"
+        "Continuing from next sentence file pair.\n")
 
     def test_try_to_open_wrongly_named_docs_from_specifed_target_zip(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
@@ -1233,7 +1234,8 @@ class TestOpusRead(unittest.TestCase):
                 target_zip = os.path.join(self.tempdir1, 'test_fi.zip'))
 
         self.assertEqual(var, "\nThere is no item named 'test_files/test_fi' "
-        "in the archive '"+os.path.join(self.tempdir1, 'test_fi.zip')+"'\n")
+        "in the archive '"+os.path.join(self.tempdir1, 'test_fi.zip')+"'\n"
+        "Continuing from next sentence file pair.\n")
 
     def test_checks_first_whether_documents_are_in_path_gz(self):
         with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
@@ -1446,19 +1448,17 @@ class TestOpusRead(unittest.TestCase):
     @mock.patch('opustools.opus_get.input', create=True)
     def test_alignment_file_not_found(self, mocked_input):
         mocked_input.side_effect = ['y', 'n']
-        opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
+        pairPrinterToVariable(directory='RF', source='en', target='sv', maximum=1,
             alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'),
             download_dir=self.tempdir1, root_directory=self.root_directory)
-        opr.printPairs()
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en-sv.xml.gz'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'))
         os.remove(os.path.join(self.tempdir1, 'RF_latest_xml_sv.zip'))
 
         with self.assertRaises(FileNotFoundError):
-            opr = OpusRead(directory='RF', source='en', target='sv',
+            pairPrinterToVariable(directory='RF', source='en', target='sv',
                 maximum=1,
                 alignment_file=os.path.join(self.tempdir1, 'unfound.xml.gz'))
-            opr.printPairs()
 
     def test_alignment_file_not_found_no_prompt(self):
         opr = OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -1736,7 +1736,8 @@ class TestOpusRead(unittest.TestCase):
                 '================================\n\n'
                 'Error while parsing sentence file: Document '
                 "'test_files/invalid_en' could not be parsed: mismatched "
-                'tag: line 8, column 3\n\n'
+                'tag: line 8, column 3\n'
+                'Continuing from next sentence file pair.\n\n'
                 '# test_files/test_en\n'
                 '# test_files/test_fi\n\n'
                 '================================\n'
@@ -1744,7 +1745,8 @@ class TestOpusRead(unittest.TestCase):
                 '(trg)="s1">test_fi1 test_fi2\n'
                 '================================\n\n'
                 "There is no item named 'test_files/no_file' in the archive "
-                "'"+os.path.join(self.tempdir1, 'test_en.zip')+"'\n\n"
+                "'"+os.path.join(self.tempdir1, 'test_en.zip')+"'\n"
+                'Continuing from next sentence file pair.\n\n'
                 '# test_files/test_en\n'
                 '# test_files/test_fi\n\n'
                 '================================\n'

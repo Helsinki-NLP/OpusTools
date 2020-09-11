@@ -199,7 +199,7 @@ class OpusRead:
                     src_doc = self.of_handler.open_sentence_file(src_doc_name, 'src')
                     trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
                 except KeyError as e:
-                    print('\n'+e.args[0])
+                    print('\n'+e.args[0]+'\nContinuing from next sentence file pair.')
                     continue
 
                 try:
@@ -212,7 +212,7 @@ class OpusRead:
                             preserve=self.preserve, delimiter=self.annot_delimiter)
                     trg_parser.store_sentences(trg_set)
                 except SentenceParserError as e:
-                    print('\n'+e.message)
+                    print('\n'+e.message+'\nContinuing from next sentence file pair.')
                     continue
 
             self.add_doc_names(src_doc_name, trg_doc_name,
@@ -240,6 +240,8 @@ class OpusRead:
                 break
 
         self.add_file_ending(self.resultfile)
+
+        self.alignmentParser.bp.close_document()
 
         if self.write:
             if self.write_mode == 'moses' and self.mosessrc:
