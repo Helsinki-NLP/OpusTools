@@ -61,8 +61,6 @@ def parse_type(preprocess, preserve, get_annotations):
         s_parent = bp.tag_in_parents('s', block)
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s_raw(block, sentence, sentences)
-        elif block.name == 'w':
-            sentence = parse_w(bp, block, sentence, id_set)
         return sentence
 
     def parsed(bp, block, sentence, sentences, id_set):
@@ -87,8 +85,6 @@ def parse_type(preprocess, preserve, get_annotations):
         s_parent = bp.tag_in_parents('s', block)
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s_raw(block, sentence, sentences)
-        elif block.name == 'w':
-            sentence = parse_w(bp, block, sentence, id_set)
         elif block.name == 'time':
             sentence = parse_time(bp, block, sentence, id_set)
         return sentence

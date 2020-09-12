@@ -132,12 +132,14 @@ class TestSentenceParser(unittest.TestCase):
             blocks = bp.get_complete_blocks()
         self.assertEqual(sp.get_annotations(blocks[0]), '|NN|w1.1|source|NN|NN')
         bp.close_document()
+        sp.document.close()
         bp = BlockParser(file_open(self.books_path))
         sp = SentenceParser(file_open(self.books_path), anno_attrs=['pos'])
         for i in range(19):
             blocks = bp.get_complete_blocks()
         self.assertEqual(sp.get_annotations(blocks[0]), '|NN')
         bp.close_document()
+        sp.document.close()
 
     def test_get_sentence(self):
         sp = SentenceParser(file_open(self.books_raw_path), preprocessing='raw')

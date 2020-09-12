@@ -5,74 +5,57 @@ import os
 from .opus_get import OpusGet
 from .parse.sentence_parser import SentenceParser
 
+def parse_type(preprocessing, get_annotations):
+    def xml_parse(bp, block, sentence, sentences, id_set):
+        if block.name == 's':
+            sid = block.attributes['id']
+            sentence = ' '.join(sentence)
+            sentences[sid] = (sentence, block.attributes)
+            sentence = []
+        elif block.name == 'w':
+            s_parent = bp.tag_in_parents('s', block)
+            if s_parent:
+                data = block.data.strip()
+                sentence.append(data)
+        return sentence
+
+    def parsed_parse(bp, block, sentence, sentences, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if block.name == 's':
+            sid = block.attributes['id']
+            sentence = ' '.join(sentence)
+            sentences[sid] = (sentence, block.attributes)
+            sentence = []
+        elif block.name == 'w':
+            s_parent = bp.tag_in_parents('s', block)
+            if s_parent:
+                data = block.data.strip()
+                data += get_annotations(block)
+                sentence.append(data)
+        return sentence
+
+    if preprocessing == 'xml':
+        return xml_parse
+    if preprocessing == 'parsed':
+        return parsed_parse
+
 class SentenceParser(SentenceParser):
 
-    def __init__(self, document, print_annotations, set_attribute,
-            change_annotation_delimiter, no_ids):
+    def __init__(self, document, preprocessing, set_attribute,
+            change_annotation_delimiter):
         """Read sentence from a xml document.
 
-        Keyword arguments:
+        Arguments:
         document -- Xml document
-        print_annotations -- Print annotations
+        preprocessing -- Preprocessing type, xml or parsed
         set_attribute -- Set annotation attributes to be printed
         change_annotation_delimiter -- Change annotation delimiter
-        no_ids -- Print sentences without sentence ids in plain mode
         """
 
-        super().__init__(document, '', '', '', '', print_annotations,
-            set_attribute, change_annotation_delimiter, False)
+        super().__init__(document, preprocessing, set_attribute,
+                change_annotation_delimiter, None)
 
-        self.stopit = False
-        self.no_ids = no_ids
-
-        self.parser.StartElementHandler = self.start_element_opuscat
-        self.parser.EndElementHandler = self.end_element_opuscat
-
-    def start_element_opuscat(self, name, attrs):
-        self.start_element(name, attrs)
-        if name == 's':
-            self.posses = []
-
-    def end_element_opuscat(self, name):
-        self.end_element(name)
-        if name in ['document', 'text']:
-            self.stopit = True
-
-    def processTokenizedSentence(self, sentence):
-        """Process and build tokenized sentence."""
-        newSentence, stop = sentence, 0
-        if self.efound:
-            self.sfound = False
-            self.efound = False
-            stop = -1
-#            if newSentence == "":
-#                newSentence = self.chara
-#                self.chara = ""
-
-        newSentence = self.addToken(sentence)
-
-        return newSentence, stop
-
-    def readSentence(self):
-        """Read and return sentence."""
-        sentence = ''
-        while True:
-            line = self.document.readline()
-            self.parseLine(line)
-            newSentence, stop = self.processTokenizedSentence(sentence)
-            sentence = newSentence
-            if stop == -1 or self.stopit:
-                break
-
-        sentence = sentence.strip()
-
-        if sentence == '':
-            return ''
-
-        if self.no_ids:
-            return sentence
-        else:
-            return '("' + self.sid + '")>' + sentence
+        self.parse_block = parse_type(preprocessing, self.get_annotations)
 
 class OpusCat:
 
@@ -104,12 +87,15 @@ class OpusCat:
         self.language = language
         self.release = release
         self.download_dir = download_dir
-        self.print_annotations = print_annotations
         self.set_attribute = set_attribute
         self.change_annotation_delimiter = change_annotation_delimiter
         self.no_ids = no_ids
         self.file_name = file_name
         self.plain = plain
+
+        self.preprocess = 'xml'
+        if print_annotations:
+            self.preprocess = 'parsed'
 
         self.openFiles(
             os.path.join(download_dir, directory+'_'+release+'_xml_'+
@@ -145,30 +131,30 @@ class OpusCat:
 
     def printFile(self, f, n):
         """Print sentences from a document."""
+        if self.maximum == 0:
+            return
         xml_break = False
         if self.plain:
-            spar = SentenceParser(f, self.print_annotations,
-                self.set_attribute, self.change_annotation_delimiter,
-                self.no_ids)
+            spar = SentenceParser(f, self.preprocess,
+                self.set_attribute, self.change_annotation_delimiter)
+            spar.store_sentences({})
             print('\n# '+n+'\n')
-            while True:
-                sent = spar.readSentence()
-                if sent != '':
-                    print(sent)
-                    self.maximum -= 1
-                if spar.stopit or self.maximum == 0:
+            for sid, attrs in spar.sentences.items():
+                if self.no_ids:
+                    print(attrs[0])
+                else:
+                    print('("{}")>{}'.format(sid, attrs[0]))
+                self.maximum -= 1
+                if self.maximum == 0:
                     break
-            spar.document.close()
         else:
             for line in f:
                 line = line.decode('utf-8')
-                if '<s id=' in line or '<s hun=' in line:
-                    self.maximum -= 1
-                    if self.maximum == -1:
-                        xml_break = True
-                        break
                 print(line, end='')
-        return xml_break
+                if '</s>' in line:
+                    self.maximum -= 1
+                    if self.maximum == 0:
+                        break
 
     def printSentences(self):
         """Print sentences from documents in a zip file."""
@@ -180,12 +166,7 @@ class OpusCat:
                 for n in self.lzip.namelist():
                     if n[-4:] == '.xml':
                         with self.lzip.open(n, 'r') as f:
-                            xml_break = self.printFile(f, n)
-                        if xml_break:
-                            break
-
-                    if self.maximum == 0:
-                        break
+                            self.printFile(f, n)
         except AttributeError as e:
             print('Necessary files not found.')
 

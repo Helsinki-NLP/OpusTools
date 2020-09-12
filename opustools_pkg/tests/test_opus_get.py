@@ -19,17 +19,6 @@ class TestOpusGet(unittest.TestCase):
     def tearDownClass(self):
         shutil.rmtree(self.tempdir)
 
-    '''
-    def test_empty_argument_list(self):
-        temp_args = sys.argv.copy()
-        sys.argv = [temp_args[0]] + '-s eo'.split()
-        opg = OpusGet([])
-        params = ['source=eo', 'version=latest', 'preprocessing=xml', '']
-        for param in opg.url.split('?')[1].split('&'):
-            self.assertTrue(param in params)
-        sys.argv = temp_args.copy()
-    '''
-
     def test_format_size(self):
         opg = OpusGet(source='eo')
         self.assertEqual(opg.format_size(1), '1 KB')
@@ -202,8 +191,12 @@ class TestOpusGet(unittest.TestCase):
     @mock.patch('opustools.opus_get.input', create=True)
     def test_dont_list_files_that_are_already_in_path(self, mocked_input):
         mocked_input.side_effect = ['y']
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
         OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
             download_dir=self.tempdir).get_files()
+        sys.stdout = old_stdout
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
@@ -223,8 +216,12 @@ class TestOpusGet(unittest.TestCase):
     @mock.patch('opustools.opus_get.input', create=True)
     def test_dont_download_files_that_are_already_in_path(self, mocked_input):
         mocked_input.side_effect = ['y', 'y']
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+        sys.stdout = printout
         OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
             download_dir=self.tempdir).get_files()
+        sys.stdout = old_stdout
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout

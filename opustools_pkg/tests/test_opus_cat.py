@@ -1,6 +1,7 @@
 import os
 import sys
 import io
+import shutil
 import tempfile
 import unittest
 from unittest import mock
@@ -101,9 +102,9 @@ class TestOpusCat(unittest.TestCase):
 
     def test_print_xml(self):
         var = self.printSentencesToVariable(directory='RF', language='en',
-            maximum=1, root_directory=self.root_directory)
+            maximum=2, root_directory=self.root_directory)
         self.assertEqual(var[-38:],
-            '<w id="w2.10">1996</w>\n</p><p id="3">\n')
+            '"w3.1.4" deprel="null">)</w>\n</s></p>\n')
 
     def test_printing_specific_file(self):
         var = self.printSentencesToVariable(directory='RF', language='en',
@@ -114,18 +115,6 @@ class TestOpusCat(unittest.TestCase):
             ' by the Prime Minister , Mr Ingvar Carlsson , at the Open'
             'ing of the Swedish Parliament on Tuesday , 4 October , 1'
             '988 .\n')
-
-    '''
-    def test_empty_argument_list(self):
-        temp_args = sys.argv.copy()
-        sys.argv = [temp_args[0]] + '-d RF -l en -m 1 -p -rd {rootdir}'.format(
-            rootdir=self.root_directory).split()
-        var = self.printSentencesToVariable([])
-        self.assertEqual(var,
-            '\n# RF/xml/en/1996.xml\n\n("s1.1")>MINISTRY FOR FOREIGN '
-            'AFFAIRS Press Section Check against delivery\n')
-        sys.argv = temp_args.copy()
-    '''
 
     @mock.patch('opustools.opus_get.input', create=True)
     def test_file_not_found(self, mocked_input):
@@ -151,7 +140,6 @@ class TestOpusCat(unittest.TestCase):
             OpusCat(directory='RF', language='en', download_dir=self.tempdir1),
             os.path.join(self.tempdir1, 'RF_latest_xml_en.zip'), '')
         sys.stdout = old_stdout
-        print(printout.getvalue())
         self.assertTrue('No file found' in printout.getvalue())
 
 

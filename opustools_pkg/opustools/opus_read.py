@@ -138,6 +138,9 @@ class OpusRead:
         self.write = write
         self.maximum = maximum
         self.preprocess = preprocess
+        if print_annotations:
+            self.preprocess = 'parsed'
+
         self.write_ids=write_ids
 
         self.preserve = preserve_inline_tags
