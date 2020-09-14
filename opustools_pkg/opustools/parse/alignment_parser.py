@@ -71,21 +71,6 @@ class AlignmentParser:
         if leave_non_alignments_out:
             self.filters.append(non_alignment_filter)
 
-    def get_link(self):
-        """Find next link or linkGrp block"""
-        try:
-            blocks = self.bp.get_complete_blocks()
-            while blocks:
-                for block in blocks:
-                    if block.name == 'link':
-                        return block
-                    elif block.name == 'linkGrp':
-                        return block
-                blocks = self.bp.get_complete_blocks()
-        except BlockParserError as e:
-            raise AlignmentParserError(
-                'Error while parsing alignment file: {error}'.format(error=e.args[0]))
-
     def add_link(self, link, attrs, src_id_set, trg_id_set):
         """Add link to set of links to be returned"""
         ids = link.attributes['xtargets'].split(';')
@@ -109,19 +94,20 @@ class AlignmentParser:
         src_id_set, trg_id_set = set(), set()
         src_doc, trg_doc = None, None
 
-        link = self.get_link()
-
-        if not link:
-            return attrs, src_id_set, trg_id_set, src_doc, trg_doc
-
-        src_doc = link.parent.attributes['fromDoc']
-        trg_doc = link.parent.attributes['toDoc']
-
-        while link:
-            if link.name == 'linkGrp':
-                break
-            self.add_link(link, attrs, src_id_set, trg_id_set)
-            link = self.get_link()
+        try:
+            blocks = self.bp.get_complete_blocks()
+            while blocks:
+                for block in blocks:
+                    if block.name == 'link':
+                        self.add_link(block, attrs, src_id_set, trg_id_set)
+                    elif block.name == 'linkGrp':
+                        src_doc = block.attributes['fromDoc']
+                        trg_doc = block.attributes['toDoc']
+                        return attrs, src_id_set, trg_id_set, src_doc, trg_doc
+                blocks = self.bp.get_complete_blocks()
+        except BlockParserError as e:
+            raise AlignmentParserError(
+                'Error while parsing alignment file: {error}'.format(error=e.args[0]))
 
         return attrs, src_id_set, trg_id_set, src_doc, trg_doc
 

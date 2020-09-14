@@ -285,6 +285,44 @@ class TestOpusRead(unittest.TestCase):
                 ' Högheter , herr talman , ledamöter av Sveriges riks'
                 'dag !\n================================\n')
 
+    def test_normal_xml_write_link_end_and_linkGrp_end_on_same_line(self):
+        same_line = os.path.join(self.tempdir1, 'test_files', 'sameline')
+        with open(same_line, 'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n'
+                '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+                '<cesAlign version="1.0">\n'
+                ' <linkGrp targType="s" toDoc="sv/1988.xml.gz" fromDoc="en/1988.xml.gz">\n'
+                '<link certainty="1.08657" xtargets="s72.1;s72.1" id="SL151" /></linkGrp>\n'
+                ' <linkGrp targType="s" toDoc="sv/1996.xml.gz" fromDoc="en/1996.xml.gz">\n'
+                '<link certainty="0.530172" xtargets="s60.1;s57.1" id="SL68" /></linkGrp>\n'
+                '</cesAlign>\n')
+
+        OpusRead(directory='RF', source='en', target='sv',
+            write=[os.path.join(self.tempdir1, 'test_files', 'test_result')],
+            root_directory=self.root_directory,
+            alignment_file=same_line).printPairs()
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_result'),
+                'r') as f:
+            self.assertEqual(f.read(),
+                '\n# en/1988.xml.gz\n'
+                '# sv/1988.xml.gz\n'
+                '\n================================\n'
+                '(src)="s72.1">It is the Government \'s resposibility '
+                'and aim to put to use all good initiatives , to work '
+                'for broad solutions and to pursue a policy in the '
+                'interests of the whole nation .\n'
+                '(trg)="s72.1">Det är regeringens ansvar och strävan att '
+                'ta till vara alla goda initiativ , att verka för breda '
+                'lösningar och att föra en politik i hela folkets intresse .\n'
+                '================================\n'
+                '\n# en/1996.xml.gz\n'
+                '# sv/1996.xml.gz\n'
+                '\n================================\n'
+                '(src)="s60.1">This will ensure the cohesion of Swedish society .\n'
+                '(trg)="s57.1">Så kan vi hålla samman Sverige .\n'
+                '================================\n')
+
     def test_normal_xml_write_verbose(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write=[os.path.join(

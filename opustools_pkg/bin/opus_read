@@ -54,7 +54,7 @@ parser.add_argument('-pn', '--print_file_names',
 parser.add_argument('-rd', '--root_directory',
     help='Change root directory (default=/projappl/nlpl/data/OPUS)',
     metavar='path_to_dir',
-    default='/proj/nlpl/data/OPUS')
+    default='/projappl/nlpl/data/OPUS')
 parser.add_argument('-af', '--alignment_file',
     help='Use given alignment file',
     metavar='path_to_file', default=-1)

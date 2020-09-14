@@ -50,64 +50,6 @@ class TestAlignmentParser(unittest.TestCase):
     def tearDownClass(self):
         shutil.rmtree(self.tempdir)
 
-    def test_get_link(self):
-        ap = AlignmentParser(file_open(self.align_path))
-        link = ap.get_link()
-        self.assertEqual(link.attributes['xtargets'], 's1;s1')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['xtargets'], ';s2')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['fromDoc'],
-            'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz')
-        self.assertEqual(link.attributes['toDoc'],
-            'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['xtargets'], 's21;')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['xtargets'], 's0 s1;s2 s3')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['fromDoc'], 'en/2.xml.gz')
-        self.assertEqual(link.attributes['toDoc'], 'fi/2.xml.gz')
-
-        link = ap.get_link()
-        self.assertEqual(link, None)
-
-        ap.bp.close_document()
-
-    def test_get_link_gz(self):
-        ap = AlignmentParser(file_open(self.align_path_gz))
-        link = ap.get_link()
-        self.assertEqual(link.attributes['xtargets'], 's1;s1')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['xtargets'], ';s2')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['fromDoc'],
-            'en/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz')
-        self.assertEqual(link.attributes['toDoc'],
-            'fi/Doyle_Arthur_Conan-Hound_of_the_Baskervilles.xml.gz')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['xtargets'], 's21;')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['xtargets'], 's0 s1;s2 s3')
-
-        link = ap.get_link()
-        self.assertEqual(link.attributes['fromDoc'], 'en/2.xml.gz')
-        self.assertEqual(link.attributes['toDoc'], 'fi/2.xml.gz')
-
-        link = ap.get_link()
-        self.assertEqual(link, None)
-
-        ap.bp.close_document()
-
     def test_collect_links(self):
         ap = AlignmentParser(file_open(self.align_path))
         attrs, src_set, trg_set, src_doc, trg_doc = ap.collect_links()
