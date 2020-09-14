@@ -303,6 +303,8 @@ arguments:
                       target language (e.g. `pt')
 -c [coll_name [coll_name ...]], --collections [coll_name [coll_name ...]]
                       OPUS collection(s) to fetch (default: `OpenSubtitles')
+                      (Check http://opus.nlpl.eu/opusapi/?corpora=True for 
+                      an up-to-date list)
                       Collections list: ['ALL', 'ada83', 'Bianet', 'bible-
                       uedin', 'Books', 'CAPES', 'DGT', 'DOGC', 'ECB',
                       'EhuHac', 'Elhuyar', 'EMEA', 'EUbookshop', 'EUconst',
@@ -317,7 +319,7 @@ arguments:
                       'Wikipedia', 'WikiSource', 'WMT-News', 'XhosaNavy']
 --root-dir /path/to/OPUS
                       Root directory for OPUS
-                      (default:`/proj/nlpl/data/OPUS')
+                      (default:`/projappl/nlpl/data/OPUS')
 --test-override /path/to/file
                       path to file containing resource IDs to reserve for
                       the test set (default: None)
