@@ -6,6 +6,7 @@ from os import path
 import zipfile
 import urllib.request
 import json
+import tempfile
 
 from opustools import OpusRead
 from random import randint
@@ -88,34 +89,6 @@ test, test_size = [], 0
 dev, dev_size = [], 0
 train, train_size = [], 0
 
-#########################
-## OPUS READ OVERRIDES ##
-#########################
-
-class OpusReadPipe(OpusRead):
-
-  def __init__(self, **arguments):
-    self.bin = []
-    super(OpusReadPipe, self).__init__(**arguments)
-
-  def sendPairOutput(self, wpair):
-    if not self.bin:
-      self.bin = [[None, None]]
-
-    if self.bin[-1][0]:
-      self.bin.append([None, None])
-
-    self.bin[-1][0] = wpair
-
-  def sendIdOutput(self, id_details):
-    if not self.bin:
-      self.bin = [[None, None]]
-
-    if self.bin[-1][1]:
-      self.bin.append([None, None])
-
-    self.bin[-1][1] = id_details
-
 #####################
 ## DATA PROCESSING ##
 #####################
@@ -129,61 +102,72 @@ for collection in collections:
   print('Checking out %s...' % collection)
 
   try:
-    tmp = 'tmp-%d' % randint(10000000, 99999999)
+    tmp_src = 'tmp_src-%d' % randint(10000000, 99999999)
+    tmp_trg = 'tmp_trg-%d' % randint(10000000, 99999999)
+    tmp_ids = 'tmp_ids-%d' % randint(10000000, 99999999)
 
-    reader = OpusReadPipe(root_directory=args.root_dir,
+    reader = OpusRead(root_directory=args.root_dir,
             attribute='overlap',
             directory=collection,
             source=src_lang, target=tgt_lang,
-            write_mode='moses', write=[tmp, tmp], write_ids=tmp,
+            write_mode='moses', write=[tmp_src, tmp_trg], write_ids=tmp_ids,
             preserve_inline_tags=args.preserve_inline_tags)
 
-    reader.printPairs() # Doesn't actually print (since overridden), but passes on data.
+    reader.printPairs() # Print data to temp files.
 
-    os.remove(tmp)
+    num_samples = 0
 
-    if not reader.bin:
+    print('...collating samples...')
+
+    with open(tmp_src, 'r') as srcs:
+      with open(tmp_trg, 'r') as trgs:
+        with open(tmp_ids, 'r') as ids:
+          for src_sent in srcs:
+            num_samples += 1
+            tgt_sent = trgs.readline()
+            id_details = ids.readline().split('\t')
+
+            src_sent = src_sent.strip()
+            tgt_sent = tgt_sent.strip()
+
+            src_uri, tgt_uri, src_align, tgt_align, overlap = id_details
+            overlap = overlap.strip()
+
+            resource_id = src_uri.split('/')[2] if collection == 'OpenSubtitles' else 0
+            one_to_one = len(src_align) == len(tgt_align) == 1
+            overlap = float(overlap) if overlap != 'None' else float('-inf')
+
+            if resource_id in test_override:
+              dump = dump_test
+            elif args.quality_aware and one_to_one and overlap >= args.overlap_threshold:
+              dump = dump_hiqu
+            else:
+              dump = dump_loqu
+
+            doc_id = (src_uri, tgt_uri)
+            stats_line = '\t'.join([src_uri, tgt_uri,
+                ' '.join(src_align), ' '.join(tgt_align), str(overlap)])
+
+            dump.append((src_sent, tgt_sent, stats_line, doc_id))
+
+    os.remove(tmp_src)
+    os.remove(tmp_trg)
+    os.remove(tmp_ids)
+
+    if num_samples == 0:
       print('...skipping %s (no %s-%s).' % (collection, src_lang, tgt_lang))
 
-    else:
-      print('...%d samples processed.' % len(reader.bin))
-
-      print('...collating samples...')
-
-      for wpair, id_details in reader.bin:
-        src_sent, tgt_sent = wpair
-
-        src_sent = src_sent.strip()
-        tgt_sent = tgt_sent.strip()
-
-        src_uri, tgt_uri, src_align, tgt_align, overlap = id_details
-
-        resource_id = src_uri.split('/')[2] if collection == 'OpenSubtitles' else 0
-        one_to_one = len(src_align) == len(tgt_align) == 1
-        overlap = float(overlap) if overlap is not None else float('-inf')
-
-        if resource_id in test_override:
-          dump = dump_test
-        elif args.quality_aware and one_to_one and overlap >= args.overlap_threshold:
-          dump = dump_hiqu
-        else:
-          dump = dump_loqu
-
-        doc_id = (src_uri, tgt_uri)
-        stats_line = '\t'.join([src_uri, tgt_uri,
-            ' '.join(src_align), ' '.join(tgt_align), str(overlap)])
-
-        dump.append((src_sent, tgt_sent, stats_line, doc_id))
   except ExpatError:
     print('...skipping (ill-formatted XML).')
   except FileNotFoundError:
     print('...skipping (broken links / XML archive not found).')
   except KeyError:
     print('...skipping (broken links / XMLs missing in archive).')
-  except Exception:
+  except Exception as e:
+    print(e.args[0])
     print('...skipping (unknown exception).')
   else:
-    print('...done!')
+    print('...%d samples processed!' % num_samples)
 
 if not dump_test and not dump_hiqu and not dump_loqu:
   print('Alas, OPUS Express turned up with no data!\n¯\_(ツ)_/¯')
