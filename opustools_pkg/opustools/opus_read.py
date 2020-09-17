@@ -193,7 +193,7 @@ class OpusRead:
             link_attrs, src_set, trg_set, src_doc_name, trg_doc_name = \
                 self.alignmentParser.collect_links()
 
-            if len(link_attrs) == 0:
+            if not src_doc_name:
                 break
 
             if (self.write_mode != 'links' or

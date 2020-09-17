@@ -953,8 +953,10 @@ class TestOpusRead(unittest.TestCase):
                 ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
                 '<linkGrp targType="s" fromDoc="en/1988.xml.gz"'
                 ' toDoc="sv/1988.xml.gz">\n'
-                '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" '
-                'id="SL10" />\n </linkGrp>\n</cesAlign>\n')
+                '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10" />\n'
+                ' </linkGrp>\n'
+                ' <linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv/1996.xml.gz">\n'
+                ' </linkGrp>\n</cesAlign>\n')
 
     def test_links_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -978,8 +980,10 @@ class TestOpusRead(unittest.TestCase):
             ' XML cesAlign//EN" "">\n<cesAlign version="1.0">\n '
             '<linkGrp targType="s" fromDoc="en/1988.xml.gz"'
             ' toDoc="sv/1988.xml.gz">\n'
-            '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10"'
-            ' />\n </linkGrp>\n</cesAlign>\n')
+            '<link certainty="0.188136" xtargets="s4.4 s4.5;s4.4" id="SL10" />\n'
+            ' </linkGrp>\n'
+            ' <linkGrp targType="s" fromDoc="en/1996.xml.gz" toDoc="sv/1996.xml.gz">\n'
+            ' </linkGrp>\n</cesAlign>\n')
 
     def test_iteration_stops_at_the_end_of_the_document_even_if_max_is_not_filled(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -994,7 +998,8 @@ class TestOpusRead(unittest.TestCase):
             """ur national security .\n(trg)="s4.4">Det är regeringe"""
             """ns föresats att söka breda lösningar i frågor som är a"""
             """v betydelse för vår nationella säkerhet .\n=========="""
-            """======================\n""")
+            """======================\n\n# en/1996.xml.gz\n# sv/1996"""
+            """.xml.gz\n\n================================\n""")
 
     def test_use_given_sentence_alignment_file(self):
         OpusRead(directory='Books', source='eo', target='pt', src_range='2',
@@ -1048,7 +1053,8 @@ class TestOpusRead(unittest.TestCase):
             """ur national security .\n(trg)="s4.4">Det är regeringe"""
             """ns föresats att söka breda lösningar i frågor som är a"""
             """v betydelse för vår nationella säkerhet .\n=========="""
-            """======================\n""")
+            """======================\n\n# en/1996.xml.gz\n# sv/1996"""
+            """.xml.gz\n\n================================\n""")
 
     def test_use_given_sentence_alignment_file_and_print_links(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -1849,6 +1855,70 @@ class TestOpusRead(unittest.TestCase):
                 'EGERINGSFÖRKLARING#NOUN#Case=Nom|Definite=Ind|Gender'
                 '=Neut|Number=Sing#Regeringsförklaring .#PUNCT#.'
                 '\n================================\n')
+
+    def test_continue_after_empty_linkGrp(self):
+        with open(os.path.join(self.tempdir1, 'test_files', 'testlinks'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE cesAlign '
+                'PUBLIC "-//CES//DTD XML cesAlign//EN" "">'
+                '\n<cesAlign version="1.0">\n'
+                '<linkGrp fromDoc="test_files/test_en" toDoc="test_files/test_fi" >\n'
+                '<link xtargets="s1;s1"/>\n'
+                ' </linkGrp>\n'
+                '<linkGrp fromDoc="test_files/test_en" toDoc="test_files/test_fi" >\n'
+                ' </linkGrp>\n'
+                '<linkGrp fromDoc="test_files/test_en" toDoc="test_files/test_fi" >\n'
+                '<link xtargets="s1;s1"/>\n'
+                ' </linkGrp>\n'
+                '</cesAlign>')
+
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n'
+                '<body>\n<s id="s1">\n <w>test_en1</w>\n <w>test_en2'
+                '</w>\n</s>\n </body>\n</text>')
+
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_en.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_en'),
+                arcname=os.path.join('test_files', 'test_en'))
+
+        with open(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                'w') as f:
+            f.write(
+                '<?xml version="1.0" encoding="utf-8"?>\n<text>\n <body>\n'
+                '<s id="s1">\n <w>test_fi1</w>\n <w>test_fi2'
+                '</w>\n</s>\n </body>\n</text>')
+
+        with zipfile.ZipFile(os.path.join(self.tempdir1, 'test_fi.zip'),
+                'w') as zf:
+            zf.write(os.path.join(self.tempdir1, 'test_files', 'test_fi'),
+                arcname=os.path.join('test_files', 'test_fi'))
+
+        var = pairPrinterToVariable(directory='Books', source='en',
+                target='fi', alignment_file=os.path.join(self.tempdir1,
+                    'test_files', 'testlinks'),
+                source_zip = os.path.join(self.tempdir1, 'test_en.zip'),
+                target_zip = os.path.join(self.tempdir1, 'test_fi.zip'))
+
+        self.assertEqual(var,
+                '\n# test_files/test_en\n'
+                '# test_files/test_fi\n\n'
+                '================================\n'
+                '(src)="s1">test_en1 test_en2\n'
+                '(trg)="s1">test_fi1 test_fi2\n'
+                '================================\n\n'
+                '# test_files/test_en\n'
+                '# test_files/test_fi\n\n'
+                '================================\n\n'
+                '# test_files/test_en\n'
+                '# test_files/test_fi\n\n'
+                '================================\n'
+                '(src)="s1">test_en1 test_en2\n'
+                '(trg)="s1">test_fi1 test_fi2\n'
+                '================================\n')
 
 
 if __name__ == '__main__':
