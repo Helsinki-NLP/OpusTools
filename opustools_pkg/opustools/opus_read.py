@@ -62,7 +62,7 @@ class OpusRead:
         suppress_prompts -- Download necessary files without prompting "(y/n)"
         download_dir -- Directory where files will be downloaded (default .)
         preserve_inline_tags -- Preserve inline tags within sentences
-        verbose -- Print progress messages when writing results to files
+        verbose -- Print progress messages
         """
 
         self.fromto = sorted([source, target])
@@ -73,8 +73,6 @@ class OpusRead:
         self.tgt_range = tgt_range
 
         self.verbose = verbose
-        if write == None:
-            self.verbose = False
 
         if self.switch_langs:
             temp = src_range

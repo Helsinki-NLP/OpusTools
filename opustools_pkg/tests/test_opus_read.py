@@ -360,6 +360,11 @@ class TestOpusRead(unittest.TestCase):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, root_directory=self.root_directory, verbose=True)
         self.assertEqual(var,
+            'Reading alignment file "/tmp/tmpnzehob2q/RF/latest/xml/en-sv.xml.gz"\n'
+            'Opening zip archive "/tmp/tmpnzehob2q/RF/latest/xml/en.zip" ... Done\n'
+            'Opening zip archive "/tmp/tmpnzehob2q/RF/latest/xml/sv.zip" ... Done\n'
+            'Reading src_file "RF/xml/en/1988.xml"\n'
+            'Reading trg_file "RF/xml/sv/1988.xml"\n'
             '\n# en/1988.xml.gz\n'
             '# sv/1988.xml.gz\n\n'
             '================================\n(src)="s1.1">State'
@@ -367,7 +372,7 @@ class TestOpusRead(unittest.TestCase):
             ' Ingvar Carlsson , at the Opening of the Swedish Parl'
             'iament on Tuesday , 4 October , 1988 .\n(trg)="s1.1"'
             '>REGERINGSFÖRKLARING .\n============================'
-            '====\n')
+            '====\nDone\n')
 
     def test_normal_raw_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -593,15 +598,21 @@ class TestOpusRead(unittest.TestCase):
             maximum=1, write_mode='tmx', root_directory=self.root_directory,
             verbose=True)
         self.assertEqual(var,
+            'Reading alignment file "/tmp/tmpnzehob2q/RF/latest/xml/en-sv.xml.gz"\n'
             '<?xml version="1.0" encoding="utf-8"?>\n<tmx version="1.4.">'
             '\n<header srclang="en"\n\tadminlang="en"\n\tsegtype='
-            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n\t\t<tu>'
+            '"sentence"\n\tdatatype="PlainText" />\n\t<body>\n'
+            'Opening zip archive "/tmp/tmpnzehob2q/RF/latest/xml/en.zip" ... Done\n'
+            'Opening zip archive "/tmp/tmpnzehob2q/RF/latest/xml/sv.zip" ... Done\n'
+            'Reading src_file "RF/xml/en/1988.xml"\n'
+            'Reading trg_file "RF/xml/sv/1988.xml"\n'
+            '\t\t<tu>'
             '\n\t\t\t<tuv xml:lang="en"><seg>Statement of Governm'
             'ent Policy by the Prime Minister , Mr Ingvar Carlsso'
             'n , at the Opening of the Swedish Parliament on Tues'
             'day , 4 October , 1988 .'
             '</seg></tuv>\n\t\t\t<tuv xml:lang="sv"><seg>REGERING'
-            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\n')
+            'SFÖRKLARING .</seg></tuv>\n\t\t</tu>\n\t</body>\n</tmx>\nDone\n')
 
     def test_tmx_xml_print_unalphabetical(self):
         var = pairPrinterToVariable(directory='RF', source='sv', target='en',

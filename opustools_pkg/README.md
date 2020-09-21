@@ -108,7 +108,7 @@ arguments:
                     Set download directory (default=current directory)
 -pi, --preserve_inline_tags
                     Preserve inline tags within sentences
--v, --verbose       Print prorgess messages when writing results to files
+-v, --verbose       Print prorgess messages
 ```
 
 ### Description
