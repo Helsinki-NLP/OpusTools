@@ -344,8 +344,8 @@ def pair_format_type(wmode, switch_langs, check_filters, check_lang,
     #args = (link_a, src_parser, trg_parser, fromto)
     def normal(*args):
         str_src_ids, str_trg_ids = args[0]['xtargets'].split(';')
-        src_ids = [sid for sid in str_src_ids.split(' ')]
-        trg_ids = [tid for tid in str_trg_ids.split(' ')]
+        src_ids = str_src_ids.split()
+        trg_ids = str_trg_ids.split()
 
         src_sentences, src_attrs = args[1].read_sentence(src_ids)
         trg_sentences, trg_attrs = args[2].read_sentence(trg_ids)
@@ -359,8 +359,8 @@ def pair_format_type(wmode, switch_langs, check_filters, check_lang,
 
     def switch(*args):
         str_src_ids, str_trg_ids = args[0]['xtargets'].split(';')
-        src_ids = [sid for sid in str_src_ids.split(' ')]
-        trg_ids = [tid for tid in str_trg_ids.split(' ')]
+        src_ids = str_src_ids.split()
+        trg_ids = str_trg_ids.split()
 
         src_sentences, src_attrs = args[1].read_sentence(src_ids)
         trg_sentences, trg_attrs = args[2].read_sentence(trg_ids)
@@ -374,8 +374,8 @@ def pair_format_type(wmode, switch_langs, check_filters, check_lang,
 
     def link_with_filter(*args):
         str_src_ids, str_trg_ids = args[0]['xtargets'].split(';')
-        src_ids = [sid for sid in str_src_ids.split(' ')]
-        trg_ids = [tid for tid in str_trg_ids.split(' ')]
+        src_ids = str_src_ids.split()
+        trg_ids = str_trg_ids.split()
 
         src_sentences, src_attrs = args[1].read_sentence(src_ids)
         trg_sentences, trg_attrs = args[2].read_sentence(trg_ids)

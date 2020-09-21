@@ -58,13 +58,11 @@ def parse_type(preprocess, preserve, get_annotations):
         return sentence
 
     def raw(bp, block, sentence, sentences, id_set):
-        s_parent = bp.tag_in_parents('s', block)
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s_raw(block, sentence, sentences)
         return sentence
 
     def parsed(bp, block, sentence, sentences, id_set):
-        s_parent = bp.tag_in_parents('s', block)
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s(block, sentence, sentences)
         elif block.name == 'w':
@@ -72,7 +70,6 @@ def parse_type(preprocess, preserve, get_annotations):
         return sentence
 
     def xml_preserve(bp, block, sentence, sentences, id_set):
-        s_parent = bp.tag_in_parents('s', block)
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s(block, sentence, sentences)
         elif block.name == 'w':
@@ -82,7 +79,6 @@ def parse_type(preprocess, preserve, get_annotations):
         return sentence
 
     def raw_preserve(bp, block, sentence, sentences, id_set):
-        s_parent = bp.tag_in_parents('s', block)
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s_raw(block, sentence, sentences)
         elif block.name == 'time':
@@ -90,7 +86,6 @@ def parse_type(preprocess, preserve, get_annotations):
         return sentence
 
     def parsed_preserve(bp, block, sentence, sentences, id_set):
-        s_parent = bp.tag_in_parents('s', block)
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s(block, sentence, sentences)
         elif block.name == 'w':
