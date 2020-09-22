@@ -66,7 +66,8 @@ class BlockParser:
 
         def char_data(data):
             """Update current block's character data"""
-            self.block.data += data
+            if self.block.name in {'s', 'w'}:
+                self.block.data += data
 
         self.p = xml.parsers.expat.ParserCreate()
 
