@@ -136,7 +136,7 @@ class TestBlockParser(unittest.TestCase):
         bp.close_document()
 
     def test_get_complete_blocks(self):
-        bp = BlockParser(file_open(self.xml_path))
+        bp = BlockParser(file_open(self.xml_path), data_tag='stamp')
         blocks = bp.get_complete_blocks()
         self.assertEqual(blocks[0].name, 'stamp')
         self.assertEqual(blocks[0].data, '123')
@@ -163,7 +163,7 @@ class TestBlockParser(unittest.TestCase):
         bp.close_document()
 
     def test_parsing_books(self):
-        bp = BlockParser(file_open(self.books_path))
+        bp = BlockParser(file_open(self.books_path), data_tag='w')
         for i in range(22):
             blocks = bp.get_complete_blocks()
         self.assertEqual(blocks[0].name, 'w')
@@ -175,7 +175,7 @@ class TestBlockParser(unittest.TestCase):
         bp.close_document()
 
     def test_parsing_books_raw(self):
-        bp = BlockParser(file_open(self.books_raw_path))
+        bp = BlockParser(file_open(self.books_raw_path), data_tag='s')
         for i in range(5):
             blocks = bp.get_complete_blocks()
         self.assertEqual(blocks[0].name, 's')
@@ -184,7 +184,7 @@ class TestBlockParser(unittest.TestCase):
         bp.close_document()
 
     def test_parsing_os(self):
-        bp = BlockParser(file_open(self.os_path))
+        bp = BlockParser(file_open(self.os_path), data_tag='w')
         blocks = bp.get_complete_blocks()
         self.assertEqual(blocks[0].name, 'time')
         self.assertEqual(blocks[0].parent.name, 's')
@@ -198,7 +198,7 @@ class TestBlockParser(unittest.TestCase):
         bp.close_document()
 
     def test_parsing_os_raw(self):
-        bp = BlockParser(file_open(self.os_raw_path))
+        bp = BlockParser(file_open(self.os_raw_path), data_tag='s')
         blocks = bp.get_complete_blocks()
         self.assertEqual(blocks[0].name, 'time')
         self.assertEqual(blocks[0].parent.name, 's')
@@ -217,7 +217,7 @@ class TestBlockParser(unittest.TestCase):
         bp.close_document()
 
     def test_get_raw_tag(self):
-        bp = BlockParser(file_open(self.os_path))
+        bp = BlockParser(file_open(self.os_path), data_tag='w')
         blocks = bp.get_complete_blocks()
         self.assertEqual(blocks[0].get_raw_tag(),
                 '<time id="T1S" value="00:00:05,897" />')

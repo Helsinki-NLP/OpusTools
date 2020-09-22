@@ -27,7 +27,7 @@ def xml_parse(bp, block, sentence, sentences, id_set):
 
 class LanguageIdAdder(SentenceParser):
 
-    def __init__(self, document, suppress, iszip):
+    def __init__(self, document, suppress, iszip, preprocessing):
         """Add language ids and confidence scores to sentences in a xml file.
 
         Positional arguments:
@@ -35,7 +35,7 @@ class LanguageIdAdder(SentenceParser):
         iszip -- Parse zip file (bytes) instead of plain text
         """
 
-        super().__init__(document, 'xml', '', '', None)
+        super().__init__(document, preprocessing, '', '', None)
         self.iszip = iszip
         self.suppress = suppress
 
@@ -89,7 +89,7 @@ class LanguageIdAdder(SentenceParser):
 class OpusLangid:
 
     def __init__(self, file_path=None, target_file_path=None, verbosity=0,
-            suppress_errors=False):
+            suppress_errors=False, preprocess='xml'):
         """Add language ids and confidence scores to sentences in plain xml
         files or xml file in zip archives.
 
@@ -104,6 +104,7 @@ class OpusLangid:
         self.target_file_path = target_file_path
         self.verbosity = verbosity
         self.suppress_errors = suppress_errors
+        self.preprocess = preprocess
 
     def processFiles(self):
         """Add language ids and confidence score to xml files."""
@@ -118,7 +119,7 @@ class OpusLangid:
                         if filename.filename[-4:] == '.xml':
                             with zip_arc.open(filename.filename) as infile:
                                 sparser = LanguageIdAdder(infile,
-                                    self.suppress_errors, True)
+                                    self.suppress_errors, True, self.preprocess)
                                 sparser.store_sentences({})
                             with zip_arc.open(filename.filename) as infile:
                                 with open(tempxml[1], 'wb') as outfile:
@@ -133,7 +134,7 @@ class OpusLangid:
             with open(tempname[1], 'w') as outfile:
                 with open(self.file_path, 'r') as infile:
                     sparser = LanguageIdAdder(infile,
-                            self.suppress_errors, False)
+                            self.suppress_errors, False, self.preprocess)
                     sparser.store_sentences({})
                 with open(self.file_path, 'r') as infile:
                     sparser.addIds(infile, outfile)

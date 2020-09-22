@@ -133,9 +133,13 @@ class SentenceParser:
         self.sentences = {}
         self.done = False
 
+        self.data_tag = 'w'
+        if preprocessing == 'raw':
+            self.data_tag = 's'
+
     def store_sentences(self, id_set):
         """Read document and store sentences in a dictionary."""
-        bp = BlockParser(self.document)
+        bp = BlockParser(self.document, data_tag=self.data_tag)
         sentence = []
         sid = None
         try:
