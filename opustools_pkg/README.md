@@ -243,6 +243,13 @@ opus_langid --file_path RF_latest_xml_en.zip
 opus_langid --file_path RF_latest_xml_sv.zip
 ```
 
+If you want to add language labels and scores to raw sentence files, you have to use the `--preprocess raw` flag:
+
+```
+opus_langid --file_path RF_latest_raw_en.zip --preprocess raw
+opus_langid --file_path RF_latest_raw_sv.zip --preprocess raw
+```
+
 Now you can filter by language ids. This example uses both cld2 and langid.py language detection confidence scores:
 
 ```
@@ -525,4 +532,19 @@ arguments:
 
 ### Description
 
-Add language ids to sentences in plain xml files or xml files in zip archives using [pycld2](https://pypi.org/project/pycld2/) and [langid.py](https://github.com/saffsd/langid.py). This is required in order to be able to filter sentences by their language ids and confidence scores as described in the examples of opus_read.
+Add language ids to sentences in plain xml files or xml files in zip archives using [pycld2](https://pypi.org/project/pycld2/) and [langid.py](https://github.com/saffsd/langid.py). This is required in order to be able to filter sentences by their language ids and confidence scores as described in the examples of `opus_read`.
+
+If you have run the `opus_read` examples, you should have `RF_latest_xml_en.zip` and `RF_latest_xml_sv.zip` in your current working directory. Apply `opus_langid` to these files:
+
+```
+opus_langid --file_path RF_latest_xml_en.zip
+opus_langid --file_path RF_latest_xml_sv.zip
+```
+
+If you want to add language labels and scores to raw sentence files, you have to use the `--preprocess raw` flag:
+
+```
+opus_langid --file_path RF_latest_raw_en.zip --preprocess raw
+opus_langid --file_path RF_latest_raw_sv.zip --preprocess raw
+```
+

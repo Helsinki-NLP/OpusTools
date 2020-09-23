@@ -126,7 +126,8 @@ class OpusLangid:
                                     sparser.addIds(infile, outfile)
                             new_arc.write(tempxml[1], filename.filename)
                         else:
-                            new_bytes = b''.join(infile.readlines())
+                            with zip_arc.open(filename.filename) as infile:
+                                new_bytes = b''.join(infile.readlines())
                             new_arc.writestr(filename, new_bytes)
                         os.remove(tempxml[1])
         except zipfile.BadZipfile:
