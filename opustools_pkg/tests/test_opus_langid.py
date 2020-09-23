@@ -102,24 +102,26 @@ class TestOpusLangid(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def run_opuslangid_and_assertEqual(self, source, target, lines, iszip,
-            correct_line):
+            preprocess, correct_line):
         source = os.path.join(self.tempdir, source)
         if target != None:
             target = os.path.join(self.tempdir, target)
-            arguments = {'file_path': source, 'target_file_path': target}
+            arguments = {'file_path': source, 'target_file_path': target,
+                    'preprocess': preprocess}
             result = target
         else:
-            arguments = {'file_path': source}
+            arguments = {'file_path': source, 'preprocess': preprocess}
             result = source
 
         langids = OpusLangid(**arguments)
         langids.processFiles()
 
         if iszip:
-            with zipfile.ZipFile(source, 'r') as zip_arc:
+            with zipfile.ZipFile(result, 'r') as zip_arc:
                 with zip_arc.open(zip_arc.filelist[0]) as xml_file:
                     for i in range(lines):
                         line = xml_file.readline()
+                self.assertEqual(line, correct_line)
         else:
             with open(result, 'r') as result:
                 for i in range(lines):
@@ -128,57 +130,57 @@ class TestOpusLangid(unittest.TestCase):
 
     def test_plain_xml(self):
         self.run_opuslangid_and_assertEqual('xml_fi.xml', 'result.xml', 10,
-                False, '<s cld2="en" cld2conf="0.96" id="s1" langid="de" '
-                    'langidconf="0.66" test="test">\n')
+                False, 'xml', '<s cld2="en" cld2conf="0.96" langid="de" '
+                    'langidconf="0.66" id="s1" test="test">\n')
 
-        self.run_opuslangid_and_assertEqual('result.xml', None, 10, False,
-                '<s cld2="en" cld2conf="0.96" id="s1" langid="de" '
-                    'langidconf="0.66" test="test">\n')
+        self.run_opuslangid_and_assertEqual('result.xml', None, 10, False, 'xml',
+                '<s cld2="en" cld2conf="0.96" langid="de" '
+                    'langidconf="0.66" id="s1" test="test">\n')
 
     def test_plain_raw(self):
         self.run_opuslangid_and_assertEqual('raw_fi.xml', 'result.xml', 11,
-                False, '  <s cld2="en" cld2conf="0.96" id="s1" langid="de" '
-                    'langidconf="0.66">Source: Project Gutenberg</s>\n')
+                False, 'raw', '  <s cld2="en" cld2conf="0.96" langid="de" '
+                    'langidconf="0.66" id="s1">Source: Project Gutenberg</s>\n')
 
-        self.run_opuslangid_and_assertEqual('result.xml', None, 11, False,
-                '  <s cld2="en" cld2conf="0.96" id="s1" langid="de" '
-                    'langidconf="0.66">Source: Project Gutenberg</s>\n')
+        self.run_opuslangid_and_assertEqual('result.xml', None, 11, False, 'raw',
+                '  <s cld2="en" cld2conf="0.96" langid="de" '
+                    'langidconf="0.66" id="s1">Source: Project Gutenberg</s>\n')
 
     def test_plain_osraw(self):
         self.run_opuslangid_and_assertEqual('osrawfi.xml', 'result.xml', 12,
-                False, '  <s cld2="fi" cld2conf="0.96" id="3" langid="fi" '
-                    'langidconf="1.0">\n')
+                False, 'raw', '  <s cld2="fi" cld2conf="0.96" langid="fi" '
+                    'langidconf="0.99" id="3">\n')
 
-        self.run_opuslangid_and_assertEqual('result.xml', None, 12, False,
-                '  <s cld2="fi" cld2conf="0.96" id="3" langid="fi" '
-                'langidconf="1.0">\n')
+        self.run_opuslangid_and_assertEqual('result.xml', None, 12, False, 'raw',
+                '  <s cld2="fi" cld2conf="0.96" langid="fi" '
+                'langidconf="0.99" id="3">\n')
 
     def test_zip_xml(self):
         self.run_opuslangid_and_assertEqual('xml_fi.zip', 'result.zip', 10,
-                True, '<s cld2="en" cld2conf="0.96" id="s1" langid="de" '
-                    'langidconf="0.66">\n')
+                True, 'xml', b'<s cld2="en" cld2conf="0.96" langid="de" '
+                    b'langidconf="0.66" id="s1" test="test">\n')
 
-        self.run_opuslangid_and_assertEqual('result.zip', None, 10, True,
-                '<s cld2="en" cld2conf="0.96" id="s1" langid="de" '
-                    'langidconf="0.66">\n')
+        self.run_opuslangid_and_assertEqual('result.zip', None, 10, True, 'xml',
+                b'<s cld2="en" cld2conf="0.96" langid="de" '
+                    b'langidconf="0.66" id="s1" test="test">\n')
 
     def test_zip_raw(self):
         self.run_opuslangid_and_assertEqual('raw_fi.zip', 'result.zip', 11,
-                True, '  <s cld2="en" cld2conf="0.96" id="s1" langid="de" '
-                    'langidconf="0.66">Source: Project Gutenberg</s>\n')
+                True, 'raw', b'  <s cld2="en" cld2conf="0.96" langid="de" '
+                    b'langidconf="0.66" id="s1">Source: Project Gutenberg</s>\n')
 
-        self.run_opuslangid_and_assertEqual('result.zip', None, 11, True,
-                '  <s cld2="en" cld2conf="0.96" id="s1" langid="de" '
-                    'langidconf="0.66">Source: Project Gutenberg</s>\n')
+        self.run_opuslangid_and_assertEqual('result.zip', None, 11, True, 'raw',
+                b'  <s cld2="en" cld2conf="0.96" langid="de" '
+                    b'langidconf="0.66" id="s1">Source: Project Gutenberg</s>\n')
 
     def test_zip_osraw(self):
         self.run_opuslangid_and_assertEqual('osrawfi.zip', 'result.zip', 12,
-                True, '  <s cld2="fi" cld2conf="0.96" id="3" langid="fi" '
-                    'langidconf="1.0">\n')
+                True, 'raw', b'  <s cld2="fi" cld2conf="0.96" langid="fi" '
+                    b'langidconf="0.99" id="3">\n')
 
-        self.run_opuslangid_and_assertEqual('result.zip', None, 12, True,
-                '  <s cld2="fi" cld2conf="0.96" id="3" langid="fi" '
-                'langidconf="1.0">\n')
+        self.run_opuslangid_and_assertEqual('result.zip', None, 12, True, 'raw',
+                b'  <s cld2="fi" cld2conf="0.96" langid="fi" '
+                b'langidconf="0.99" id="3">\n')
 
 if __name__ == '__main__':
     unittest.main()

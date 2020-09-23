@@ -17,6 +17,9 @@ parser.add_argument('-v', '--verbosity',
 parser.add_argument('-s', '--suppress_errors',
     help='Suppress error messages in language detection',
     action='store_true')
+parser.add_argument('-p', '--preprocess',
+    help='Preprocess-type (raw or xml, default=xml)',
+    default='xml', choices=['raw', 'xml'])
 
 args = parser.parse_args()
 

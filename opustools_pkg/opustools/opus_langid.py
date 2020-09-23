@@ -3,6 +3,7 @@ import zipfile
 import argparse
 import cgi
 import tempfile
+import re
 
 import pycld2
 from langid.langid import LanguageIdentifier, model
@@ -10,9 +11,23 @@ identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
 
 from .parse.sentence_parser import SentenceParser
 
+def xml_parse(bp, block, sentence, sentences, id_set):
+    if block.name == 's':
+        sid = block.attributes['id']
+        sentence.append(block.data.strip())
+        sentence = ' '.join(sentence)
+        sentences[sid] = (sentence, block.attributes)
+        sentence = []
+    elif block.name == 'w':
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent:
+            data = block.data.strip()
+            sentence.append(data)
+    return sentence
+
 class LanguageIdAdder(SentenceParser):
 
-    def __init__(self, suppress, iszip):
+    def __init__(self, document, suppress, iszip, preprocessing):
         """Add language ids and confidence scores to sentences in a xml file.
 
         Positional arguments:
@@ -20,9 +35,11 @@ class LanguageIdAdder(SentenceParser):
         iszip -- Parse zip file (bytes) instead of plain text
         """
 
-        super().__init__('', '', '', False, '', '', '', '', False)
+        super().__init__(document, preprocessing, '', '', None)
         self.iszip = iszip
         self.suppress = suppress
+
+        self.parse_block = xml_parse
 
     def detectLanguage(self, sentence, sid):
         """Assign language ids and scores to a sentence."""
@@ -47,63 +64,32 @@ class LanguageIdAdder(SentenceParser):
         return cldlan, cldconf, lilan, liconf
 
     def addIds(self, infile, outfile):
-        """Add language ids to sentences in a xml file."""
-        done = False
-        outfile.write(infile.readline())
-        while not done:
-            skippedTags = []
-            sentence = []
-            while True:
-                self.oneLineSStart = False
-                self.oneLineSEnd = False
-                line = infile.readline()
-                if not line:
-                    done = True
-                    break
-                self.parseLine(line)
-                if not self.sfound:
-                    outfile.write(line)
-                else:
-                    skippedTags.append(line)
-                    sentence.append(self.chara)
-                    self.chara = ''
-                if self.efound:
-                    self.sfound = False
-                    self.efound = False
-                    self.chara = ''
-                    break
-            sentence = ' '.join(sentence)
-            indent = ''
-            if len(skippedTags) > 0:
-                for c in skippedTags[0]:
-                    if c == ' ':
-                        indent += ' '
-                    else:
-                        break
-            cldlan, cldconf, lilan, liconf = self.detectLanguage(sentence,
-                    self.sid)
-            self.attrs['cld2'] = cldlan
-            self.attrs['cld2conf'] = cldconf
-            self.attrs['langid'] = lilan
-            self.attrs['langidconf'] = liconf
-            attributes = []
-            for k in sorted(self.attrs.keys()):
-                attributes.append('{0}="{1}"'.format(k, self.attrs[k]))
+        """Add language ids to sentences in an xml file."""
 
-            stag = '{0}<s {1}>\n'.format(indent, ' '.join(attributes))
-            if self.oneLineSStart and self.oneLineSEnd:
-                stag = stag[:-1] + cgi.escape(sentence) + '</s>\n'
+        for line in infile:
             if self.iszip:
-                stag = bytes(stag, 'utf-8')
-            if len(skippedTags) > 0:
-                skippedTags[0]=stag
-            for item in skippedTags:
-                outfile.write(item)
+                line = line.decode('utf-8')
+            if '<s' in line:
+                m = re.search('( cld2=".*?" cld2conf=".*?" langid=".*?" '
+                    'langidconf=".*?")', line)
+                if m:
+                    line = line.replace(m.group(1), '')
+                m = re.search(' id\="(.*?)"', line)
+                if m:
+                    sid = m.group(1)
+                    sentence = self.get_sentence(sid)[0]
+                    cldlan, cldconf, lilan, liconf = self.detectLanguage(sentence, sid)
+                    new_tag_start = ('<s cld2="{}" cld2conf="{}" langid="{}" '
+                        'langidconf="{}"'.format(cldlan, cldconf, lilan, liconf))
+                    line = line.replace('<s', new_tag_start)
+            if self.iszip:
+                line = bytes(line, 'utf-8')
+            outfile.write(line)
 
 class OpusLangid:
 
     def __init__(self, file_path=None, target_file_path=None, verbosity=0,
-            suppress_errors=False):
+            suppress_errors=False, preprocess='xml'):
         """Add language ids and confidence scores to sentences in plain xml
         files or xml file in zip archives.
 
@@ -118,6 +104,7 @@ class OpusLangid:
         self.target_file_path = target_file_path
         self.verbosity = verbosity
         self.suppress_errors = suppress_errors
+        self.preprocess = preprocess
 
     def processFiles(self):
         """Add language ids and confidence score to xml files."""
@@ -128,23 +115,29 @@ class OpusLangid:
                     for filename in zip_arc.filelist:
                         if self.verbosity > 0:
                             print(filename.filename)
-                        with zip_arc.open(filename.filename) as infile:
-                            if filename.filename[-4:] == '.xml':
-                                tempxml = tempfile.mkstemp()
+                        tempxml = tempfile.mkstemp()
+                        if filename.filename[-4:] == '.xml':
+                            with zip_arc.open(filename.filename) as infile:
+                                sparser = LanguageIdAdder(infile,
+                                    self.suppress_errors, True, self.preprocess)
+                                sparser.store_sentences({})
+                            with zip_arc.open(filename.filename) as infile:
                                 with open(tempxml[1], 'wb') as outfile:
-                                    sparser = LanguageIdAdder(
-                                        self.suppress_errors, True)
                                     sparser.addIds(infile, outfile)
-                                new_arc.write(tempxml[1], filename.filename)
-                                os.remove(tempxml[1])
-                            else:
+                            new_arc.write(tempxml[1], filename.filename)
+                        else:
+                            with zip_arc.open(filename.filename) as infile:
                                 new_bytes = b''.join(infile.readlines())
-                                new_arc.writestr(filename, new_bytes)
+                            new_arc.writestr(filename, new_bytes)
+                        os.remove(tempxml[1])
         except zipfile.BadZipfile:
             tempname = tempfile.mkstemp()
-            sparser = LanguageIdAdder(self.suppress_errors, False)
-            with open(self.file_path, 'r') as infile:
-                with open(tempname[1], 'w') as outfile:
+            with open(tempname[1], 'w') as outfile:
+                with open(self.file_path, 'r') as infile:
+                    sparser = LanguageIdAdder(infile,
+                            self.suppress_errors, False, self.preprocess)
+                    sparser.store_sentences({})
+                with open(self.file_path, 'r') as infile:
                     sparser.addIds(infile, outfile)
 
         if self.target_file_path:

@@ -22,7 +22,7 @@ Tools for accessing and processing OPUS data.
 usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [-p {raw,xml,parsed}] [-m M] [-S S] [-T T] [-a attribute]
                  [-tr TR] [-ln] [-w file_name [file_name ...]]
-                 [-wm {normal,moses,tmx,links}] [-pn] [-f] [-rd path_to_dir]
+                 [-wm {normal,moses,tmx,links}] [-pn] [-rd path_to_dir]
                  [-af path_to_file] [-sz path_to_zip] [-tz path_to_zip]
                  [-cm delimiter] [-pa] [-sa attribute [attribute ...]]
                  [-ta attribute [attribute ...]] [-ca delimiter]
@@ -66,9 +66,6 @@ arguments:
                     Set write mode
 -pn, --print_file_names
                     Print file names when using moses format
--f, --fast          Fast parsing. Faster than normal parsing, if you print
-                    a small part of the whole corpus, but requires the
-                    sentence ids in alignment files to be in sequence.
 -rd path_to_dir, --root_directory path_to_dir
                     Change root directory (default=/proj/nlpl/data/OPUS)
 -af path_to_file, --alignment_file path_to_file
@@ -111,7 +108,7 @@ arguments:
                     Set download directory (default=current directory)
 -pi, --preserve_inline_tags
                     Preserve inline tags within sentences
--v, --verbose       Print prorgess messages when writing results to files
+-v, --verbose       Print prorgess messages
 ```
 
 ### Description
@@ -133,10 +130,6 @@ Several parameters can be set to filter the alignments and to print only certain
 XCES align format. Set the "-wm" flag to "links" to enable this mode.
 
 `opus_read` reads the alignments from zip files. Starting up the script might take some time, if the zip files are large (for example OpenSubtitles in OPUS).
-
-`opus_read` uses `ExhaustiveSentenceParser` by default. This means that each time a `<linkGrp>` tag is found, the corresponding source and target documents are read through and each sentence is stored in a hashmap with the sentence id as the key. This allows the reader to read alignment files that have sentence ids in non-sequential order. Each time a `<linkGrp>` tag is found, the script pauses printing for a second to read through the source and target documents. The duration of the pause depends on the size of the source and target documents.
-
-Using the "-f" flag allows the usage of `SentenceParser`, which is faster than ExhaustiveSentenceParser in cases where only a small part of a corpus is read. `SentenceParser` does not store the sentences in a hashmap. Rather, when it finds a `<link>` tag, it iterates through a sentence file until a sentence id is matched with the sentence id found in the `<link>` tag. SentenceParser can't go backwards, which means that if the ids are not in sequential order in the alignment file, the parser will not find alignment pairs after the sentence id sequence breaks. `SentenceParser` is less reliable than `ExhaustiveSentenceParser`, but using the "-f" flag is beneficial when the whole corpus does not need to be scanned, in other words, when using the "-m" flag.
 
 **Examples:**
 
@@ -250,6 +243,13 @@ opus_langid --file_path RF_latest_xml_en.zip
 opus_langid --file_path RF_latest_xml_sv.zip
 ```
 
+If you want to add language labels and scores to raw sentence files, you have to use the `--preprocess raw` flag:
+
+```
+opus_langid --file_path RF_latest_raw_en.zip --preprocess raw
+opus_langid --file_path RF_latest_raw_sv.zip --preprocess raw
+```
+
 Now you can filter by language ids. This example uses both cld2 and langid.py language detection confidence scores:
 
 ```
@@ -310,6 +310,8 @@ arguments:
                       target language (e.g. `pt')
 -c [coll_name [coll_name ...]], --collections [coll_name [coll_name ...]]
                       OPUS collection(s) to fetch (default: `OpenSubtitles')
+                      (Check http://opus.nlpl.eu/opusapi/?corpora=True for 
+                      an up-to-date list)
                       Collections list: ['ALL', 'ada83', 'Bianet', 'bible-
                       uedin', 'Books', 'CAPES', 'DGT', 'DOGC', 'ECB',
                       'EhuHac', 'Elhuyar', 'EMEA', 'EUbookshop', 'EUconst',
@@ -324,7 +326,7 @@ arguments:
                       'Wikipedia', 'WikiSource', 'WMT-News', 'XhosaNavy']
 --root-dir /path/to/OPUS
                       Root directory for OPUS
-                      (default:`/proj/nlpl/data/OPUS')
+                      (default:`/projappl/nlpl/data/OPUS')
 --test-override /path/to/file
                       path to file containing resource IDs to reserve for
                       the test set (default: None)
@@ -530,4 +532,19 @@ arguments:
 
 ### Description
 
-Add language ids to sentences in plain xml files or xml files in zip archives using [pycld2](https://pypi.org/project/pycld2/) and [langid.py](https://github.com/saffsd/langid.py). This is required in order to be able to filter sentences by their language ids and confidence scores as described in the examples of opus_read.
+Add language ids to sentences in plain xml files or xml files in zip archives using [pycld2](https://pypi.org/project/pycld2/) and [langid.py](https://github.com/saffsd/langid.py). This is required in order to be able to filter sentences by their language ids and confidence scores as described in the examples of `opus_read`.
+
+If you have run the `opus_read` examples, you should have `RF_latest_xml_en.zip` and `RF_latest_xml_sv.zip` in your current working directory. Apply `opus_langid` to these files:
+
+```
+opus_langid --file_path RF_latest_xml_en.zip
+opus_langid --file_path RF_latest_xml_sv.zip
+```
+
+If you want to add language labels and scores to raw sentence files, you have to use the `--preprocess raw` flag:
+
+```
+opus_langid --file_path RF_latest_raw_en.zip --preprocess raw
+opus_langid --file_path RF_latest_raw_sv.zip --preprocess raw
+```
+
