@@ -1,54 +1,74 @@
 Corpus: Books, 3654 alignment pairs, source: en, target: fi, all alignments 
-Exhaustive parser:
-2.0865 s
-Fast parser:
-2.3072 s
+<0.0.54:
+    Exhaustive parser:  2.0865 s
+    Fast parser:        2.3072 s
+0.0.54:                 1.3503 s
+1.0.0:                  1.4379 s
 
 Corpus: Books, 129305 alignment pairs, source: en, target: fr, all alignments
-Exhaustive parser:
-104.2131 s
-Fast parser:
-115.4909 s
+<0.0.54:
+    Exhaustive parser:  104.2131 s
+    Fast parser:        115.4909 s 
+0.0.54:                 65.7613 s
+1.0.0:                  68.6586 s
 
 Corpus: Books, 3654 alignment pairs, source: en, target: fi, 10 alignments
-Exhaustive parser:
-2.0589 s
-Fast parser:
-0.0189 s
+<0.0.54:
+    Exhaustive parser:  2.0589 s
+    Fast parser:        0.0189 s
+0.0.54:                 1.2434 s
+1.0.0:                  1.3391 s
 
 Corpus: Books, 129305 alignment pairs, source: en, target: fr, 10 alignments
-Exhaustive parser:
-2.5155 s
-Fast parser:
-0.0154 s
+<0.0.54:
+    Exhaustive parser:  2.5155 s
+    Fast parser:        0.0154 s
+0.0.54:                 1.5441 s
+1.0.0:                  1.6453 s
 
 Corpus: Books, 3654 alignment pairs, source: en, target: fi, all alignments, preprocessing raw
-Exhaustive parser:
-0.2336 s
-Fast parser:
-0.2349 s
+<0.0.54:
+    Exhaustive parser:  0.2336 s
+    Fast parser:        0.2349 s
+0.0.54:                 0.1465 s
+1.0.0:                  0.1882 s
 
 Corpus: Books, 129305 alignment pairs, source: en, target: fr, all alignments, preprocessing raw
-Exhaustive parser:
-7.9155 s
-Fast parser:
-8.5816 s
+<0.0.54:
+    Exhaustive parser:  7.9155 s
+    Fast parser:        8.5816 s
+0.0.54:                 4.8031 s
+1.0.0:                  3.9896 s
 
 Corpus: Books, 3654 alignment pairs, source: en, target: fi, 10 alignments, preprocessing raw
-Exhaustive parser:
-0.3669 s
-Fast parser:
-0.0087 s
+<0.0.54:
+    Exhaustive parser:  0.3669 s
+    Fast parser:        0.0087 s
+0.0.54:                 0.0735 s
+1.0.0:                  0.0991 s
 
 Corpus: Books, 129305 alignment pairs, source: en, target: fr, 10 alignments, preprocessing raw
-Exhaustive parser:
-0.1134 s
-Fast parser:
-0.0102 s
+<0.0.54:
+    Exhaustive parser:  0.1134 s
+    Fast parser:        0.0102 s
+0.0.54:                 0.0819 s
+1.0.0:                  0.1026 s
 
 Corpus: Europarl, 1974717 alignment pairs, source: en, target: fi, all alignments 
-Exhaustive parser:
-1794.5676 s
-Fast parser:
-1943.8987 s
+<0.0.54:
+    Exhaustive parser:  1794.5676 s
+    Fast parser:        1943.8987 s
+0.0.54:                 1012.0687 s
+1.0.0:                  1061.5609 s
 
+Corpus: Europarl, 1974717 alignment pairs, source: en, target: fi, all alignments, preprocessing raw
+0.0.54:                 122.0512 s
+1.0.0:                  115.8344 s
+
+Corpus: Tatoeba, 383 alignment pairs, source: br, target: en, all alignments
+0.0.54:                 1069.0132 s
+1.0.0:                  104.7389 s
+
+Corpus: Tatoeba, 383 alignment pairs, source: br, target: en, all alignments, preprocessing raw
+0.0.54:                 439.6820 s
+1.0.0:                  11.3429 s
