@@ -1,10 +1,28 @@
 import os
+import re
 
 from .parse.alignment_parser import AlignmentParser
 from .parse.sentence_parser import SentenceParser, SentenceParserError
 from .util import file_open
 from .formatting import *
 from .opus_file_handler import OpusFileHandler
+
+def skip_regex_type(n, N):
+    "Select function to skip document names"
+
+    def get_re(doc_name):
+        return not re.search(n, doc_name)
+    def skip_re(doc_name):
+        return re.search(N, doc_name)
+    def nothing(doc_name):
+        return False
+
+    if n:
+        return get_re
+    if N:
+        return skip_re
+    return nothing
+
 
 class OpusRead:
 
@@ -20,7 +38,7 @@ class OpusRead:
             change_annotation_delimiter='|',
             src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
             write_ids=None, suppress_prompts=False, download_dir='.',
-            preserve_inline_tags=False, verbose=False):
+            preserve_inline_tags=False, n=None, N=None, verbose=False):
         """Read xces alignment files and xml sentence files and output in
         desired format.
 
@@ -62,6 +80,8 @@ class OpusRead:
         suppress_prompts -- Download necessary files without prompting "(y/n)"
         download_dir -- Directory where files will be downloaded (default .)
         preserve_inline_tags -- Preserve inline tags within sentences
+        n -- Get only documents that match the regex
+        N -- Skip all doucments that match the regex
         verbose -- Print progress messages
         """
 
@@ -147,6 +167,8 @@ class OpusRead:
         self.trg_annot = target_annotations
         self.annot_delimiter = change_annotation_delimiter
 
+        self.skip_doc = skip_regex_type(n, N)
+
         self.add_file_header = file_header_type(write_mode, write, source)
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
         self.add_doc_ending = doc_ending_type(write_mode, write)
@@ -193,6 +215,9 @@ class OpusRead:
 
             if not src_doc_name:
                 break
+
+            if self.skip_doc(src_doc_name):
+                continue
 
             if (self.write_mode != 'links' or
                     (self.write_mode == 'links' and self.check_lang)):

@@ -1931,6 +1931,33 @@ class TestOpusRead(unittest.TestCase):
                 '(trg)="s1">test_fi1 test_fi2\n'
                 '================================\n')
 
+    def test_get_documents_by_regex(self):
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+                root_directory=self.root_directory, n='19')
+        self.assertTrue('# en/1988.xml.gz' in var)
+        self.assertTrue('# en/1996.xml.gz' in var)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+                root_directory=self.root_directory, n='88')
+        self.assertTrue('# en/1988.xml.gz' in var)
+        self.assertTrue('# en/1996.xml.gz' not in var)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+                root_directory=self.root_directory, n='96')
+        self.assertTrue('# en/1988.xml.gz' not in var)
+        self.assertTrue('# en/1996.xml.gz' in var)
+
+    def test_skip_documents_by_regex(self):
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+                root_directory=self.root_directory, N='19')
+        self.assertTrue('# en/1988.xml.gz' not in var)
+        self.assertTrue('# en/1996.xml.gz' not in var)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+                root_directory=self.root_directory, N='88')
+        self.assertTrue('# en/1988.xml.gz' not in var)
+        self.assertTrue('# en/1996.xml.gz' in var)
+        var = pairPrinterToVariable(directory='RF', source='en', target='sv',
+                root_directory=self.root_directory, N='96')
+        self.assertTrue('# en/1988.xml.gz' in var)
+        self.assertTrue('# en/1996.xml.gz' not in var)
 
 if __name__ == '__main__':
     unittest.main()

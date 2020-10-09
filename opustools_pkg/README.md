@@ -28,7 +28,8 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [-ta attribute [attribute ...]] [-ca delimiter]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
-                 [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi] [-v]
+                 [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi] [-n regex]
+                 [-N regex] [-v]
 ```
 
 arguments:
@@ -108,6 +109,8 @@ arguments:
                     Set download directory (default=current directory)
 -pi, --preserve_inline_tags
                     Preserve inline tags within sentences
+-n regex              Get only documents that match the regex
+-N regex              Skip all documents that match the regex
 -v, --verbose       Print prorgess messages
 ```
 
