@@ -9,7 +9,7 @@ import json
 import tempfile
 
 from opustools import OpusRead
-from random import randint
+from random import randint, shuffle
 from xml.parsers.expat import ExpatError
 
 with urllib.request.urlopen('http://opus.nlpl.eu/opusapi/?corpora=True') as url:
