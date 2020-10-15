@@ -12,11 +12,15 @@ from opustools import OpusRead
 from random import randint, shuffle
 from xml.parsers.expat import ExpatError
 
-with urllib.request.urlopen('http://opus.nlpl.eu/opusapi/?corpora=True') as url:
-    data = json.loads(url.read().decode())
-    all_collections = data['corpora']
+collection_choices = ['ALL']
 
-collection_choices = ['ALL'] + all_collections
+try:
+    with urllib.request.urlopen('http://opus.nlpl.eu/opusapi/?corpora=True') as url:
+        data = json.loads(url.read().decode())
+        all_collections = data['corpora']
+        collection_choices += all_collections
+except urllib.error.URLError:
+    print('\nWARNING: Could not retrieve corpus list\n')
 
 parser = argparse.ArgumentParser(description='All aboard the OPUS Express! Create test/dev/train sets from OPUS data.')
 
@@ -111,7 +115,8 @@ for collection in collections:
             directory=collection,
             source=src_lang, target=tgt_lang,
             write_mode='moses', write=[tmp_src, tmp_trg], write_ids=tmp_ids,
-            preserve_inline_tags=args.preserve_inline_tags)
+            preserve_inline_tags=args.preserve_inline_tags,
+            leave_non_alignments_out=True)
 
     reader.printPairs() # Print data to temp files.
 

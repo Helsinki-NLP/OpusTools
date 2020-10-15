@@ -68,7 +68,7 @@ arguments:
 -pn, --print_file_names
                     Print file names when using moses format
 -rd path_to_dir, --root_directory path_to_dir
-                    Change root directory (default=/proj/nlpl/data/OPUS)
+                    Change root directory (default=/projappl/nlpl/data/OPUS)
 -af path_to_file, --alignment_file path_to_file
                     Use given alignment file
 -sz path_to_zip, --source_zip path_to_zip
