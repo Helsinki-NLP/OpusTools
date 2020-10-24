@@ -294,12 +294,12 @@ and then run:
 ```
 usage: opus_express [-h] [-f] -s lang_id -t lang_id
                     [-c [coll_name [coll_name ...]]]
-                    [--root-dir /path/to/OPUS] [--test-override /path/to/file]
-                    [--test-quota num_sents] [--dev-quota num_sents]
-                    [--doc-bounds] [--quality-aware]
+                    [--root-dir /path/to/OPUS] [--download-dir /path/to/dir]
+                    [--test-override /path/to/file] [--test-quota num_sents]
+                    [--dev-quota num_sents] [--doc-bounds] [--quality-aware]
                     [--overlap-threshold min_pct] [--preserve-inline-tags]
                     [--shuffle] [--test-set filename] [--dev-set filename]
-                    [--train-set filename]
+                    [--train-set filename] [-q]
 ```
 
 arguments:
@@ -330,6 +330,9 @@ arguments:
 --root-dir /path/to/OPUS
                       Root directory for OPUS
                       (default:`/projappl/nlpl/data/OPUS')
+--download-dir /path/to/dir
+                      Directory for downloaded OPUS corpus files
+                      (default:`.')
 --test-override /path/to/file
                       path to file containing resource IDs to reserve for
                       the test set (default: None)
@@ -355,6 +358,8 @@ arguments:
                       `dev')
 --train-set filename  filename stub for output training set (default:
                       `train')
+-q                    Download necessary files without prompting "(y/n)"
+                      (default: False)
 ```
 
 ### Description
