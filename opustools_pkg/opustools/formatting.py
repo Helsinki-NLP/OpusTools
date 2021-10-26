@@ -1,5 +1,6 @@
 import html
 
+
 def file_header_type(wmode, write, source_lang):
     """Select function for adding file header"""
 
@@ -189,12 +190,18 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
     def normal_print(*args):
         print(args[0]+args[1], end='')
     def moses_write(*args):
-        args[2].write(args[0][:-1]+moses_del+args[1])
+        src = args[0].rstrip('\n').replace('\n', ' ')
+        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        args[2].write(src + moses_del + tgt + '\n')
     def moses_write_2(*args):
-        args[3].write(args[0])
-        args[4].write(args[1])
+        src = args[0].rstrip('\n').replace('\n', ' ')
+        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        args[3].write(src + '\n')
+        args[4].write(tgt + '\n')
     def moses_print(*args):
-        print(args[0][:-1]+moses_del+args[1], end='')
+        src = args[0].rstrip('\n').replace('\n', ' ')
+        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        print(src + moses_del + tgt)
     def links_write(*args):
         str_link = '<link {} />\n'.format(' '.join(
             ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
@@ -213,14 +220,20 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
         print(args[0]+args[1], end='')
         write_id_line(args[5], args[6], args[7], args[8])
     def moses_write_id(*args):
-        args[2].write(args[0][:-1]+'\t'+args[1])
+        src = args[0].rstrip('\n').replace('\n', ' ')
+        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        args[2].write(src + moses_del + tgt + '\n')
         write_id_line(args[5], args[6], args[7], args[8])
     def moses_write_2_id(*args):
-        args[3].write(args[0])
-        args[4].write(args[1])
+        src = args[0].rstrip('\n').replace('\n', ' ')
+        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        args[3].write(src + '\n')
+        args[4].write(tgt + '\n')
         write_id_line(args[5], args[6], args[7], args[8])
     def moses_print_id(*args):
-        print(args[0][:-1]+'\t'+args[1], end='')
+        src = args[0].rstrip('\n').replace('\n', ' ')
+        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        print(src + moses_del + tgt)
         write_id_line(args[5], args[6], args[7], args[8])
     def links_write_id(*args):
         str_link = '<link {} />\n'.format(' '.join(
