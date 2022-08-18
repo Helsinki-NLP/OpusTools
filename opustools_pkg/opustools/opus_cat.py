@@ -113,11 +113,11 @@ class OpusCat:
         except FileNotFoundError:
             print('\nRequested file not found. The following files are '
                 'availble for downloading:\n')
-            arguments = ['-d', self.directory, '-s', self.language, '-t', ' ',
+            arguments = ['-d', self.directory, '-s', self.language, '-t', '',
                 '-p', 'xml', '-l', '-r', self.release, '-dl',
                 self.download_dir]
             arguments={'directory': self.directory, 'source': self.language,
-                'target': ' ', 'preprocess': 'xml', 'list_resources': True,
+                'target': '', 'preprocess': 'xml', 'list_resources': True,
                 'release': self.release, 'download_dir': self.download_dir}
             og = OpusGet(**arguments)
             og.get_files()

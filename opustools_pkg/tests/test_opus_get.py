@@ -241,7 +241,7 @@ class TestOpusGet(unittest.TestCase):
         files = OpusGet(directory='RF', release='v1', preprocess='xml',
             list_resources=True).get_files()
         sys.stdout = old_stdout
-        self.assertEqual(len(printout.getvalue().split('\n')), 18)
+        self.assertEqual(len(printout.getvalue().split('\n')), 23)
 
 if __name__ == '__main__':
     unittest.main()
