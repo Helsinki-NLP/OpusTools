@@ -1,4 +1,5 @@
 import os
+import shutil
 import zipfile
 import argparse
 import cgi
@@ -141,9 +142,9 @@ class OpusLangid:
                     sparser.addIds(infile, outfile)
 
         if self.target_file_path:
-            os.rename(tempname[1], self.target_file_path)
+            shutil.move(tempname[1], self.target_file_path)
         else:
             os.remove(self.file_path)
-            os.rename(tempname[1], self.file_path)
+            shutil.move(tempname[1], self.file_path)
 
 
