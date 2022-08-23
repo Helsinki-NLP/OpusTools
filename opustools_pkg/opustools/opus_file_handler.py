@@ -71,17 +71,8 @@ class OpusFileHandler:
         return alignment
 
     def open_specific_zips(self, src_zip_name, trg_zip_name):
-        if self.verbose:
-            print('Opening zip archive "{}" ... '.format(src_zip_name),
-                    end='')
         src_zip = zipfile.ZipFile(src_zip_name, 'r')
-        if self.verbose:
-            print('Done')
-            print('Opening zip archive "{}" ... '.format(trg_zip_name),
-                    end='')
         trg_zip = zipfile.ZipFile(trg_zip_name, 'r')
-        if self.verbose:
-            print('Done')
         return src_zip, trg_zip
 
     def open_zipfiles(self):
@@ -127,9 +118,6 @@ class OpusFileHandler:
         #In OPUS, directory and preprocessing information need to be added and
         #the ".gz" ending needs to be removed.
         opus_doc_name = self.directory+'/'+self.preprocess+'/'+doc_name[:-3]
-
-        if self.verbose: print('Reading {}_file "{}"'.format(
-            direction, opus_doc_name))
 
         try:
             if direction == 'src':

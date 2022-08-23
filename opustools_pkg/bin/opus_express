@@ -120,6 +120,7 @@ for collection in collections:
             write_mode='moses', write=[tmp_src, tmp_trg], write_ids=tmp_ids,
             preserve_inline_tags=args.preserve_inline_tags,
             leave_non_alignments_out=True,
+            verbose=True,
             suppress_prompts=args.q)
 
     reader.printPairs() # Print data to temp files.

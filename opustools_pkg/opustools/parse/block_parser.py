@@ -94,12 +94,15 @@ class BlockParser:
         Read lines until one or more end tags are found on a single line,
         and return the block trees corresponding to those end tags.
         """
+        slen = 0
         for line in self.document:
+            slen += len(line)
             self.parse_line(line)
             if len(self.completeBlocks) > 0:
                 ret_blocks = self.completeBlocks
                 self.completeBlocks = []
-                return ret_blocks
+                return ret_blocks, slen
+        return None, None
 
     @staticmethod
     def tag_in_parents(tag, block):

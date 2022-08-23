@@ -111,7 +111,7 @@ arguments:
                     Preserve inline tags within sentences
 -n regex              Get only documents that match the regex
 -N regex              Skip all documents that match the regex
--v, --verbose       Print prorgess messages
+-v, --verbose       Print progress messages
 ```
 
 ### Description

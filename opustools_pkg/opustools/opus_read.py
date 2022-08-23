@@ -209,9 +209,13 @@ class OpusRead:
 
         total = 0
         stop = False
+        cur_pos = 0
+
         while True:
-            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name = \
-                self.alignmentParser.collect_links()
+            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, progress, cur_pos = \
+                self.alignmentParser.collect_links(cur_pos)
+
+            print(progress)
 
             if not src_doc_name:
                 break
@@ -231,11 +235,13 @@ class OpusRead:
                 try:
                     src_parser = SentenceParser(src_doc,
                             preprocessing=self.preprocess, anno_attrs=self.src_annot,
-                            preserve=self.preserve, delimiter=self.annot_delimiter)
+                            preserve=self.preserve, delimiter=self.annot_delimiter,
+                            verbose=self.verbose)
                     src_parser.store_sentences(src_set)
                     trg_parser = SentenceParser(trg_doc,
                             preprocessing=self.preprocess, anno_attrs=self.trg_annot,
-                            preserve=self.preserve, delimiter=self.annot_delimiter)
+                            preserve=self.preserve, delimiter=self.annot_delimiter,
+                            verbose=self.verbose)
                     trg_parser.store_sentences(trg_set)
                 except SentenceParserError as e:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.')
@@ -280,9 +286,4 @@ class OpusRead:
             self.id_file.close()
 
         self.of_handler.close_zipfiles()
-
-        if self.verbose:
-            print('Done')
-
-
 

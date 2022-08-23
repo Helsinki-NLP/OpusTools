@@ -52,6 +52,12 @@ class AlignmentParser:
             attr=None, thres=None, leave_non_alignments_out=False):
         """Parse xces alignment files and output sentence ids."""
 
+        self.alignment_file = alignment_file
+
+        self.alignment_file.seek(0, 2)
+        self.af_size = self.alignment_file.tell()
+        self.alignment_file.seek(0)
+
         self.bp = BlockParser(alignment_file)
         self.filters = []
 
@@ -87,15 +93,16 @@ class AlignmentParser:
 
         return attrs, src_id_set, trg_id_set
 
-    def collect_links(self):
+    def collect_links(self, cur_pos=0):
         """Collect links for a linkGrp"""
 
         attrs = []
         src_id_set, trg_id_set = set(), set()
         src_doc, trg_doc = None, None
 
+        progress = "test"
         try:
-            blocks = self.bp.get_complete_blocks()
+            blocks, slen = self.bp.get_complete_blocks()
             while blocks:
                 for block in blocks:
                     if block.name == 'link':
@@ -103,11 +110,15 @@ class AlignmentParser:
                     elif block.name == 'linkGrp':
                         src_doc = block.attributes['fromDoc']
                         trg_doc = block.attributes['toDoc']
-                        return attrs, src_id_set, trg_id_set, src_doc, trg_doc
-                blocks = self.bp.get_complete_blocks()
+                        cur_pos += slen
+                        print(slen, cur_pos)
+                        progress = str(round(cur_pos/self.af_size*100, 2))
+                        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, progress, cur_pos
+                blocks, slen = self.bp.get_complete_blocks()
         except BlockParserError as e:
             raise AlignmentParserError(
                 'Error while parsing alignment file: {error}'.format(error=e.args[0]))
 
-        return attrs, src_id_set, trg_id_set, src_doc, trg_doc
+        progress = str(round(self.alignment_file.tell()/self.af_size*100, 2))
+        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, progress, cur_pos
 
