@@ -137,12 +137,12 @@ class TestBlockParser(unittest.TestCase):
 
     def test_get_complete_blocks(self):
         bp = BlockParser(file_open(self.xml_path), data_tag='stamp')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(0)
         self.assertEqual(blocks[0].name, 'stamp')
         self.assertEqual(blocks[0].data, '123')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(blocks[0].name, 'child1')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(blocks[0].name, 'stamp')
         self.assertEqual(blocks[0].data, '321')
         self.assertEqual(blocks[1].name, 'child2')
@@ -150,22 +150,23 @@ class TestBlockParser(unittest.TestCase):
 
     def test_parse_document(self):
         bp = BlockParser(file_open(self.xml_path))
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(0)
         while blocks:
-            blocks = bp.get_complete_blocks()
+            blocks, curpos = bp.get_complete_blocks(curpos)
         bp.close_document()
 
     def test_parsing_alignment(self):
         bp = BlockParser(file_open(self.align_path))
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(0)
         self.assertEqual(blocks[0].parent.name, 'linkGrp')
         self.assertEqual(blocks[0].attributes['xtargets'], 's1;s1')
         bp.close_document()
 
     def test_parsing_books(self):
         bp = BlockParser(file_open(self.books_path), data_tag='w')
+        curpos = 0
         for i in range(22):
-            blocks = bp.get_complete_blocks()
+            blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(blocks[0].name, 'w')
         self.assertEqual(blocks[0].data, 'Project')
         self.assertEqual(blocks[0].attributes['tree'], 'NP')
@@ -176,8 +177,9 @@ class TestBlockParser(unittest.TestCase):
 
     def test_parsing_books_raw(self):
         bp = BlockParser(file_open(self.books_raw_path), data_tag='s')
+        curpos = 0
         for i in range(5):
-            blocks = bp.get_complete_blocks()
+            blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(blocks[0].name, 's')
         self.assertEqual(blocks[0].attributes['id'], 's3')
         self.assertEqual(blocks[0].data, 'Victor Hugo')
@@ -185,24 +187,24 @@ class TestBlockParser(unittest.TestCase):
 
     def test_parsing_os(self):
         bp = BlockParser(file_open(self.os_path), data_tag='w')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(0)
         self.assertEqual(blocks[0].name, 'time')
         self.assertEqual(blocks[0].parent.name, 's')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(blocks[0].name, 'w')
         self.assertEqual(blocks[0].parent.name, 's')
         for i in range(8):
-            blocks = bp.get_complete_blocks()
+            blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(blocks[0].name, 'w')
         self.assertEqual(blocks[0].parent.attributes['id'], '2')
         bp.close_document()
 
     def test_parsing_os_raw(self):
         bp = BlockParser(file_open(self.os_raw_path), data_tag='s')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(0)
         self.assertEqual(blocks[0].name, 'time')
         self.assertEqual(blocks[0].parent.name, 's')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(blocks[0].name, 's')
         self.assertEqual(blocks[0].data.strip(), '- How\'d you score that?')
         self.assertEqual(blocks[0].parent.name, 'document')
@@ -210,17 +212,18 @@ class TestBlockParser(unittest.TestCase):
 
     def test_tag_in_parents(self):
         bp = BlockParser(file_open(self.books_path))
+        curpos = 0
         for i in range(22):
-            blocks = bp.get_complete_blocks()
+            blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertTrue(bp.tag_in_parents('chunk', blocks[0]))
         self.assertTrue(bp.tag_in_parents('s', blocks[0]))
         bp.close_document()
 
     def test_get_raw_tag(self):
         bp = BlockParser(file_open(self.os_path), data_tag='w')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(0)
         self.assertEqual(blocks[0].get_raw_tag(),
                 '<time id="T1S" value="00:00:05,897" />')
-        blocks = bp.get_complete_blocks()
+        blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(blocks[0].get_raw_tag(), '<w id="1.1">-</w>')
         bp.close_document()

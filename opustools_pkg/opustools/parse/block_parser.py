@@ -89,19 +89,21 @@ class BlockParser:
     def close_document(self):
         self.document.close()
 
-    def get_complete_blocks(self):
+    def get_complete_blocks(self, cur_pos):
         """
         Read lines until one or more end tags are found on a single line,
         and return the block trees corresponding to those end tags.
+
+        cur_pos -- Current position in file
         """
-        slen = 0
+
         for line in self.document:
-            slen += len(line)
+            cur_pos += len(line)
             self.parse_line(line)
             if len(self.completeBlocks) > 0:
                 ret_blocks = self.completeBlocks
                 self.completeBlocks = []
-                return ret_blocks, slen
+                return ret_blocks, cur_pos
         return None, None
 
     @staticmethod

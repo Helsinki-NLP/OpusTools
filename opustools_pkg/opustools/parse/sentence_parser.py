@@ -144,21 +144,25 @@ class SentenceParser:
         sentence = []
         sid = None
 
+        #Get file size
         self.document.seek(0,2)
         doc_size = self.document.tell()
         self.document.seek(0)
+        slen = 0
 
         try:
-            blocks, _ = bp.get_complete_blocks()
+            blocks, _ = bp.get_complete_blocks(slen)
             while blocks:
                 for block in blocks:
                     sentence = self.parse_block(
                             bp, block, sentence, self.sentences, id_set)
                     if self.verbose:
-                        print("\rReading sentence_file {} ... {}%".format(
+                        #Empty previous line
+                        #print("\x1b[2K", end="")
+                        print("\x1b[2KReading sentence file \"{}\" ... {}%".format(
                             self.document.name,
-                            str(round(self.document.tell()/doc_size*100, 2))), end="", flush=True)
-                blocks, _ = bp.get_complete_blocks()
+                            str(round(self.document.tell()/doc_size*100, 2))), end="\r")
+                blocks, _ = bp.get_complete_blocks(slen)
             bp.close_document()
             if self.verbose: print("")
         except BlockParserError as e:

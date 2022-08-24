@@ -128,15 +128,17 @@ class TestSentenceParser(unittest.TestCase):
     def test_get_annotations(self):
         bp = BlockParser(file_open(self.books_path))
         sp = SentenceParser(file_open(self.books_path))
+        curpos = 0
         for i in range(19):
-            blocks = bp.get_complete_blocks()
+            blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(sp.get_annotations(blocks[0]), '|NN|w1.1|source|NN|NN')
         bp.close_document()
         sp.document.close()
         bp = BlockParser(file_open(self.books_path))
         sp = SentenceParser(file_open(self.books_path), anno_attrs=['pos'])
+        curpos = 0
         for i in range(19):
-            blocks = bp.get_complete_blocks()
+            blocks, curpos = bp.get_complete_blocks(curpos)
         self.assertEqual(sp.get_annotations(blocks[0]), '|NN')
         bp.close_document()
         sp.document.close()

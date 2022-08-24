@@ -100,9 +100,10 @@ class AlignmentParser:
         src_id_set, trg_id_set = set(), set()
         src_doc, trg_doc = None, None
 
-        progress = "test"
+        slen = 0
+
         try:
-            blocks, slen = self.bp.get_complete_blocks()
+            blocks, slen = self.bp.get_complete_blocks(slen)
             while blocks:
                 for block in blocks:
                     if block.name == 'link':
@@ -111,10 +112,9 @@ class AlignmentParser:
                         src_doc = block.attributes['fromDoc']
                         trg_doc = block.attributes['toDoc']
                         cur_pos += slen
-                        print(slen, cur_pos)
                         progress = str(round(cur_pos/self.af_size*100, 2))
                         return attrs, src_id_set, trg_id_set, src_doc, trg_doc, progress, cur_pos
-                blocks, slen = self.bp.get_complete_blocks()
+                blocks, slen = self.bp.get_complete_blocks(slen)
         except BlockParserError as e:
             raise AlignmentParserError(
                 'Error while parsing alignment file: {error}'.format(error=e.args[0]))

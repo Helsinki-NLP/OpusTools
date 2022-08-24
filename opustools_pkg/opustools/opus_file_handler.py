@@ -8,14 +8,13 @@ from .opus_get import OpusGet
 class OpusFileHandler:
 
     def __init__(self, download_dir, source_zip, target_zip, directory,
-            release, preprocess, fromto, verbose, suppress_prompts):
+            release, preprocess, fromto, suppress_prompts):
 
         self.directory = directory
         self.release = release
         self.preprocess = preprocess
         self.fromto = fromto
 
-        self.verbose = verbose
         self.suppress_prompts = suppress_prompts
 
         self.download_dir = download_dir
@@ -47,20 +46,16 @@ class OpusFileHandler:
         local_align_name = os.path.join(self.download_dir,
                 self.directory+'_'+ self.release+'_xml_'+self.fromto[0]+'-'+
                 self.fromto[1]+'.xml.gz')
-        if self.verbose: print('Reading alignment file ', end='')
 
         if os.path.isfile(align_name):
-            if self.verbose: print('"{}"'.format(align_name))
             alignment = file_open(align_name, mode='r', encoding='utf-8')
         elif os.path.isfile(local_align_name):
-            if self.verbose: print('"{}"'.format(local_align_name))
             alignment = file_open(local_align_name, mode='r', encoding='utf-8')
         else:
             print('No alignment file "{default}" or "{downloaded}" found'.format(
                 default=align_name, downloaded=local_align_name))
             self.download_files()
             if os.path.isfile(local_align_name):
-                if self.verbose: print('"{}"'.format(local_align_name))
                 alignment = file_open(
                     local_align_name, mode='r', encoding='utf-8')
             else:

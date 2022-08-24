@@ -190,7 +190,7 @@ class OpusRead:
 
         self.of_handler = OpusFileHandler(
                 download_dir, source_zip, target_zip, directory, release,
-                preprocess, self.fromto, self.verbose, suppress_prompts)
+                preprocess, self.fromto, suppress_prompts)
 
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
         self.alignmentParser = AlignmentParser(self.alignment,
@@ -211,14 +211,22 @@ class OpusRead:
         stop = False
         cur_pos = 0
 
+        if self.verbose:
+            print("\n\n")
+
         while True:
             link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, progress, cur_pos = \
                 self.alignmentParser.collect_links(cur_pos)
 
-            print(progress)
-
             if not src_doc_name:
+                if self.verbose:
+                    print("\033[F\033[F\033[FReading alignment file \"{}\" ... 100.0%\n\n".format(
+                        self.alignment.name))
                 break
+
+            if self.verbose:
+                print("\033[F\033[F\033[FReading alignment file \"{}\" ... {}%".format(
+                    self.alignment.name, progress))
 
             if self.skip_doc(src_doc_name):
                 continue
