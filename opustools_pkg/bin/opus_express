@@ -102,8 +102,9 @@ train, train_size = [], 0
 for collection in collections:
   archive_path = args.root_dir + '/%s/latest/xml/%s-%s.xml.gz' % (collection, src_lang, tgt_lang)
 
-  if not os.path.isfile(archive_path):
-    print('Skipping %s (no %s-%s)...' % (collection, src_lang, tgt_lang))
+# Misleading message; the below OpusRead command tries to download the data anyway
+#  if not os.path.isfile(archive_path):
+#    print('Skipping %s (no %s-%s)...' % (collection, src_lang, tgt_lang))
 
   print('Checking out %s...' % collection)
 
