@@ -93,6 +93,8 @@ class OpusRead:
         self.tgt_range = tgt_range
 
         self.verbose = verbose
+        if write:
+            self.verbose = True
 
         if self.switch_langs:
             temp = src_range
@@ -220,13 +222,20 @@ class OpusRead:
 
             if not src_doc_name:
                 if self.verbose:
-                    print("\033[F\033[F\033[FReading alignment file \"{}\" ... 100.0%\n\n".format(
-                        self.alignment.name))
+                    message = "Reading alignment file \"{}\" ... 100.0%".format(self.alignment.name)
+                    if self.write:
+                        # \033[F = go to previous line
+                        print("\033[F\033[F\033[F{}\n\n".format(message))
+                    else:
+                        print(message)
                 break
 
             if self.verbose:
-                print("\033[F\033[F\033[FReading alignment file \"{}\" ... {}%".format(
-                    self.alignment.name, progress))
+                message = "Reading alignment file \"{}\" ... {}%".format(self.alignment.name, progress)
+                if self.write:
+                    print("\033[F\033[F\033[F{}".format(message))
+                else:
+                    print(message)
 
             if self.skip_doc(src_doc_name):
                 continue

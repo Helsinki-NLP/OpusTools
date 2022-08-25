@@ -157,11 +157,12 @@ class SentenceParser:
                     sentence = self.parse_block(
                             bp, block, sentence, self.sentences, id_set)
                     if self.verbose:
-                        #Empty previous line
-                        #print("\x1b[2K", end="")
-                        print("\x1b[2KReading sentence file \"{}\" ... {}%".format(
-                            self.document.name,
-                            str(round(self.document.tell()/doc_size*100, 2))), end="\r")
+                        curpos = self.document.tell()
+                        if curpos%10000 == 0 or curpos == doc_size:
+                            # \x1b[2K = erase current line
+                            print("\x1b[2KReading sentence file \"{}\" ... {}%".format(
+                                self.document.name,
+                                str(round(self.document.tell()/doc_size*100, 2))), end="\r")
                 blocks, _ = bp.get_complete_blocks(slen)
             bp.close_document()
             if self.verbose: print("")
