@@ -11,7 +11,8 @@ parser.add_argument('-d', '--directory', help='Corpus name')
 parser.add_argument('-r', '--release', help='Release', default='latest')
 parser.add_argument('-p', '--preprocess',
     help='Preprocess type', default='xml',
-    choices=['raw', 'xml', 'parsed'])
+    choices=['raw', 'xml', 'parsed', 'mono', 'moses', 'tmx', 'truecaser',
+        'ud', 'freq', 'smt', 'dic'])
 parser.add_argument('-l', '--list_resources', help='List resources',
     action='store_true')
 parser.add_argument('-dl', '--download_dir',
