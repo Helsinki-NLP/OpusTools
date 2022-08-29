@@ -197,7 +197,7 @@ class OpusRead:
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
         self.alignmentParser = AlignmentParser(self.alignment,
                 (src_range, tgt_range), attribute, threshold,
-                leave_non_alignments_out)
+                leave_non_alignments_out, verbose)
 
     def printPairs(self):
 
@@ -213,29 +213,13 @@ class OpusRead:
         stop = False
         cur_pos = 0
 
-        if self.verbose:
-            print("\n\n")
-
         while True:
-            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, progress, cur_pos = \
+            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, cur_pos = \
                 self.alignmentParser.collect_links(cur_pos)
+            if self.verbose: print("")
 
             if not src_doc_name:
-                if self.verbose:
-                    message = "Reading alignment file \"{}\" ... 100.0%".format(self.alignment.name)
-                    if self.write:
-                        # \033[F = go to previous line
-                        print("\033[F\033[F\033[F{}\n\n".format(message))
-                    else:
-                        print(message)
                 break
-
-            if self.verbose:
-                message = "Reading alignment file \"{}\" ... {}%".format(self.alignment.name, progress)
-                if self.write:
-                    print("\033[F\033[F\033[F{}".format(message))
-                else:
-                    print(message)
 
             if self.skip_doc(src_doc_name):
                 continue
@@ -264,6 +248,9 @@ class OpusRead:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.')
                     continue
 
+            if self.verbose and self.write:
+                    print("\033[F\033[F\033[F", end="")
+
             self.add_doc_names(src_doc_name, trg_doc_name,
                     self.resultfile, self.mosessrc, self.mosestrg)
 
@@ -287,6 +274,9 @@ class OpusRead:
 
             if stop:
                 break
+
+        if self.verbose and self.write:
+            print("\n")
 
         self.add_file_ending(self.resultfile)
 

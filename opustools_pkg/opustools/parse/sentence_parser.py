@@ -140,7 +140,7 @@ class SentenceParser:
 
     def store_sentences(self, id_set):
         """Read document and store sentences in a dictionary."""
-        bp = BlockParser(self.document, data_tag=self.data_tag)
+        bp = BlockParser(self.document, data_tag=self.data_tag, verbose=self.verbose)
         sentence = []
         sid = None
 
@@ -148,22 +148,15 @@ class SentenceParser:
         self.document.seek(0,2)
         doc_size = self.document.tell()
         self.document.seek(0)
-        slen = 0
+        cur_pos = 0
 
         try:
-            blocks, _ = bp.get_complete_blocks(slen)
+            blocks, cur_pos = bp.get_complete_blocks(cur_pos)
             while blocks:
                 for block in blocks:
                     sentence = self.parse_block(
                             bp, block, sentence, self.sentences, id_set)
-                    if self.verbose:
-                        curpos = self.document.tell()
-                        if curpos%10000 == 0 or curpos == doc_size:
-                            # \x1b[2K = erase current line
-                            print("\x1b[2KReading sentence file \"{}\" ... {}%".format(
-                                self.document.name,
-                                str(round(self.document.tell()/doc_size*100, 2))), end="\r")
-                blocks, _ = bp.get_complete_blocks(slen)
+                blocks, cur_pos= bp.get_complete_blocks(cur_pos)
             bp.close_document()
             if self.verbose: print("")
         except BlockParserError as e:

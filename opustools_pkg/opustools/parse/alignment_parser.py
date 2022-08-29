@@ -49,7 +49,7 @@ def non_alignment_filter(*args):
 class AlignmentParser:
 
     def __init__(self, alignment_file, src_trg_range=('all', 'all'),
-            attr=None, thres=None, leave_non_alignments_out=False):
+            attr=None, thres=None, leave_non_alignments_out=False, verbose=False):
         """Parse xces alignment files and output sentence ids."""
 
         self.alignment_file = alignment_file
@@ -58,7 +58,7 @@ class AlignmentParser:
         self.af_size = self.alignment_file.tell()
         self.alignment_file.seek(0)
 
-        self.bp = BlockParser(alignment_file)
+        self.bp = BlockParser(alignment_file, verbose=verbose)
         self.filters = []
 
         src_range, trg_range = src_trg_range
@@ -100,10 +100,8 @@ class AlignmentParser:
         src_id_set, trg_id_set = set(), set()
         src_doc, trg_doc = None, None
 
-        slen = 0
-
         try:
-            blocks, slen = self.bp.get_complete_blocks(slen)
+            blocks, cur_pos = self.bp.get_complete_blocks(cur_pos)
             while blocks:
                 for block in blocks:
                     if block.name == 'link':
@@ -111,14 +109,11 @@ class AlignmentParser:
                     elif block.name == 'linkGrp':
                         src_doc = block.attributes['fromDoc']
                         trg_doc = block.attributes['toDoc']
-                        cur_pos += slen
-                        progress = str(round(cur_pos/self.af_size*100, 2))
-                        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, progress, cur_pos
-                blocks, slen = self.bp.get_complete_blocks(slen)
+                        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, cur_pos
+                blocks, cur_pos = self.bp.get_complete_blocks(cur_pos)
         except BlockParserError as e:
             raise AlignmentParserError(
                 'Error while parsing alignment file: {error}'.format(error=e.args[0]))
 
-        progress = str(round(self.alignment_file.tell()/self.af_size*100, 2))
-        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, progress, cur_pos
+        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, cur_pos
 

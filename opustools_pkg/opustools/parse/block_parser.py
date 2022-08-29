@@ -41,19 +41,26 @@ class Block:
 
 class BlockParser:
 
-    def __init__(self, document, data_tag=None):
+    def __init__(self, document, data_tag=None, verbose=False):
         """Parse an xml document line by line removing each element
         from memory as soon as its end tag is found.
 
         Positional arguments:
         document -- Xml document to be parsed
         data_tag -- Tag for which char data is updated
+        verbose -- Print progress messages
         """
+
+        self.verbose = verbose
 
         self.document = document
         self.data_tag = data_tag
         self.block = Block(name='root')
         self.completeBlocks = []
+
+        self.document.seek(0, 2)
+        self.doc_size = self.document.tell()
+        self.document.seek(0)
 
         def start_element(name, attrs):
             """Update current block"""
@@ -97,8 +104,15 @@ class BlockParser:
         cur_pos -- Current position in file
         """
 
+        temp_message = ""
+
         for line in self.document:
             cur_pos += len(line)
+            if self.verbose:
+                if cur_pos%100 == 0 or cur_pos == self.doc_size:
+                    progress = str(round(cur_pos/self.doc_size*100, 2))
+                    print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
+                        progress), end="\r")
             self.parse_line(line)
             if len(self.completeBlocks) > 0:
                 ret_blocks = self.completeBlocks

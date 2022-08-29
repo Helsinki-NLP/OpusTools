@@ -329,9 +329,9 @@ class TestOpusRead(unittest.TestCase):
                 self.tempdir1, 'test_files', 'test_result')],
             root_directory=self.root_directory, verbose=True)
         alignment=os.path.join(self.root_directory, 'RF', 'latest', 'xml', 'en-sv.xml.gz')
-        self.assertTrue('Reading alignment file "{}'.format(alignment) in var)
-        self.assertTrue('Reading sentence file "RF/xml/en/1988.xml"' in var)
-        self.assertTrue('Reading sentence file "RF/xml/sv/1988.xml"' in var)
+        self.assertTrue('Parsing file "{}'.format(alignment) in var)
+        self.assertTrue('Parsing file "RF/xml/en/1988.xml"' in var)
+        self.assertTrue('Parsing file "RF/xml/sv/1988.xml"' in var)
 
     def test_normal_xml_print(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
@@ -350,9 +350,9 @@ class TestOpusRead(unittest.TestCase):
     def test_normal_xml_print_verbose(self):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, root_directory=self.root_directory, verbose=True)
-        self.assertTrue('Reading alignment file "'+self.root_directory+'/RF/latest/xml/en-sv.xml.gz"' in var)
-        self.assertTrue('Reading sentence file "RF/xml/en/1988.xml"' in var)
-        self.assertTrue('Reading sentence file "RF/xml/sv/1988.xml"' in var)
+        self.assertTrue('Parsing file "'+self.root_directory+'/RF/latest/xml/en-sv.xml.gz"' in var)
+        self.assertTrue('Parsing file "RF/xml/en/1988.xml"' in var)
+        self.assertTrue('Parsing file "RF/xml/sv/1988.xml"' in var)
 
     def test_normal_raw_write(self):
         OpusRead(directory='RF', source='en', target='sv', maximum=1,
@@ -577,9 +577,9 @@ class TestOpusRead(unittest.TestCase):
         var = pairPrinterToVariable(directory='RF', source='en', target='sv',
             maximum=1, write_mode='tmx', root_directory=self.root_directory,
             verbose=True)
-        self.assertTrue('Reading alignment file "'+self.root_directory+'/RF/latest/xml/en-sv.xml.gz"' in var)
-        self.assertTrue('Reading sentence file "RF/xml/en/1988.xml"' in var)
-        self.assertTrue('Reading sentence file "RF/xml/sv/1988.xml"' in var)
+        self.assertTrue('Parsing file "'+self.root_directory+'/RF/latest/xml/en-sv.xml.gz"' in var)
+        self.assertTrue('Parsing file "RF/xml/en/1988.xml"' in var)
+        self.assertTrue('Parsing file "RF/xml/sv/1988.xml"' in var)
 
     def test_tmx_xml_print_unalphabetical(self):
         var = pairPrinterToVariable(directory='RF', source='sv', target='en',
