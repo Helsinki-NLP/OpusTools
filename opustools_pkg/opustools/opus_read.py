@@ -197,7 +197,7 @@ class OpusRead:
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
         self.alignmentParser = AlignmentParser(self.alignment,
                 (src_range, tgt_range), attribute, threshold,
-                leave_non_alignments_out, verbose)
+                leave_non_alignments_out)
 
     def printPairs(self):
 
@@ -215,7 +215,7 @@ class OpusRead:
 
         while True:
             link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, cur_pos = \
-                self.alignmentParser.collect_links(cur_pos)
+                self.alignmentParser.collect_links(cur_pos, self.verbose)
             if self.verbose: print("")
 
             if not src_doc_name:
@@ -236,14 +236,12 @@ class OpusRead:
                 try:
                     src_parser = SentenceParser(src_doc,
                             preprocessing=self.preprocess, anno_attrs=self.src_annot,
-                            preserve=self.preserve, delimiter=self.annot_delimiter,
-                            verbose=self.verbose)
-                    src_parser.store_sentences(src_set)
+                            preserve=self.preserve, delimiter=self.annot_delimiter)
+                    src_parser.store_sentences(src_set, self.verbose)
                     trg_parser = SentenceParser(trg_doc,
                             preprocessing=self.preprocess, anno_attrs=self.trg_annot,
-                            preserve=self.preserve, delimiter=self.annot_delimiter,
-                            verbose=self.verbose)
-                    trg_parser.store_sentences(trg_set)
+                            preserve=self.preserve, delimiter=self.annot_delimiter)
+                    trg_parser.store_sentences(trg_set, self.verbose)
                 except SentenceParserError as e:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.')
                     continue

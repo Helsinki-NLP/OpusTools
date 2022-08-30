@@ -49,7 +49,7 @@ def non_alignment_filter(*args):
 class AlignmentParser:
 
     def __init__(self, alignment_file, src_trg_range=('all', 'all'),
-            attr=None, thres=None, leave_non_alignments_out=False, verbose=False):
+            attr=None, thres=None, leave_non_alignments_out=False):
         """Parse xces alignment files and output sentence ids."""
 
         self.alignment_file = alignment_file
@@ -58,7 +58,7 @@ class AlignmentParser:
         self.af_size = self.alignment_file.tell()
         self.alignment_file.seek(0)
 
-        self.bp = BlockParser(alignment_file, verbose=verbose)
+        self.bp = BlockParser(alignment_file)
         self.filters = []
 
         src_range, trg_range = src_trg_range
@@ -93,7 +93,7 @@ class AlignmentParser:
 
         return attrs, src_id_set, trg_id_set
 
-    def collect_links(self, cur_pos=0):
+    def collect_links(self, cur_pos=0, verbose=False):
         """Collect links for a linkGrp"""
 
         attrs = []
@@ -101,7 +101,7 @@ class AlignmentParser:
         src_doc, trg_doc = None, None
 
         try:
-            blocks, cur_pos = self.bp.get_complete_blocks(cur_pos)
+            blocks, cur_pos = self.bp.get_complete_blocks(cur_pos, verbose)
             while blocks:
                 for block in blocks:
                     if block.name == 'link':
@@ -110,7 +110,7 @@ class AlignmentParser:
                         src_doc = block.attributes['fromDoc']
                         trg_doc = block.attributes['toDoc']
                         return attrs, src_id_set, trg_id_set, src_doc, trg_doc, cur_pos
-                blocks, cur_pos = self.bp.get_complete_blocks(cur_pos)
+                blocks, cur_pos = self.bp.get_complete_blocks(cur_pos, verbose)
         except BlockParserError as e:
             raise AlignmentParserError(
                 'Error while parsing alignment file: {error}'.format(error=e.args[0]))

@@ -41,17 +41,14 @@ class Block:
 
 class BlockParser:
 
-    def __init__(self, document, data_tag=None, verbose=False):
+    def __init__(self, document, data_tag=None):
         """Parse an xml document line by line removing each element
         from memory as soon as its end tag is found.
 
         Positional arguments:
         document -- Xml document to be parsed
         data_tag -- Tag for which char data is updated
-        verbose -- Print progress messages
         """
-
-        self.verbose = verbose
 
         self.document = document
         self.data_tag = data_tag
@@ -96,27 +93,30 @@ class BlockParser:
     def close_document(self):
         self.document.close()
 
-    def get_complete_blocks(self, cur_pos):
+    def get_complete_blocks(self, cur_pos, verbose=False):
         """
         Read lines until one or more end tags are found on a single line,
         and return the block trees corresponding to those end tags.
 
         cur_pos -- Current position in file
+        verbose -- Print progress messages
         """
 
-        temp_message = ""
+        if verbose:
+            progress = str(round(cur_pos/self.doc_size*100, 2))
+            print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name, progress), end="\r")
 
         for line in self.document:
             cur_pos += len(line)
-            if self.verbose:
-                if cur_pos%100 == 0 or cur_pos == self.doc_size:
-                    progress = str(round(cur_pos/self.doc_size*100, 2))
-                    print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
-                        progress), end="\r")
             self.parse_line(line)
             if len(self.completeBlocks) > 0:
                 ret_blocks = self.completeBlocks
                 self.completeBlocks = []
+                if verbose:
+                    if cur_pos%10000 == 0 or cur_pos == self.doc_size:
+                        progress = str(round(cur_pos/self.doc_size*100, 2))
+                        print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
+                            progress), end="\r")
                 return ret_blocks, cur_pos
         return None, None
 

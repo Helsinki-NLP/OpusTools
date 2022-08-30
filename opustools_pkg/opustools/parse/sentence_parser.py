@@ -113,7 +113,7 @@ def parse_type(preprocess, preserve, get_annotations):
 class SentenceParser:
 
     def __init__(self, document, preprocessing=None, anno_attrs=['all_attrs'],
-            delimiter='|', preserve=None, verbose=False):
+            delimiter='|', preserve=None):
         """Parse xml sentence files that have sentence ids in any order.
 
         Arguments:
@@ -127,7 +127,6 @@ class SentenceParser:
         self.document = document
         self.delimiter = delimiter
         self.anno_attrs = anno_attrs
-        self.verbose = verbose
 
         self.parse_block = parse_type(preprocessing, preserve, self.get_annotations)
 
@@ -138,9 +137,9 @@ class SentenceParser:
         if preprocessing == 'raw':
             self.data_tag = 's'
 
-    def store_sentences(self, id_set):
+    def store_sentences(self, id_set, verbose=False):
         """Read document and store sentences in a dictionary."""
-        bp = BlockParser(self.document, data_tag=self.data_tag, verbose=self.verbose)
+        bp = BlockParser(self.document, data_tag=self.data_tag)
         sentence = []
         sid = None
 
@@ -151,14 +150,14 @@ class SentenceParser:
         cur_pos = 0
 
         try:
-            blocks, cur_pos = bp.get_complete_blocks(cur_pos)
+            blocks, cur_pos = bp.get_complete_blocks(cur_pos, verbose)
             while blocks:
                 for block in blocks:
                     sentence = self.parse_block(
                             bp, block, sentence, self.sentences, id_set)
-                blocks, cur_pos= bp.get_complete_blocks(cur_pos)
+                blocks, cur_pos= bp.get_complete_blocks(cur_pos, verbose)
             bp.close_document()
-            if self.verbose: print("")
+            if verbose: print("")
         except BlockParserError as e:
             raise SentenceParserError(
                 'Error while parsing sentence file: {error}'.format(error=e.args[0]))
