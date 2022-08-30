@@ -102,22 +102,21 @@ class BlockParser:
         verbose -- Print progress messages
         """
 
-        if verbose:
-            progress = str(round(cur_pos/self.doc_size*100, 2))
-            print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name, progress), end="\r")
-
         for line in self.document:
+            if verbose:
+                if cur_pos%10000 == 0 or cur_pos == self.doc_size:
+                    progress = str(round(cur_pos/self.doc_size*100, 2))
+                    print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
+                        progress), end="\r")
             cur_pos += len(line)
             self.parse_line(line)
             if len(self.completeBlocks) > 0:
                 ret_blocks = self.completeBlocks
                 self.completeBlocks = []
-                if verbose:
-                    if cur_pos%10000 == 0 or cur_pos == self.doc_size:
-                        progress = str(round(cur_pos/self.doc_size*100, 2))
-                        print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
-                            progress), end="\r")
                 return ret_blocks, cur_pos
+        progress = str(round(cur_pos/self.doc_size*100, 2))
+        print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
+            progress), end="\r")
         return None, None
 
     @staticmethod
