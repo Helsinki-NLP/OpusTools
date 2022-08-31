@@ -115,8 +115,9 @@ class BlockParser:
                 self.completeBlocks = []
                 return ret_blocks, cur_pos
         progress = str(round(cur_pos/self.doc_size*100, 2))
-        print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
-            progress), end="\r")
+        if verbose:
+            print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
+                progress), end="\r")
         return None, None
 
     @staticmethod
