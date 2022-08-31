@@ -89,7 +89,7 @@ class OpusFileHandler:
         else:
             print('No zip files found.')
             self.download_files()
-            if os.path.isfile(local_src_name) and os.path.isfile(local_src_name):
+            if os.path.isfile(local_src_name) and os.path.isfile(local_trg_name):
                 self.src_zip, self.trg_zip = self.open_specific_zips(
                         local_src_name, local_trg_name)
             else:

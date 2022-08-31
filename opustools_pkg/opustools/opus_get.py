@@ -43,6 +43,7 @@ class OpusGet:
             os.makedirs(download_dir)
 
         self.release = release
+        self.preprocess = preprocess
         self.download_dir = download_dir
         self.target = target
         self.list_resources = list_resources
@@ -125,7 +126,7 @@ class OpusGet:
         total_size = 0
         data = self.get_response(self.url)
 
-        if self.target and self.target != ' ':
+        if self.target and self.target != ' ' and self.preprocess in ['xml', 'raw', 'parsed']:
             corpora = self.remove_data_with_no_alignment(data)
         else:
             corpora = data['corpora']
