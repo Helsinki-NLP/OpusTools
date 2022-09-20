@@ -1,5 +1,6 @@
 import os
 import re
+import tempfile
 
 from .parse.alignment_parser import AlignmentParser
 from .parse.sentence_parser import SentenceParser, SentenceParserError
@@ -216,6 +217,15 @@ class OpusRead:
         while True:
             link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, cur_pos = \
                 self.alignmentParser.collect_links(cur_pos, self.verbose)
+            src_list = [d['xtargets'].split(';')[0] for d in link_attrs]
+            trg_list = [d['xtargets'].split(';')[1] for d in link_attrs]
+
+            # Get two versions of lists: one with multi-ids in one string, and one with multi-ids
+            # separated. Get a chunk size of both lists, and multi-id-separated list size ajusted.
+            # Read chunk size number of sentences. If all ids from multi-id separated list are not 
+            # included in the chunk, read more until they are. Can we assume that multi-ids are 
+            # always next to each other or at least close by? If not then this does not work.
+
             if self.verbose: print("")
 
             if not src_doc_name:
@@ -237,14 +247,20 @@ class OpusRead:
                     src_parser = SentenceParser(src_doc,
                             preprocessing=self.preprocess, anno_attrs=self.src_annot,
                             preserve=self.preserve, delimiter=self.annot_delimiter)
-                    src_parser.store_sentences(src_set, self.verbose)
+                    #src_parser.store_sentences(src_set, self.verbose)
                     trg_parser = SentenceParser(trg_doc,
                             preprocessing=self.preprocess, anno_attrs=self.trg_annot,
                             preserve=self.preserve, delimiter=self.annot_delimiter)
-                    trg_parser.store_sentences(trg_set, self.verbose)
+                    #trg_parser.store_sentences(trg_set, self.verbose)
                 except SentenceParserError as e:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.')
                     continue
+
+            # read_chunk has to take in unsplitted multi-ids and process them and output
+            # all sentences associated with the ids in a single tuple. This way we can use the 
+            # multi-id when sorting according to the link order.
+            src_sents = src_parser.read_chunk(src_set, self.verbose)
+            trg_sents = trg_parser.read_chunk(trg_set, self.verbose)
 
             if self.verbose and self.write:
                     print("\033[F\033[F\033[F", end="")
@@ -252,21 +268,48 @@ class OpusRead:
             self.add_doc_names(src_doc_name, trg_doc_name,
                     self.resultfile, self.mosessrc, self.mosestrg)
 
-            for link_a in link_attrs:
-                src_result, trg_result = self.format_pair(
-                        link_a, src_parser, trg_parser, self.fromto)
+            chunk_size = 10
 
-                if src_result == -1:
-                    continue
+            src_list_2 = []
+            multis = []
+            for item in src_list:
+                if ' ' in item:
+                    multis.append(item.split(' '))
+                    for i in item.split(' '):
+                        src_list_2.append(i)
+                else:
+                    src_list_2.append(item)
 
-                self.out_put_pair(src_result, trg_result, self.resultfile,
-                        self.mosessrc, self.mosestrg, link_a, self.id_file,
-                        src_doc_name, trg_doc_name)
+            # empty ids is a problem because this introduces mutliple identical ids. However, we don't
+            # actually need any sentence for the empty ids, so this can probably be solved some other
+            # way.
+            with tempfile.TemporaryFile() as tf:
+                chunk = []
+                for s in src_sents.items():
+                    chunk.append((s[0], s[1][0]))
+                print(src_list_2)
+                print(multis)
+                print(chunk)
+                chunk.sort(key=lambda i: src_list_2.index(i[0]))
+                print(chunk)
 
-                total +=1
-                if total == self.maximum:
-                    stop = True
-                    break
+            #for link_a in link_attrs:
+            #    src_result, trg_result = self.format_pair(
+            #            link_a, src_parser, trg_parser, self.fromto)
+
+            #    if src_result == -1:
+            #        continue
+
+            #    print(src_result)
+
+            #    self.out_put_pair(src_result, trg_result, self.resultfile,
+            #            self.mosessrc, self.mosestrg, link_a, self.id_file,
+            #            src_doc_name, trg_doc_name)
+
+            #    total +=1
+            #    if total == self.maximum:
+            #        stop = True
+            #        break
 
             self.add_doc_ending(self.resultfile)
 
