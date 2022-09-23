@@ -1,6 +1,7 @@
 import os
 import re
 import tempfile
+import shutil
 
 from .parse.alignment_parser import AlignmentParser
 from .parse.sentence_parser import SentenceParser, SentenceParserError
@@ -214,9 +215,13 @@ class OpusRead:
         stop = False
         cur_pos = 0
 
+        src_result = open('moses.src', 'a').close()
+        trg_result = open('moses.trg', 'a').close()
+
         while True:
-            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, cur_pos = \
-                self.alignmentParser.collect_links(cur_pos, self.verbose)
+            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, src_multis, trg_multis, src_multi_d, trg_multi_d, src_sid_to_lid, trg_sid_to_lid, cur_pos = \
+                self.alignmentParser.collect_links_m(cur_pos, self.verbose)
+
             src_list = [d['xtargets'].split(';')[0] for d in link_attrs]
             trg_list = [d['xtargets'].split(';')[1] for d in link_attrs]
 
@@ -256,11 +261,13 @@ class OpusRead:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.')
                     continue
 
+            chunk_size = 10
+
             # read_chunk has to take in unsplitted multi-ids and process them and output
             # all sentences associated with the ids in a single tuple. This way we can use the 
             # multi-id when sorting according to the link order.
-            src_sents = src_parser.read_chunk(src_set, self.verbose)
-            trg_sents = trg_parser.read_chunk(trg_set, self.verbose)
+            src_sents = src_parser.read_chunk(src_set, src_multis, src_multi_d, src_sid_to_lid, self.verbose)
+            trg_sents = trg_parser.read_chunk(trg_set, trg_multis, trg_multi_d, trg_sid_to_lid, self.verbose)
 
             if self.verbose and self.write:
                     print("\033[F\033[F\033[F", end="")
@@ -268,30 +275,39 @@ class OpusRead:
             self.add_doc_names(src_doc_name, trg_doc_name,
                     self.resultfile, self.mosessrc, self.mosestrg)
 
-            chunk_size = 10
-
-            src_list_2 = []
-            multis = []
-            for item in src_list:
-                if ' ' in item:
-                    multis.append(item.split(' '))
-                    for i in item.split(' '):
-                        src_list_2.append(i)
-                else:
-                    src_list_2.append(item)
-
             # empty ids is a problem because this introduces mutliple identical ids. However, we don't
             # actually need any sentence for the empty ids, so this can probably be solved some other
             # way.
-            with tempfile.TemporaryFile() as tf:
-                chunk = []
-                for s in src_sents.items():
-                    chunk.append((s[0], s[1][0]))
-                print(src_list_2)
-                print(multis)
-                print(chunk)
-                chunk.sort(key=lambda i: src_list_2.index(i[0]))
-                print(chunk)
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as sf, open('moses.src', 'r') as src_result:
+                src_sents = [(k,v) for k,v in src_sents.items()]
+                src_sents.sort(key=lambda i: src_list.index(i[0]))
+
+                src_line = src_result.readline()
+                sid2 = src_sents[0][0]
+                text_part2 = ' '.join([item[0] for item in src_sents[0][1]])
+                i = 0
+                while True:
+                    if src_line and '\t' in src_line:
+                        sid1, text_part1 = src_line.split('\t')
+                        try:
+                            if src_list.index(sid1) < src_list.index(sid2):
+                                sf.write(f'{sid1}\t{text_part1}')
+                                src_line = src_result.readline()
+                                continue
+                        except:
+                            import ipdb; ipdb.set_trace()
+
+                    sf.write(f'{sid2}\t{text_part2}\n')
+                    i += 1
+                    if i == len(src_sents):
+                        break
+                    sid2 = src_sents[i][0]
+                    text_part2 = ' '.join([item[0] for item in src_sents[i][1]])
+            shutil.move(sf.name, 'moses.src')
+                        
+            with tempfile.NamedTemporaryFile() as tf:
+                trg_sents = [(k,v) for k,v in trg_sents.items()]
+                trg_sents.sort(key=lambda i: trg_list.index(i[0]))
 
             #for link_a in link_attrs:
             #    src_result, trg_result = self.format_pair(

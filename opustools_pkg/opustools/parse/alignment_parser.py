@@ -77,7 +77,7 @@ class AlignmentParser:
         if leave_non_alignments_out:
             self.filters.append(non_alignment_filter)
 
-    def add_link(self, link, attrs, src_id_set, trg_id_set):
+    def add_link(self, link, attrs, src_id_set, trg_id_set, src_multis, trg_multis, src_multi_d, trg_multi_d, src_sid_to_lid, trg_sid_to_lid):
         """Add link to set of links to be returned"""
         ids = link.attributes['xtargets'].split(';')
         s_id = ids[0].split()
@@ -89,9 +89,23 @@ class AlignmentParser:
 
         attrs.append(link.attributes)
         src_id_set.update(s_id)
+        if len(s_id) > 1:
+            # add each member of a multi-id separately in a set so we can identify multi-ids members
+            # when reading individual sentence ids
+            src_multis.update(s_id)
+            # add multi-ids as tuples so we can find the correct multi-id members for a given link id
+            src_multi_d[link.attributes['id']] = (tuple(s_id), [])
+            # update sid_to_lid dictionary so we can find the link id for a given sentence id
+            for s in s_id:
+                src_sid_to_lid[s] = link.attributes['id']
         trg_id_set.update(t_id)
+        if len(t_id) > 1:
+            trg_multis.update(t_id)
+            trg_multi_d[link.attributes['id']] = (tuple(t_id), [])
+            for t in t_id:
+                trg_sid_to_lid[t] = link.attributes['id']
 
-        return attrs, src_id_set, trg_id_set
+        return attrs, src_id_set, trg_id_set, src_multis, trg_multis, src_multi_d, trg_multi_d, src_sid_to_lid, trg_sid_to_lid
 
     def collect_links(self, cur_pos=0, verbose=False):
         """Collect links for a linkGrp"""
@@ -116,4 +130,35 @@ class AlignmentParser:
                 'Error while parsing alignment file: {error}'.format(error=e.args[0]))
 
         return attrs, src_id_set, trg_id_set, src_doc, trg_doc, cur_pos
+
+    def collect_links_m(self, cur_pos=0, verbose=False):
+        """Collect links for a linkGrp"""
+
+        attrs = []
+        src_id_set, trg_id_set = set(), set()
+        # links with multiple ids on either side
+        src_multis, trg_multis = set(), set()
+        # sentence id tuple from link id
+        src_multi_d, trg_multi_d = {}, {}
+        # link id from a sentence id
+        src_sid_to_lid, trg_sid_to_lid = {}, {}
+
+        src_doc, trg_doc = None, None
+
+        try:
+            blocks, cur_pos = self.bp.get_complete_blocks(cur_pos, verbose)
+            while blocks:
+                for block in blocks:
+                    if block.name == 'link':
+                        self.add_link(block, attrs, src_id_set, trg_id_set, src_multis, trg_multis, src_multi_d, trg_multi_d, src_sid_to_lid, trg_sid_to_lid)
+                    elif block.name == 'linkGrp':
+                        src_doc = block.attributes['fromDoc']
+                        trg_doc = block.attributes['toDoc']
+                        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, src_multis, trg_multis, src_multi_d, trg_multi_d, src_sid_to_lid, trg_sid_to_lid, cur_pos
+                blocks, cur_pos = self.bp.get_complete_blocks(cur_pos, verbose)
+        except BlockParserError as e:
+            raise AlignmentParserError(
+                'Error while parsing alignment file: {error}'.format(error=e.args[0]))
+
+        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, src_multis, trg_multis, src_multi_d, trg_multi_d, src_sid_to_lid, trg_sid_to_lid, cur_pos
 

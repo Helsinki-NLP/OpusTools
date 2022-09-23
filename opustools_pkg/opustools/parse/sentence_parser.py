@@ -20,13 +20,23 @@ def parse_type(preprocess, preserve, get_annotations):
         sentence = []
         return sentence
 
-    def parse_s_raw(block, sentence, sentences):
+    def parse_s_raw(block, sentence, sentences, multis, multi_d, sid_to_lid, multi_found):
         sid = block.attributes['id']
         sentence.append(block.data.strip())
         sentence = ' '.join(sentence)
-        sentences[sid] = (sentence, block.attributes)
+        if sid in multis:
+            lid = sid_to_lid[sid]
+            multi = multi_d[lid][1].append(sid)
+            multi_found = len(multi_d[lid][0]) == len(multi_d[lid][1])
+            # use multi_sid as the key
+            sid = ' '.join(list(multi_d[lid][0]))
+            if sid not in sentences.keys():
+                sentences[sid] = []
+            sentences[sid].append((sentence, block.attributes))
+        else:
+            sentences[sid] = [(sentence, block.attributes)]
         sentence = []
-        return sentence
+        return sentence, multi_found
 
     def parse_w(bp, block, sentence, id_set):
         s_parent = bp.tag_in_parents('s', block)
@@ -57,10 +67,10 @@ def parse_type(preprocess, preserve, get_annotations):
             sentence = parse_w(bp, block, sentence, id_set)
         return sentence
 
-    def raw(bp, block, sentence, sentences, id_set):
+    def raw(bp, block, sentence, sentences, id_set, multis, multi_d, sid_to_lid, multi_found):
         if block.name == 's' and block.attributes['id'] in id_set:
-            sentence = parse_s_raw(block, sentence, sentences)
-        return sentence
+            sentence, multi_found = parse_s_raw(block, sentence, sentences, multis, multi_d, sid_to_lid, multi_found)
+        return sentence, multi_found
 
     def parsed(bp, block, sentence, sentences, id_set):
         if block.name == 's' and block.attributes['id'] in id_set:
@@ -144,12 +154,14 @@ class SentenceParser:
         doc_size = self.document.tell()
         self.document.seek(0)
 
-    def read_chunk(self, id_set, cur_pos=0, verbose=False):
+    def read_chunk(self, id_set, multis, multi_d, sid_to_lid, cur_pos=0, verbose=False):
         """Read document and store sentences in a dictionary."""
         self.sentences = {}
 
         sentence = []
         sid = None
+
+        multi_found = True
 
         chunk_size = 10
 
@@ -157,9 +169,9 @@ class SentenceParser:
             blocks, cur_pos = self.bp.get_complete_blocks(cur_pos, verbose)
             while blocks:
                 for block in blocks:
-                    sentence = self.parse_block(
-                            self.bp, block, sentence, self.sentences, id_set)
-                if len(self.sentences) == chunk_size:
+                    sentence, multi_found = self.parse_block(
+                            self.bp, block, sentence, self.sentences, id_set, multis, multi_d, sid_to_lid, multi_found)
+                if len(self.sentences) >= chunk_size and multi_found:
                     return self.sentences
                 blocks, cur_pos= self.bp.get_complete_blocks(cur_pos, verbose)
             self.bp.close_document()
