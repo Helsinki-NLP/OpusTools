@@ -213,9 +213,12 @@ class OpusRead:
         stop = False
         cur_pos = 0
 
+        chunk_size = 1000000
+
         while True:
             link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, cur_pos = \
-                self.alignmentParser.collect_links(cur_pos, self.verbose)
+                self.alignmentParser.collect_links(cur_pos, chunk_size, self.verbose)
+
             if self.verbose: print("")
 
             if not src_doc_name:
@@ -246,8 +249,8 @@ class OpusRead:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.')
                     continue
 
-            if self.verbose and self.write:
-                    print("\033[F\033[F\033[F", end="")
+                if self.verbose and self.write:
+                        print("\033[F\033[F\033[F", end="")
 
             self.add_doc_names(src_doc_name, trg_doc_name,
                     self.resultfile, self.mosessrc, self.mosestrg)

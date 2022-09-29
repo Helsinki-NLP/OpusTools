@@ -149,12 +149,18 @@ class SentenceParser:
         self.document.seek(0)
         cur_pos = 0
 
+        stop = False
+
         try:
             blocks, cur_pos = bp.get_complete_blocks(cur_pos, verbose)
-            while blocks:
+            while blocks and not stop:
                 for block in blocks:
                     sentence = self.parse_block(
                             bp, block, sentence, self.sentences, id_set)
+                    print(len(self.sentences), len(id_set), end="\r")
+                    if len(self.sentences) == len(id_set):
+                        stop = True
+                        break
                 blocks, cur_pos= bp.get_complete_blocks(cur_pos, verbose)
             bp.close_document()
             if verbose: print("")

@@ -93,7 +93,7 @@ class AlignmentParser:
 
         return attrs, src_id_set, trg_id_set
 
-    def collect_links(self, cur_pos=0, verbose=False):
+    def collect_links(self, cur_pos=0, chunk_size=1000000, verbose=False):
         """Collect links for a linkGrp"""
 
         attrs = []
@@ -106,6 +106,10 @@ class AlignmentParser:
                 for block in blocks:
                     if block.name == 'link':
                         self.add_link(block, attrs, src_id_set, trg_id_set)
+                        if len(attrs) == chunk_size:
+                            src_doc = block.parent.attributes['fromDoc']
+                            trg_doc = block.parent.attributes['toDoc']
+                            return attrs, src_id_set, trg_id_set, src_doc, trg_doc, cur_pos
                     elif block.name == 'linkGrp':
                         src_doc = block.attributes['fromDoc']
                         trg_doc = block.attributes['toDoc']
