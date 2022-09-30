@@ -137,16 +137,12 @@ class SentenceParser:
         if preprocessing == 'raw':
             self.data_tag = 's'
 
-    def store_sentences(self, id_set, verbose=False):
+    def store_sentences(self, id_set, doc_size, verbose=False):
         """Read document and store sentences in a dictionary."""
-        bp = BlockParser(self.document, data_tag=self.data_tag)
+        bp = BlockParser(self.document, data_tag=self.data_tag, doc_size=doc_size)
         sentence = []
         sid = None
 
-        #Get file size
-        self.document.seek(0,2)
-        doc_size = self.document.tell()
-        self.document.seek(0)
         cur_pos = 0
 
         stop = False
@@ -162,10 +158,13 @@ class SentenceParser:
                         break
                 blocks, cur_pos= bp.get_complete_blocks(cur_pos, verbose)
             bp.close_document()
-            if verbose: print("")
+            if verbose:
+                bp.report_progress(cur_pos)
+                print("")
         except BlockParserError as e:
             raise SentenceParserError(
                 'Error while parsing sentence file: {error}'.format(error=e.args[0]))
+        return bp.doc_size
 
     def get_annotations(self, block):
         annotations = ''

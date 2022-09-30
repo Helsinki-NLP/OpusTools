@@ -203,9 +203,6 @@ class OpusRead:
 
         self.add_file_header(self.resultfile)
 
-        prev_src_doc_name = None
-        prev_trg_doc_name = None
-
         src_parser = None
         trg_parser = None
 
@@ -215,9 +212,21 @@ class OpusRead:
 
         chunk_size = 1000000
 
+        prev_src_doc_name = None
+        prev_trg_doc_name = None
+        src_doc_size = -1
+        trg_doc_size = -1
+
         while True:
             link_list, src_set, trg_set, attrs_list, src_doc_name, trg_doc_name, cur_pos = \
                 self.alignmentParser.collect_links(cur_pos, chunk_size, self.verbose)
+
+            if src_doc_name != prev_src_doc_name:
+               src_doc_size = -1 
+            prev_src_doc_name = src_doc_name
+            if trg_doc_name != prev_trg_doc_name:
+               trg_doc_size = -1 
+            prev_trg_doc_name = trg_doc_name
 
             if self.verbose: print("")
 
@@ -240,17 +249,17 @@ class OpusRead:
                     src_parser = SentenceParser(src_doc,
                             preprocessing=self.preprocess, anno_attrs=self.src_annot,
                             preserve=self.preserve, delimiter=self.annot_delimiter)
-                    src_parser.store_sentences(src_set, self.verbose)
+                    src_doc_size = src_parser.store_sentences(src_set, src_doc_size, self.verbose)
                     trg_parser = SentenceParser(trg_doc,
                             preprocessing=self.preprocess, anno_attrs=self.trg_annot,
                             preserve=self.preserve, delimiter=self.annot_delimiter)
-                    trg_parser.store_sentences(trg_set, self.verbose)
+                    trg_doc_size = trg_parser.store_sentences(trg_set, trg_doc_size, self.verbose)
                 except SentenceParserError as e:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.')
                     continue
 
                 if self.verbose and self.write:
-                        print("\033[F\033[F\033[F", end="")
+                    print("\033[F\033[F\033[F", end="")
 
             self.add_doc_names(src_doc_name, trg_doc_name,
                     self.resultfile, self.mosessrc, self.mosestrg)

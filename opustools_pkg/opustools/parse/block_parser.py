@@ -41,7 +41,7 @@ class Block:
 
 class BlockParser:
 
-    def __init__(self, document, data_tag=None):
+    def __init__(self, document, data_tag=None, doc_size=-1):
         """Parse an xml document line by line removing each element
         from memory as soon as its end tag is found.
 
@@ -55,9 +55,13 @@ class BlockParser:
         self.block = Block(name='root')
         self.completeBlocks = []
 
-        self.document.seek(0, 2)
-        self.doc_size = self.document.tell()
-        self.document.seek(0)
+        if doc_size == -1:
+            print(f'Measuring file "{document.name}" ...', end="\r")
+            self.document.seek(0, 2)
+            self.doc_size = self.document.tell()
+            self.document.seek(0)
+        else:
+            self.doc_size = doc_size
 
         def start_element(name, attrs):
             """Update current block"""
@@ -93,6 +97,10 @@ class BlockParser:
     def close_document(self):
         self.document.close()
 
+    def report_progress(self, cur_pos):
+        progress = str(round(cur_pos/self.doc_size*100, 2))
+        print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name, progress), end="\r")
+
     def get_complete_blocks(self, cur_pos, verbose=False):
         """
         Read lines until one or more end tags are found on a single line,
@@ -105,19 +113,15 @@ class BlockParser:
         for line in self.document:
             if verbose:
                 if cur_pos%10000 == 0 or cur_pos == self.doc_size:
-                    progress = str(round(cur_pos/self.doc_size*100, 2))
-                    print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
-                        progress), end="\r")
+                    self.report_progress(cur_pos)
             cur_pos += len(line)
             self.parse_line(line)
             if len(self.completeBlocks) > 0:
                 ret_blocks = self.completeBlocks
                 self.completeBlocks = []
                 return ret_blocks, cur_pos
-        progress = str(round(cur_pos/self.doc_size*100, 2))
         if verbose:
-            print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
-                progress), end="\r")
+            self.report_progress(cur_pos)
         return None, None
 
     @staticmethod
