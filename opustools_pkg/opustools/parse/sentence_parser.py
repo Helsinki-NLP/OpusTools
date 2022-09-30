@@ -157,7 +157,6 @@ class SentenceParser:
                 for block in blocks:
                     sentence = self.parse_block(
                             bp, block, sentence, self.sentences, id_set)
-                    print(len(self.sentences), len(id_set), end="\r")
                     if len(self.sentences) == len(id_set):
                         stop = True
                         break

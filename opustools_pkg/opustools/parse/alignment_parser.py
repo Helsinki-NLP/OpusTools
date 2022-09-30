@@ -37,6 +37,18 @@ def attribute_filter_type(attribute, threshold):
         return False
     return attribute_filter
 
+def attribute_add_type(wmode):
+    """Store attributes only in links mode"""
+    # args = (attrs_list, link_attrs)
+    def normal_mode(*args):
+        pass
+    def links_mode(*args):
+        args[0].append(args[1])
+    if wmode == 'links':
+        return links_mode
+    else:
+        return normal_mode
+
 def non_alignment_filter(*args):
     """Flag if there are no source or target ids"""
 
@@ -49,7 +61,7 @@ def non_alignment_filter(*args):
 class AlignmentParser:
 
     def __init__(self, alignment_file, src_trg_range=('all', 'all'),
-            attr=None, thres=None, leave_non_alignments_out=False):
+            attr=None, thres=None, wmode=None, leave_non_alignments_out=False):
         """Parse xces alignment files and output sentence ids."""
 
         self.alignment_file = alignment_file
@@ -74,10 +86,12 @@ class AlignmentParser:
         if attr and thres:
             self.filters.append(attribute_filter_type(attr, float(thres)))
 
+        self.add_attributes = attribute_add_type(wmode)
+
         if leave_non_alignments_out:
             self.filters.append(non_alignment_filter)
 
-    def add_link(self, link, attrs, src_id_set, trg_id_set):
+    def add_link(self, link, link_list, src_id_set, trg_id_set, attrs):
         """Add link to set of links to be returned"""
         ids = link.attributes['xtargets'].split(';')
         s_id = ids[0].split()
@@ -85,17 +99,19 @@ class AlignmentParser:
 
         for f in self.filters:
             if f(s_id, t_id, link.attributes):
-                return attrs, src_id_set, trg_id_set
+                return link_list, src_id_set, trg_id_set, attrs
 
-        attrs.append(link.attributes)
+        self.add_attributes(attrs, link.attributes)
+        link_list.append(tuple(ids))
         src_id_set.update(s_id)
         trg_id_set.update(t_id)
 
-        return attrs, src_id_set, trg_id_set
+        return link_list, src_id_set, trg_id_set, attrs
 
     def collect_links(self, cur_pos=0, chunk_size=1000000, verbose=False):
         """Collect links for a linkGrp"""
 
+        link_list = []
         attrs = []
         src_id_set, trg_id_set = set(), set()
         src_doc, trg_doc = None, None
@@ -105,19 +121,19 @@ class AlignmentParser:
             while blocks:
                 for block in blocks:
                     if block.name == 'link':
-                        self.add_link(block, attrs, src_id_set, trg_id_set)
-                        if len(attrs) == chunk_size:
+                        self.add_link(block, link_list, src_id_set, trg_id_set, attrs)
+                        if len(link_list) == chunk_size:
                             src_doc = block.parent.attributes['fromDoc']
                             trg_doc = block.parent.attributes['toDoc']
-                            return attrs, src_id_set, trg_id_set, src_doc, trg_doc, cur_pos
+                            return link_list, src_id_set, trg_id_set, attrs, src_doc, trg_doc, cur_pos
                     elif block.name == 'linkGrp':
                         src_doc = block.attributes['fromDoc']
                         trg_doc = block.attributes['toDoc']
-                        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, cur_pos
+                        return link_list, src_id_set, trg_id_set, attrs, src_doc, trg_doc, cur_pos
                 blocks, cur_pos = self.bp.get_complete_blocks(cur_pos, verbose)
         except BlockParserError as e:
             raise AlignmentParserError(
                 'Error while parsing alignment file: {error}'.format(error=e.args[0]))
 
-        return attrs, src_id_set, trg_id_set, src_doc, trg_doc, cur_pos
+        return link_list, src_id_set, trg_id_set, attrs, src_doc, trg_doc, cur_pos
 

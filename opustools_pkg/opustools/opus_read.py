@@ -196,7 +196,7 @@ class OpusRead:
 
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
         self.alignmentParser = AlignmentParser(self.alignment,
-                (src_range, tgt_range), attribute, threshold,
+                (src_range, tgt_range), attribute, threshold, write_mode,
                 leave_non_alignments_out)
 
     def printPairs(self):
@@ -216,7 +216,7 @@ class OpusRead:
         chunk_size = 1000000
 
         while True:
-            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, cur_pos = \
+            link_list, src_set, trg_set, attrs_list, src_doc_name, trg_doc_name, cur_pos = \
                 self.alignmentParser.collect_links(cur_pos, chunk_size, self.verbose)
 
             if self.verbose: print("")
@@ -255,18 +255,20 @@ class OpusRead:
             self.add_doc_names(src_doc_name, trg_doc_name,
                     self.resultfile, self.mosessrc, self.mosestrg)
 
-            for link_a in link_attrs:
+            for i, link_a in enumerate(link_list):
                 src_result, trg_result = self.format_pair(
                         link_a, src_parser, trg_parser, self.fromto)
 
                 if src_result == -1:
                     continue
 
+                link_attr = attrs_list[i] if i < len(attrs_list) else None
+
                 self.out_put_pair(src_result, trg_result, self.resultfile,
-                        self.mosessrc, self.mosestrg, link_a, self.id_file,
+                        self.mosessrc, self.mosestrg, link_attr, self.id_file,
                         src_doc_name, trg_doc_name)
 
-                total +=1
+                total += 1
                 if total == self.maximum:
                     stop = True
                     break
