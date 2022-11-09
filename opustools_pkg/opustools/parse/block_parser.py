@@ -105,7 +105,7 @@ class BlockParser:
         for line in self.document:
             if verbose:
                 if cur_pos%10000 == 0 or cur_pos == self.doc_size:
-                    progress = str(round(cur_pos/self.doc_size*100, 2))
+                    progress = str(round(cur_pos/self.doc_size*100, 2) if self.doc_size > 0 else 0)
                     print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
                         progress), end="\r")
             cur_pos += len(line)
@@ -114,7 +114,7 @@ class BlockParser:
                 ret_blocks = self.completeBlocks
                 self.completeBlocks = []
                 return ret_blocks, cur_pos
-        progress = str(round(cur_pos/self.doc_size*100, 2))
+        progress = str(round(cur_pos/self.doc_size*100, 2) if self.doc_size > 0 else 0)
         if verbose:
             print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name,
                 progress), end="\r")
