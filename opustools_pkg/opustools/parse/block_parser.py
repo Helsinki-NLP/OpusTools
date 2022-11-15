@@ -122,7 +122,7 @@ class BlockParser:
                 return ret_blocks, cur_pos
         if verbose:
             self.report_progress(cur_pos)
-        return None, None
+        return None, cur_pos
 
     @staticmethod
     def tag_in_parents(tag, block):
