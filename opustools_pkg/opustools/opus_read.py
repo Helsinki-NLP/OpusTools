@@ -197,9 +197,13 @@ class OpusRead:
                 download_dir, source_zip, target_zip, directory, release,
                 preprocess, self.fromto, suppress_prompts)
 
+        store_attrs = False
+        if write_mode == "links" or write_ids != None:
+            store_attrs = True
+
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
         self.alignmentParser = AlignmentParser(self.alignment,
-                (src_range, tgt_range), attribute, threshold, write_mode,
+                (src_range, tgt_range), attribute, threshold, store_attrs,
                 leave_non_alignments_out)
 
     def printPairs(self):

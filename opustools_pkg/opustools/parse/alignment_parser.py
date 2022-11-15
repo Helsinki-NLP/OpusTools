@@ -37,15 +37,15 @@ def attribute_filter_type(attribute, threshold):
         return False
     return attribute_filter
 
-def attribute_add_type(wmode):
-    """Store attributes only in links mode"""
+def attribute_add_type(store_attrs):
+    """Store attributes only in links mode and when writing ids"""
     # args = (attrs_list, link_attrs)
     def normal_mode(*args):
         pass
-    def links_mode(*args):
+    def attr_mode(*args):
         args[0].append(args[1])
-    if wmode == 'links':
-        return links_mode
+    if store_attrs:
+        return attr_mode
     else:
         return normal_mode
 
@@ -61,7 +61,7 @@ def non_alignment_filter(*args):
 class AlignmentParser:
 
     def __init__(self, alignment_file, src_trg_range=('all', 'all'),
-            attr=None, thres=None, wmode=None, leave_non_alignments_out=False):
+            attr=None, thres=None, store_attrs=False, leave_non_alignments_out=False):
         """Parse xces alignment files and output sentence ids."""
 
         self.alignment_file = alignment_file
@@ -86,7 +86,7 @@ class AlignmentParser:
         if attr and thres:
             self.filters.append(attribute_filter_type(attr, float(thres)))
 
-        self.add_attributes = attribute_add_type(wmode)
+        self.add_attributes = attribute_add_type(store_attrs)
 
         if leave_non_alignments_out:
             self.filters.append(non_alignment_filter)
