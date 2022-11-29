@@ -110,19 +110,19 @@ class TestSentenceParser(unittest.TestCase):
 
     def test_store_sentences(self):
         sp = SentenceParser(file_open(self.books_path), preprocessing='xml')
-        sp.store_sentences({'s1'})
+        sp.store_sentences({'s1'}, 0)
         self.assertEqual(sp.sentences['s1'][0],
                 'Source : Project GutenbergTranslation')
         sp = SentenceParser(file_open(self.books_raw_path), preprocessing='raw')
-        sp.store_sentences({'s1'})
+        sp.store_sentences({'s1'}, 0)
         self.assertEqual(sp.sentences['s1'][0],
                 'Source: Project GutenbergTranslation: Isabel F. '
                 'HapgoodAudiobook available here')
         sp = SentenceParser(file_open(self.os_path), preprocessing='xml')
-        sp.store_sentences({'1'})
+        sp.store_sentences({'1'}, 0)
         self.assertEqual(sp.sentences['1'][0], "- How 'd you score that ?")
         sp = SentenceParser(file_open(self.os_raw_path), preprocessing='raw')
-        sp.store_sentences({'1'})
+        sp.store_sentences({'1'}, 0)
         self.assertEqual(sp.sentences['1'][0], "- How'd you score that?")
 
     def test_get_annotations(self):
@@ -145,13 +145,13 @@ class TestSentenceParser(unittest.TestCase):
 
     def test_get_sentence(self):
         sp = SentenceParser(file_open(self.books_raw_path), preprocessing='raw')
-        sp.store_sentences({'s2', '0'})
+        sp.store_sentences({'s2', '0'}, 0)
         self.assertEqual(sp.get_sentence('s2')[0], 'Hunchback of Notre-Dame')
         self.assertEqual(sp.get_sentence('0'), ('', {}))
 
     def test_read_sentence(self):
         sp = SentenceParser(file_open(self.books_raw_path), preprocessing='raw')
-        sp.store_sentences({'s1', 's2'})
+        sp.store_sentences({'s1', 's2'}, 0)
         self.assertEqual(sp.read_sentence(['s2'])[0],
                 ['Hunchback of Notre-Dame'])
         self.assertEqual(sp.read_sentence(['s1', 's2'])[0],
@@ -162,7 +162,7 @@ class TestSentenceParser(unittest.TestCase):
     def test_read_sentence_new(self):
         sp = SentenceParser(file_open(self.books_raw_path),
                 preprocessing='raw')
-        sp.store_sentences({'s1', 's2'})
+        sp.store_sentences({'s1', 's2'}, 0)
         self.assertEqual(sp.read_sentence(['s2']),
                 (['Hunchback of Notre-Dame'], [{'id': 's2'}]))
         self.assertEqual(sp.read_sentence(['s1', 's2'])[0],

@@ -127,6 +127,9 @@ parser.add_argument('-n',
 parser.add_argument('-N',
     metavar='regex',
     help='Skip all documents that match the regex')
+parser.add_argument('-cs', '--chunk_size',
+    help='Number of sentence pairs in chunks to be processed (default=1000000)',
+    default=1000000, type=int)
 parser.add_argument('-v', '--verbose',
     help='Print progress messages when writing results to files',
     action='store_true')

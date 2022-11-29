@@ -38,7 +38,7 @@ class OpusRead:
             change_annotation_delimiter='|',
             src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
             write_ids=None, suppress_prompts=False, download_dir='.',
-            preserve_inline_tags=False, n=None, N=None, verbose=False):
+            preserve_inline_tags=False, n=None, N=None, chunk_size=1000000, verbose=False):
         """Read xces alignment files and xml sentence files and output in
         desired format.
 
@@ -82,6 +82,7 @@ class OpusRead:
         preserve_inline_tags -- Preserve inline tags within sentences
         n -- Get only documents that match the regex
         N -- Skip all doucments that match the regex
+        chunk_size -- Number of sentence pairs in chunks to be processed (default 1000000)
         verbose -- Print progress messages
         """
 
@@ -171,6 +172,8 @@ class OpusRead:
 
         self.skip_doc = skip_regex_type(n, N)
 
+        self.chunk_size = chunk_size
+
         self.add_file_header = file_header_type(write_mode, write, source)
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
         self.add_doc_ending = doc_ending_type(write_mode, write)
@@ -194,17 +197,18 @@ class OpusRead:
                 download_dir, source_zip, target_zip, directory, release,
                 preprocess, self.fromto, suppress_prompts)
 
+        store_attrs = False
+        if write_mode == "links" or write_ids != None:
+            store_attrs = True
+
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
         self.alignmentParser = AlignmentParser(self.alignment,
-                (src_range, tgt_range), attribute, threshold,
+                (src_range, tgt_range), attribute, threshold, store_attrs,
                 leave_non_alignments_out)
 
     def printPairs(self):
 
         self.add_file_header(self.resultfile)
-
-        prev_src_doc_name = None
-        prev_trg_doc_name = None
 
         src_parser = None
         trg_parser = None
@@ -213,9 +217,22 @@ class OpusRead:
         stop = False
         cur_pos = 0
 
+        prev_src_doc_name = None
+        prev_trg_doc_name = None
+        src_doc_size = -1
+        trg_doc_size = -1
+
         while True:
-            link_attrs, src_set, trg_set, src_doc_name, trg_doc_name, cur_pos = \
-                self.alignmentParser.collect_links(cur_pos, self.verbose)
+            link_list, src_set, trg_set, attrs_list, src_doc_name, trg_doc_name, cur_pos = \
+                self.alignmentParser.collect_links(cur_pos, self.chunk_size, self.verbose)
+
+            if src_doc_name != prev_src_doc_name:
+               src_doc_size = -1
+            prev_src_doc_name = src_doc_name
+            if trg_doc_name != prev_trg_doc_name:
+               trg_doc_size = -1
+            prev_trg_doc_name = trg_doc_name
+
             if self.verbose: print("")
 
             if not src_doc_name:
@@ -237,44 +254,53 @@ class OpusRead:
                     src_parser = SentenceParser(src_doc,
                             preprocessing=self.preprocess, anno_attrs=self.src_annot,
                             preserve=self.preserve, delimiter=self.annot_delimiter)
-                    src_parser.store_sentences(src_set, self.verbose)
+                    src_doc_size = src_parser.store_sentences(src_set, src_doc_size, self.verbose)
                     trg_parser = SentenceParser(trg_doc,
                             preprocessing=self.preprocess, anno_attrs=self.trg_annot,
                             preserve=self.preserve, delimiter=self.annot_delimiter)
-                    trg_parser.store_sentences(trg_set, self.verbose)
+                    trg_doc_size = trg_parser.store_sentences(trg_set, trg_doc_size, self.verbose)
                 except SentenceParserError as e:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.')
                     continue
 
-            if self.verbose and self.write:
-                    print("\033[F\033[F\033[F", end="")
-
             self.add_doc_names(src_doc_name, trg_doc_name,
                     self.resultfile, self.mosessrc, self.mosestrg)
 
-            for link_a in link_attrs:
+            len_link_list = len(link_list)
+
+            for i, link_a in enumerate(link_list):
+                if self.verbose:
+                    if i%1000==0 or i+1==len_link_list:
+                        progress = str(round((i+1)/len_link_list*100, 2))
+                        print("\x1b[2KWriting chunk ... {}%".format(progress), end="\r")
+
                 src_result, trg_result = self.format_pair(
                         link_a, src_parser, trg_parser, self.fromto)
 
                 if src_result == -1:
                     continue
 
+                link_attr = attrs_list[i] if i < len(attrs_list) else None
+
                 self.out_put_pair(src_result, trg_result, self.resultfile,
-                        self.mosessrc, self.mosestrg, link_a, self.id_file,
+                        self.mosessrc, self.mosestrg, link_attr, self.id_file,
                         src_doc_name, trg_doc_name)
 
-                total +=1
+                total += 1
                 if total == self.maximum:
                     stop = True
                     break
 
             self.add_doc_ending(self.resultfile)
 
+            if self.verbose and self.write:
+                print("\033[F\033[F\033[F", end="")
+
             if stop:
                 break
 
         if self.verbose and self.write:
-            print("\n")
+            print("\n\n")
 
         self.add_file_ending(self.resultfile)
 

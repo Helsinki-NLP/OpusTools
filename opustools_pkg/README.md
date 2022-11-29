@@ -29,7 +29,7 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
                  [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi] [-n regex]
-                 [-N regex] [-v]
+                 [-N regex] [-cs CHUNK_SIZE] [-v]
 ```
 
 arguments:
@@ -111,6 +111,8 @@ arguments:
                     Preserve inline tags within sentences
 -n regex              Get only documents that match the regex
 -N regex              Skip all documents that match the regex
+-cs CHUNK_SIZE, --chunk_size CHUNK_SIZE
+                      Number of sentence pairs in chunks to be processed (default=1000000)
 -v, --verbose       Print progress messages
 ```
 
@@ -133,6 +135,10 @@ Several parameters can be set to filter the alignments and to print only certain
 XCES align format. Set the "-wm" flag to "links" to enable this mode.
 
 `opus_read` reads the alignments from zip files. Starting up the script might take some time, if the zip files are large (for example OpenSubtitles in OPUS).
+
+**Chunk size:**
+
+The `--chunk_size` parameter can be used to adjust the number of sentence pairs to be processed per chunk. The XCES format can contain source and target sentence ids in a non-sequential random order. This means that we have to store sentence pairs from entire documents to make sure that all sentence pairs are found. This is not a problem for corpora that are split into multiple smaller documents, but this can lead to huge memory usage for big corpora that consist of only a single document, e.g. WikiMatrix. The `--chunk_size` parameter is a compromise to conserve memory at the expense of time. `opus_read` collects as many alignment links as `--chunk_size` indicates, parses the entire source and target sentence documents, and outputs the sentence pairs. This process is repeated until all sentence pairs from the document pair have been processed. This means that entire documents are re-parsed each time a new chunk is processed. For example, if a document pair has 10,000,000 sentence pairs and you use the default chunk size of 1,000,000, which uses roughly 1.5 Gb of memory, the memory usage will be one tenth of what it would be without the chunk size restriction, but the processing will take ten times longer. This is not an optimal solution and we are looking for a better one. To disable chunking, set the parameter to -1.
 
 **Examples:**
 
