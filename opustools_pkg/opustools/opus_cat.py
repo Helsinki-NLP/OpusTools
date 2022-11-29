@@ -11,7 +11,6 @@ def parse_type(preprocessing, get_annotations):
         if block.name == 's':
             sid = block.attributes['id']
             sentence = ' '.join(sentence)
-            #sentences[sid] = (sentence, block.attributes)
             if no_ids:
                 print(sentence)
             else:
@@ -26,12 +25,9 @@ def parse_type(preprocessing, get_annotations):
         return sentence, maximum
 
     def parsed_parse(bp, block, sentence, no_ids, maximum):
-        s_parent = bp.tag_in_parents('s', block)
         if block.name == 's':
             sid = block.attributes['id']
             sentence = ' '.join(sentence)
-            #sentences[sid] = (sentence, block.attributes)
-            #print(sentence, block.attributes)
             if no_ids:
                 print(sentence)
             else:
@@ -148,12 +144,12 @@ class OpusCat:
 
     def printFile(self, f, n):
         """Print sentences from a document."""
-        print('\n# '+n+'\n')
         if self.maximum == 0:
             return
-        maximum = self.maximum
-        stop = False
         if self.plain:
+            print('\n# '+n+'\n')
+            maximum = self.maximum
+            stop = False
             sentence = []
             bp = BlockParser(f, data_tag='w', doc_size=0)
             blocks, cur_pos = bp.get_complete_blocks(0)
@@ -161,6 +157,7 @@ class OpusCat:
                 for block in blocks:
                     sentence, maximum = self.parse_block(bp, block, sentence, self.no_ids, maximum)
                     if maximum == 0:
+                        self.maximum = 0
                         stop = True
                         break
                 if stop:
