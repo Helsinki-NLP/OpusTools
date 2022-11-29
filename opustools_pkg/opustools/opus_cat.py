@@ -3,28 +3,40 @@ import zipfile
 import os
 
 from .opus_get import OpusGet
+from .parse.block_parser import BlockParser
 from .parse.sentence_parser import SentenceParser
 
 def parse_type(preprocessing, get_annotations):
-    def xml_parse(bp, block, sentence, sentences, id_set):
+    def xml_parse(bp, block, sentence, no_ids, maximum):
         if block.name == 's':
             sid = block.attributes['id']
             sentence = ' '.join(sentence)
-            sentences[sid] = (sentence, block.attributes)
+            #sentences[sid] = (sentence, block.attributes)
+            if no_ids:
+                print(sentence)
+            else:
+                print(f'("{sid}")>{sentence}')
+            maximum -= 1
             sentence = []
         elif block.name == 'w':
             s_parent = bp.tag_in_parents('s', block)
             if s_parent:
                 data = block.data.strip()
                 sentence.append(data)
-        return sentence
+        return sentence, maximum
 
-    def parsed_parse(bp, block, sentence, sentences, id_set):
+    def parsed_parse(bp, block, sentence, no_ids, maximum):
         s_parent = bp.tag_in_parents('s', block)
         if block.name == 's':
             sid = block.attributes['id']
             sentence = ' '.join(sentence)
-            sentences[sid] = (sentence, block.attributes)
+            #sentences[sid] = (sentence, block.attributes)
+            #print(sentence, block.attributes)
+            if no_ids:
+                print(sentence)
+            else:
+                print(f'("{sid}")>{sentence}')
+            maximum -= 1
             sentence = []
         elif block.name == 'w':
             s_parent = bp.tag_in_parents('s', block)
@@ -32,7 +44,7 @@ def parse_type(preprocessing, get_annotations):
                 data = block.data.strip()
                 data += get_annotations(block)
                 sentence.append(data)
-        return sentence
+        return sentence, maximum
 
     if preprocessing == 'xml':
         return xml_parse
@@ -55,7 +67,7 @@ class SentenceParser(SentenceParser):
         super().__init__(document, preprocessing, set_attribute,
                 change_annotation_delimiter, None)
 
-        self.parse_block = parse_type(preprocessing, self.get_annotations)
+        #self.parse_block = parse_type(preprocessing, self.get_annotations)
 
 class OpusCat:
 
@@ -93,9 +105,14 @@ class OpusCat:
         self.file_name = file_name
         self.plain = plain
 
+
         self.preprocess = 'xml'
         if print_annotations:
             self.preprocess = 'parsed'
+
+        spar = SentenceParser(None, self.preprocess,
+            self.set_attribute, self.change_annotation_delimiter)
+        self.parse_block = parse_type(self.preprocess, spar.get_annotations)
 
         self.openFiles(
             os.path.join(download_dir, directory+'_'+release+'_xml_'+
@@ -131,22 +148,25 @@ class OpusCat:
 
     def printFile(self, f, n):
         """Print sentences from a document."""
+        print('\n# '+n+'\n')
         if self.maximum == 0:
             return
-        xml_break = False
+        maximum = self.maximum
+        stop = False
         if self.plain:
-            spar = SentenceParser(f, self.preprocess,
-                self.set_attribute, self.change_annotation_delimiter)
-            spar.store_sentences({})
-            print('\n# '+n+'\n')
-            for sid, attrs in spar.sentences.items():
-                if self.no_ids:
-                    print(attrs[0])
-                else:
-                    print('("{}")>{}'.format(sid, attrs[0]))
-                self.maximum -= 1
-                if self.maximum == 0:
+            sentence = []
+            bp = BlockParser(f, data_tag='w', doc_size=0)
+            blocks, cur_pos = bp.get_complete_blocks(0)
+            while blocks:
+                for block in blocks:
+                    sentence, maximum = self.parse_block(bp, block, sentence, self.no_ids, maximum)
+                    if maximum == 0:
+                        stop = True
+                        break
+                if stop:
                     break
+                blocks, cur_pos = bp.get_complete_blocks(0)
+
         else:
             for line in f:
                 line = line.decode('utf-8')
