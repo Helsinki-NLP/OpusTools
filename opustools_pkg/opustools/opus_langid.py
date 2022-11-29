@@ -10,25 +10,11 @@ import pycld2
 from langid.langid import LanguageIdentifier, model
 identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
 
-from .parse.sentence_parser import SentenceParser
+from .parse.block_parser import Block, BlockParser
 
-def xml_parse(bp, block, sentence, sentences, id_set):
-    if block.name == 's':
-        sid = block.attributes['id']
-        sentence.append(block.data.strip())
-        sentence = ' '.join(sentence)
-        sentences[sid] = (sentence, block.attributes)
-        sentence = []
-    elif block.name == 'w':
-        s_parent = bp.tag_in_parents('s', block)
-        if s_parent:
-            data = block.data.strip()
-            sentence.append(data)
-    return sentence
+class LanguageIdAdder(BlockParser):
 
-class LanguageIdAdder(SentenceParser):
-
-    def __init__(self, document, suppress, iszip, preprocessing):
+    def __init__(self, document, out_file, suppress, iszip, preprocessing):
         """Add language ids and confidence scores to sentences in a xml file.
 
         Positional arguments:
@@ -36,11 +22,74 @@ class LanguageIdAdder(SentenceParser):
         iszip -- Parse zip file (bytes) instead of plain text
         """
 
-        super().__init__(document, preprocessing, '', '', None)
+        data_tag = 'w'
+        if preprocessing == 'raw':
+            data_tag = 's'
+
+        super().__init__(document, data_tag, 0)
+        self.out_file = out_file
         self.iszip = iszip
         self.suppress = suppress
 
-        self.parse_block = xml_parse
+        self.s_blocks = []
+
+        def start_element(name, attrs):
+            """Update current block"""
+            sub_block = Block(parent=self.block, name=name, attributes=attrs)
+            attr_str = ' '.join([f'{k}="{v}"' for k, v in sub_block.attributes.items()])
+            if name not in {'s', 'w'}:
+                self.write_to_out(f'<{sub_block.name} {attr_str}>\n')
+            else:
+                self.s_blocks.append(sub_block)
+            self.block = sub_block
+
+        def end_element(name):
+            """Update complete blocks, and move up one level on block tree"""
+            self.completeBlocks.append(self.block)
+            if name not in {'s', 'w'}:
+                self.write_to_out(f'{self.block.data}</{self.block.name}>\n')
+            self.block = self.block.parent
+
+        def char_data(data):
+            """Update current block's character data"""
+            self.block.data += data.lstrip()
+
+        self.p.StartElementHandler = start_element
+        self.p.EndElementHandler = end_element
+        self.p.CharacterDataHandler = char_data
+
+    def write_to_out(self, output):
+        if self.iszip:
+            output = bytes(output, 'utf-8')
+        self.out_file.write(output)
+
+    def xml_parse(self, block, sentence):
+        if block.name == 's':
+            sid = block.attributes['id']
+            sentence.append(block.data.strip())
+            sentence = ' '.join(sentence)
+            cl, cc, ll, lc = self.detectLanguage(sentence, sid)
+            for block in self.s_blocks:
+                if block.name == 's':
+                    block.attributes['cld2'] = cl
+                    block.attributes['cld2conf'] = cc
+                    block.attributes['langid'] = ll
+                    block.attributes['langidconf'] = lc
+                    attr_str = ' '.join([f'{k}="{v}"' for k, v in block.attributes.items()])
+                    self.write_to_out(f'<{block.name} {attr_str}>{block.data}\n')
+                else:
+                    attr_str = ' '.join([f'{k}="{v}"' for k, v in block.attributes.items()])
+                    self.write_to_out(f'<{block.name} {attr_str}>{block.data}</{block.name}>\n')
+            self.write_to_out('</s>\n')
+
+            sentence = []
+            self.s_blocks = []
+        elif block.name == 'w':
+            s_parent = self.tag_in_parents('s', block)
+            if s_parent:
+                data = block.data.strip()
+                sentence.append(data)
+        return sentence
 
     def detectLanguage(self, sentence, sid):
         """Assign language ids and scores to a sentence."""
@@ -64,28 +113,15 @@ class LanguageIdAdder(SentenceParser):
 
         return cldlan, cldconf, lilan, liconf
 
-    def addIds(self, infile, outfile):
+    def addIds(self):
         """Add language ids to sentences in an xml file."""
 
-        for line in infile:
-            if self.iszip:
-                line = line.decode('utf-8')
-            if '<s' in line:
-                m = re.search('( cld2=".*?" cld2conf=".*?" langid=".*?" '
-                    'langidconf=".*?")', line)
-                if m:
-                    line = line.replace(m.group(1), '')
-                m = re.search(' id\="(.*?)"', line)
-                if m:
-                    sid = m.group(1)
-                    sentence = self.get_sentence(sid)[0]
-                    cldlan, cldconf, lilan, liconf = self.detectLanguage(sentence, sid)
-                    new_tag_start = ('<s cld2="{}" cld2conf="{}" langid="{}" '
-                        'langidconf="{}"'.format(cldlan, cldconf, lilan, liconf))
-                    line = line.replace('<s', new_tag_start)
-            if self.iszip:
-                line = bytes(line, 'utf-8')
-            outfile.write(line)
+        sentence = []
+        blocks, cur_pos = self.get_complete_blocks(0)
+        while blocks:
+            for block in blocks:
+                sentence = self.xml_parse(block, sentence)
+            blocks, cur_pos = self.get_complete_blocks(0)
 
 class OpusLangid:
 
@@ -118,13 +154,10 @@ class OpusLangid:
                             print(filename.filename)
                         tempxml = tempfile.mkstemp()
                         if filename.filename[-4:] == '.xml':
-                            with zip_arc.open(filename.filename) as infile:
-                                sparser = LanguageIdAdder(infile,
+                            with zip_arc.open(filename.filename) as infile, open(tempxml[1], 'wb') as outfile:
+                                sparser = LanguageIdAdder(infile, outfile,
                                     self.suppress_errors, True, self.preprocess)
-                                sparser.store_sentences({})
-                            with zip_arc.open(filename.filename) as infile:
-                                with open(tempxml[1], 'wb') as outfile:
-                                    sparser.addIds(infile, outfile)
+                                sparser.addIds()
                             new_arc.write(tempxml[1], filename.filename)
                         else:
                             with zip_arc.open(filename.filename) as infile:
@@ -135,11 +168,9 @@ class OpusLangid:
             tempname = tempfile.mkstemp()
             with open(tempname[1], 'w') as outfile:
                 with open(self.file_path, 'r') as infile:
-                    sparser = LanguageIdAdder(infile,
+                    sparser = LanguageIdAdder(infile, outfile,
                             self.suppress_errors, False, self.preprocess)
-                    sparser.store_sentences({})
-                with open(self.file_path, 'r') as infile:
-                    sparser.addIds(infile, outfile)
+                    sparser.addIds()
 
         if self.target_file_path:
             shutil.move(tempname[1], self.target_file_path)
