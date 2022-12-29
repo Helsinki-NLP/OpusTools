@@ -244,7 +244,12 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
         str_link = '<link {} />\n'.format(' '.join(
             ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
         print(str_link, end='')
-        write_id_line(args[5], args[6], args[7], args[8])
+        write_id_line(args[5], args[6], args[7], args[8])  
+    def yield_tuple(*args):
+        src = args[0].rstrip('\n').replace('\n', ' ')
+        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        return src, tgt
+        
 
     def nothing(*args):
         pass
@@ -279,6 +284,8 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
             return links_write
         if wmode == 'links'and not write:
             return links_print
+        if wmode == "yield_tuple":
+            return yield_tuple
     return nothing
 
 def sentence_format_type(wmode, fromto):
@@ -319,6 +326,7 @@ def sentence_format_type(wmode, fromto):
     format_fs = {'normal': (normal_src, normal_trg),
             'tmx': (tmx_src, tmx_trg),
             'moses': (moses, moses),
+            'yield_tuple': (moses, moses),
             'links': (None, None)}
 
     return format_fs[wmode]

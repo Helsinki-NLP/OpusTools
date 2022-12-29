@@ -84,8 +84,8 @@ class OpusRead:
         N -- Skip all doucments that match the regex
         chunk_size -- Number of sentence pairs in chunks to be processed (default 1000000)
         verbose -- Print progress messages
-        """
 
+        """
         self.fromto = sorted([source, target])
         fromto_copy = [source, target]
         self.switch_langs = fromto_copy != self.fromto
@@ -281,8 +281,13 @@ class OpusRead:
                     continue
 
                 link_attr = attrs_list[i] if i < len(attrs_list) else None
-
-                self.out_put_pair(src_result, trg_result, self.resultfile,
+                
+                if self.write_mode == "yield_tuple":
+                    yield self.out_put_pair(src_result, trg_result, self.resultfile,
+                        self.mosessrc, self.mosestrg, link_attr, self.id_file,
+                        src_doc_name, trg_doc_name)
+                else:
+                    self.out_put_pair(src_result, trg_result, self.resultfile,
                         self.mosessrc, self.mosestrg, link_attr, self.id_file,
                         src_doc_name, trg_doc_name)
 
@@ -317,4 +322,3 @@ class OpusRead:
             self.id_file.close()
 
         self.of_handler.close_zipfiles()
-
