@@ -2,11 +2,11 @@
 
 Tools for accessing and processing OPUS data.
 
-* opus_read: read parallel data sets and convert to different output formats
-* opus_express: Create test/dev/train sets from OPUS data.
-* opus_cat: extract given OPUS document from release data
-* opus_get: download files from OPUS
-* opus_langid: add language ids to sentences in xml files in zip archives
+* [opus_read](#opus_read): read parallel data sets and convert to different output formats
+* [opus_express](#opus_express): Create test/dev/train sets from OPUS data.
+* [opus_cat](#opus_cat): extract given OPUS document from release data
+* [opus_get](#opus_get): download files from OPUS
+* [opus_langid](#opus_langid): add language ids to sentences in xml files in zip archives
 
 ### Installation:
 
@@ -454,7 +454,8 @@ opus_cat --directory RF --language en --file_name RF/xml/en/1996.xml
 
 ```
 usage: opus_get [-h] [-s SOURCE] [-t TARGET] [-d DIRECTORY] [-r RELEASE]
-                [-p {raw,xml,parsed}] [-l] [-dl DOWNLOAD_DIR] [-q]
+                [-p {raw,xml,parsed,mono,moses,tmx,truecaser,ud,freq,smt,dic}]
+                [-l] [-dl DOWNLOAD_DIR] [-q]
 ```
 
 arguments:
@@ -469,7 +470,7 @@ arguments:
                       Corpus name
 -r RELEASE, --release RELEASE
                       Release
--p {raw,xml,parsed}, --preprocess {raw,xml,parsed}
+-p {raw,xml,parsed,mono,moses,tmx,truecaser,ud,freq,smt,dic}, --preprocess {raw,xml,parsed,mono,moses,tmx,truecaser,ud,freq,smt,dic}
                       Preprocess type
 -l, --list_resources  List resources
 -dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
