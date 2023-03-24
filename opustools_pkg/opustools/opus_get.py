@@ -128,8 +128,8 @@ class OpusGet:
     def get_corpora_data(self):
         """Receive corpus data."""
         total_size = 0
-        data = self.get_response(self.url)
-        corpora = data['corpora']
+        #data = self.get_response(self.url)
+        #corpora = data['corpora']
 
         #if self.target and self.target != ' ' and self.preprocess in ['xml', 'raw', 'parsed']:
         #    corpora = self.remove_data_with_no_alignment(data)

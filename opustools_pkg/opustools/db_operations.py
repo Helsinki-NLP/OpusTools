@@ -85,8 +85,9 @@ def get_corpora(parameters):
         # Don't get the sentence file
         suffix=' AND target != ""'
     ret = run_default_query(a_parameters, suffix=suffix)
+    source = parameters.get('source')
     target = parameters.get('target')
-    if not target:
+    if source and not target:
         # Get items where the queried language is on the target side
         a_parameters['target'] = parameters['source']
         del a_parameters['source']
