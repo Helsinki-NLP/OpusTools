@@ -10,7 +10,7 @@ class OpusGet:
 
     def __init__(self, source=None, target=None, directory=None,
             release='latest', preprocess='xml', list_resources=False,
-            download_dir='.', suppress_prompts=False):
+            download_dir='.', list_languages=False, list_corpora=False, suppress_prompts=False):
         """Download files from OPUS.
 
         Keyword arguments:
@@ -23,6 +23,9 @@ class OpusGet:
         download_dir -- Directory where files will be downloaded (default .)
         suppress_prompts -- Download files without prompting "(y/n)"
         """
+
+        self.list_languages = list_languages
+        self.list_corpora = list_corpora
 
         if target != None:
             self.fromto = [source, target]
@@ -189,7 +192,16 @@ class OpusGet:
     def get_files(self):
         """Output corpus file information/data."""
         try:
-            corpora, total_size = self.get_corpora_data()
+            if self.list_languages:
+                languages = run_languages_query(self.parameters)
+                print(languages)
+                exit()
+            elif self.list_corpora:
+                corpus_list = run_corpora_query(self.parameters)
+                print(corpus_list)
+                exit()
+            else:
+                corpora, total_size = self.get_corpora_data()
         except urllib.error.URLError as e:
             print('Unable to retrieve the data.')
             return

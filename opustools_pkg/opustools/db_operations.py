@@ -34,8 +34,10 @@ def run_default_query(parameters, suffix=''):
     return ret
 
 def run_corpora_query(parameters):
+    parameters = convert_latest(parameters)
     parameters = sort_source_target(parameters)
-    del parameters['corpora']
+    if 'corpora' in parameters.keys():
+        del parameters['corpora']
 
     sql_command = 'SELECT DISTINCT corpus FROM opusfile'
     if len(parameters) > 0:
@@ -45,8 +47,10 @@ def run_corpora_query(parameters):
     return values
 
 def run_languages_query(parameters):
+    parameters = convert_latest(parameters)
     parameters = sort_source_target(parameters)
-    del parameters['languages']
+    if 'languages' in parameters.keys():
+        del parameters['languages']
 
     sql_command = 'SELECT DISTINCT source FROM opusfile '
     if len(parameters) > 0:
@@ -70,11 +74,15 @@ def sort_source_target(parameters):
         parameters['target'] = sou_tar[1]
     return parameters
 
-def get_corpora(parameters):
+def convert_latest(parameters):
     version = parameters.get('version')
     if version and version == 'latest':
         parameters['latest'] = 'True'
         del parameters['version']
+    return parameters
+
+def get_corpora(parameters):
+    parameters = convert_latest(parameters)
 
     a_parameters = parameters.copy()
     preprocessing = parameters.get('preprocessing')
