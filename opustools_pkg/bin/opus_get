@@ -13,11 +13,13 @@ parser.add_argument('-p', '--preprocess',
     help='Preprocess type', default='xml',
     choices=['raw', 'xml', 'parsed', 'mono', 'moses', 'tmx', 'truecaser',
         'ud', 'freq', 'smt', 'dic'])
-parser.add_argument('-l', '--list_resources', help='List resources',
+parser.add_argument('-l', '--list_resources', help='List resources instead of downloading',
     action='store_true')
-parser.add_argument('-ll', '--list_languages', help='List languages',
+parser.add_argument('-ll', '--list_languages', help='List available languages. Use -d to find languages for a given corpus and -s for a given source language. Use both to find target language for a given source language in a given corpus.',
     action='store_true')
-parser.add_argument('-lc', '--list_corpora', help='List corpora',
+parser.add_argument('-lc', '--list_corpora', help='List available corpora. Use -s to find corpora for a given language and use both -s and -t to find corpora for a given language pair.',
+    action='store_true')
+parser.add_argument('-o', '--online_api', help='Search resources from the online OPUS-API instead of the local database.',
     action='store_true')
 parser.add_argument('-dl', '--download_dir',
     help='Set download directory (default=current directory)', default='.')

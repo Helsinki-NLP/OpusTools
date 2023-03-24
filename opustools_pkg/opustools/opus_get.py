@@ -10,7 +10,8 @@ class OpusGet:
 
     def __init__(self, source=None, target=None, directory=None,
             release='latest', preprocess='xml', list_resources=False,
-            download_dir='.', list_languages=False, list_corpora=False, suppress_prompts=False):
+            list_languages=False, list_corpora=False, download_dir='.',
+            online_api=False, suppress_prompts=False):
         """Download files from OPUS.
 
         Keyword arguments:
@@ -20,24 +21,28 @@ class OpusGet:
         release -- Corpus release version (default latest)
         preprocess -- Corpus preprocessing type (default xml)
         list_resource -- List resources instead of downloading
+        list_languages -- List available languages
+        list_corpora -- List available corpora
+        online_api -- Search resource from the online OPUS-API instead of the local database.
         download_dir -- Directory where files will be downloaded (default .)
         suppress_prompts -- Download files without prompting "(y/n)"
         """
 
         self.list_languages = list_languages
         self.list_corpora = list_corpora
+        self.online_api = online_api
 
-        if target != None:
+        if source and target:
             self.fromto = [source, target]
             self.fromto.sort()
 
         #self.url = 'http://opus.nlpl.eu/opusapi/?'
         self.url = 'http://127.0.0.1:5000/?'
-        self.parameters = {}
 
         urlparts = [(source, 'source'), (target, 'target'),
             (directory, 'corpus'), (release, 'version'),
             (preprocess, 'preprocessing')]
+        self.parameters = {}
 
         for a in urlparts:
             if a[0]:
@@ -131,15 +136,17 @@ class OpusGet:
     def get_corpora_data(self):
         """Receive corpus data."""
         total_size = 0
-        #data = self.get_response(self.url)
-        #corpora = data['corpora']
 
         #if self.target and self.target != ' ' and self.preprocess in ['xml', 'raw', 'parsed']:
         #    corpora = self.remove_data_with_no_alignment(data)
         #else:
         #    corpora = data['corpora']
 
-        corpora = get_corpora(self.parameters)
+        if self.online_api:
+            data = self.get_response(self.url)
+            corpora = data['corpora']
+        else:
+            corpora = get_corpora(self.parameters)
 
         ret_corpora = []
         for c in corpora:
@@ -193,13 +200,19 @@ class OpusGet:
         """Output corpus file information/data."""
         try:
             if self.list_languages:
-                languages = run_languages_query(self.parameters)
-                print(languages)
-                exit()
+                if self.online_api:
+                    languages = self.get_response(self.url+'languages=True')['languages']
+                else:
+                    languages = run_languages_query(self.parameters)
+                print(', '.join([str(l) for l in languages]))
+                return
             elif self.list_corpora:
-                corpus_list = run_corpora_query(self.parameters)
-                print(corpus_list)
-                exit()
+                if self.online_api:
+                    corpus_list = self.get_response(self.url+'corpora=True')['corpora']
+                else:
+                    corpus_list = run_corpora_query(self.parameters)
+                print(', '.join([str(c) for c in corpus_list]))
+                return
             else:
                 corpora, total_size = self.get_corpora_data()
         except urllib.error.URLError as e:
