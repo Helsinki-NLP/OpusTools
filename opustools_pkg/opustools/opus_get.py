@@ -4,6 +4,8 @@ import argparse
 import sys
 import os.path
 
+from .db_operations import clean_up_parameters, run_corpora_query, run_languages_query, get_corpora
+
 class OpusGet:
 
     def __init__(self, source=None, target=None, directory=None,
@@ -26,7 +28,9 @@ class OpusGet:
             self.fromto = [source, target]
             self.fromto.sort()
 
-        self.url = 'http://opus.nlpl.eu/opusapi/?'
+        #self.url = 'http://opus.nlpl.eu/opusapi/?'
+        self.url = 'http://127.0.0.1:5000/?'
+        self.parameters = {}
 
         urlparts = [(source, 'source'), (target, 'target'),
             (directory, 'corpus'), (release, 'version'),
@@ -34,6 +38,7 @@ class OpusGet:
 
         for a in urlparts:
             if a[0]:
+                self.parameters[a[1]] = a[0]
                 if a[0] == ' ':
                     self.url += a[1] + '=&'
                 else:
@@ -122,14 +127,16 @@ class OpusGet:
 
     def get_corpora_data(self):
         """Receive corpus data."""
-        file_n = 0
         total_size = 0
         data = self.get_response(self.url)
+        corpora = data['corpora']
 
-        if self.target and self.target != ' ' and self.preprocess in ['xml', 'raw', 'parsed']:
-            corpora = self.remove_data_with_no_alignment(data)
-        else:
-            corpora = data['corpora']
+        #if self.target and self.target != ' ' and self.preprocess in ['xml', 'raw', 'parsed']:
+        #    corpora = self.remove_data_with_no_alignment(data)
+        #else:
+        #    corpora = data['corpora']
+
+        corpora = get_corpora(self.parameters)
 
         ret_corpora = []
         for c in corpora:
@@ -139,12 +146,11 @@ class OpusGet:
                     print('        {} already exists'.format(filename))
             else:
                 ret_corpora.append(c)
-                file_n += 1
                 total_size += c['size']
 
         total_size = self.format_size(total_size)
 
-        return ret_corpora, file_n, total_size
+        return ret_corpora, total_size
 
     def progress_status(self, count, blockSize, totalSize):
         """Report download progress."""
@@ -154,10 +160,10 @@ class OpusGet:
         print('\r{0} ... {1}% of {2}'.format(self.filename, percent,
             self.filesize), end='', flush=True)
 
-    def download(self, corpora, file_n, total_size):
+    def download(self, corpora, total_size):
         """Download files."""
         if self.suppress_prompts == False:
-            answer = input(('Downloading ' + str(file_n) + ' file(s) with the '
+            answer = input(('Downloading ' + str(len(corpora)) + ' file(s) with the '
                 'total size of ' + total_size + '. Continue? (y/n) '))
         else:
             answer = 'y'
@@ -174,7 +180,7 @@ class OpusGet:
                     print('Unable to retrieve the data.')
                     return
 
-    def print_files(self, corpora, file_n, total_size):
+    def print_files(self, corpora, total_size):
         """Print file list."""
         for c in corpora:
             print('{0:>7} {1:s}'.format(self.format_size(c['size']), c['url']))
@@ -183,13 +189,13 @@ class OpusGet:
     def get_files(self):
         """Output corpus file information/data."""
         try:
-            corpora, file_n, total_size = self.get_corpora_data()
+            corpora, total_size = self.get_corpora_data()
         except urllib.error.URLError as e:
             print('Unable to retrieve the data.')
             return
 
         if not self.list_resources:
-            self.download(corpora, file_n, total_size)
+            self.download(corpora, total_size)
         else:
-            self.print_files(corpora, file_n, total_size)
+            self.print_files(corpora, total_size)
 
