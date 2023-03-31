@@ -118,7 +118,7 @@ def get_corpora(parameters):
             languages.add(item['target'])
 
         parameters['target'] = ''
-        for language in languages:
+        for language in sorted(list(languages)):
             parameters['source'] = language
             ret = ret + run_default_query(parameters)
 

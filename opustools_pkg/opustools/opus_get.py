@@ -36,8 +36,8 @@ class OpusGet:
             self.fromto = [source, target]
             self.fromto.sort()
 
-        #self.url = 'http://opus.nlpl.eu/opusapi/?'
-        self.url = 'http://127.0.0.1:5000/?'
+        self.url = 'http://opus.nlpl.eu/opusapi/?'
+        #self.url = 'http://127.0.0.1:5000/?'
 
         urlparts = [(source, 'source'), (target, 'target'),
             (directory, 'corpus'), (release, 'version'),
@@ -91,39 +91,6 @@ class OpusGet:
 
         return data
 
-    def add_data_with_aligment(self, tempdata, retdata):
-        """Add tempdata, that has an alignment file for the
-        current language pair, to retdata."""
-        for i in tempdata:
-            if (i['preprocessing'] == 'xml' and i['source'] == self.fromto[0]
-                    and i['target'] == self.fromto[1]):
-                retdata += tempdata
-                break
-        return retdata
-
-    def remove_data_with_no_alignment(self, data):
-        """Remove corpus data, that are missing an alignment file for
-        the current language pair, from data.
-        """
-        retdata = []
-        tempdata = []
-        prev_directory = ''
-
-        #Put all files from one directory to tempfile, and
-        #when the directory changes, add the files to retdata,
-        #if the files contain an alignment file for the current
-        #language pair.
-        for c in data['corpora']:
-            directory = '/{0}/{1}'.format(c['corpus'], c['version'])
-            if prev_directory != '' and prev_directory!=directory:
-                retdata = self.add_data_with_aligment(tempdata, retdata)
-                tempdata = []
-            tempdata.append(c)
-            prev_directory = directory
-
-        retdata = self.add_data_with_aligment(tempdata, retdata)
-        return retdata
-
     def make_file_name(self, c):
         """Return file name based on corpus data."""
         filename = c['url'].replace('/', '_').replace(
@@ -136,11 +103,6 @@ class OpusGet:
     def get_corpora_data(self):
         """Receive corpus data."""
         total_size = 0
-
-        #if self.target and self.target != ' ' and self.preprocess in ['xml', 'raw', 'parsed']:
-        #    corpora = self.remove_data_with_no_alignment(data)
-        #else:
-        #    corpora = data['corpora']
 
         if self.online_api:
             data = self.get_response(self.url)

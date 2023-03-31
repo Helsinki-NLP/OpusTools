@@ -30,140 +30,9 @@ class TestOpusGet(unittest.TestCase):
         self.assertEqual(opg.format_size(1000000000), '1 TB')
         self.assertEqual(opg.format_size(2304006273), '2 TB')
 
-    def test_remove_data_with_no_alignment(self):
-        opg = OpusGet(source='en', target='sv', list_resources=True)
-        data = {'corpora':
-                [{'alignment_pairs': 219,
-                    'corpus': 'RF',
-                    'documents': 2,
-                    'id': 321123,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 4,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': 'sv',
-                    'target_tokens': 2905,
-                    'url': ('https://object.pouta.csc.fi/OPUS-RF/v1/xml/'
-                        'en-sv.xml.gz'),
-                    'version': 'v1'},
-                {'alignment_pairs': 181,
-                    'corpus': 'RF',
-                    'documents': 2,
-                    'id': 321124,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 60,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-RF/v1/xml/en.zip',
-                    'version': 'v1'},
-                {'alignment_pairs': 298,
-                    'corpus': 'RF',
-                    'documents': 4,
-                    'id': 321130,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 64,
-                    'source': 'sv',
-                    'source_tokens': 3456,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-RF/v1/xml/sv.zip',
-                    'version': 'v1'},
-                {'alignment_pairs': 181,
-                    'corpus': 'Test',
-                    'documents': 2,
-                    'id': 321124,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 60,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-T/v1/xml/en.zip',
-                    'version': 'v1'},
-                {'alignment_pairs': 298,
-                    'corpus': 'Test',
-                    'documents': 4,
-                    'id': 321130,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 64,
-                    'source': 'sv',
-                    'source_tokens': 3456,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-T/v1/xml/sv.zip',
-                    'version': 'v1'}]}
-
-        new_data = opg.remove_data_with_no_alignment(data)
-        self.assertEqual(len(new_data), 3)
-        data['corpora'].pop(0)
-        new_data = opg.remove_data_with_no_alignment(data)
-        self.assertEqual(len(new_data), 0)
-
-    def test_add_data_with_alignment(self):
-        opg = OpusGet(directory= 'RF', source='en', target='sv',
-            list_resources=True)
-        data = [{'alignment_pairs': 219,
-                    'corpus': 'RF',
-                    'documents': 2,
-                    'id': 321123,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 4,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': 'sv',
-                    'target_tokens': 2905,
-                    'url': ('https://object.pouta.csc.fi/OPUS-RF/v1/xml/'
-                        'en-sv.xml.gz'),
-                    'version': 'v1'},
-                {'alignment_pairs': 181,
-                    'corpus': 'RF',
-                    'documents': 2,
-                    'id': 321124,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 60,
-                    'source': 'en',
-                    'source_tokens': 4393,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-RF/v1/xml/en.zip',
-                    'version': 'v1'},
-                {'alignment_pairs': 298,
-                    'corpus': 'RF',
-                    'documents': 4,
-                    'id': 321130,
-                    'latest': 'True',
-                    'preprocessing': 'xml',
-                    'size': 64,
-                    'source': 'sv',
-                    'source_tokens': 3456,
-                    'target': '',
-                    'target_tokens': None,
-                    'url': 'https://object.pouta.csc.fi/OPUS-RF/v1/xml/sv.zip',
-                    'version': 'v1'}]
-        new_data = opg.add_data_with_aligment(data, [])
-        self.assertEqual(len(new_data), 3)
-        data.pop(0)
-        new_data = opg.add_data_with_aligment(data, [])
-        self.assertEqual(len(new_data),0 )
-
-    def test_remove_data_with_no_alignment_from_OPUS(self):
-        opg = OpusGet(source='en', target='sv', list_resources=True)
-        data = opg.get_response(opg.url)
-        new_data = opg.remove_data_with_no_alignment(data)
-        self.assertEqual(len(new_data), len(data['corpora']))
-
     def test_get_files_invalid_url(self):
         opg = OpusGet(directory='RF', source='en', target='sv',
-            list_resources=True)
+            list_resources=True, online_api=True)
         opg.url = 'http://slkdfjlks'
         old_stdout = sys.stdout
         printout = io.StringIO()
@@ -178,12 +47,12 @@ class TestOpusGet(unittest.TestCase):
         mocked_input.side_effect = ['y']
         opg = OpusGet(directory='RF', source='en', target='sv',
             list_resources=True)
-        corpora, file_n, total_size = opg.get_corpora_data()
+        corpora, total_size = opg.get_corpora_data()
         corpora[0]['url'] = 'http://alskdjfl'
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
-        opg.download(corpora, file_n, total_size)
+        opg.download(corpora, total_size)
         sys.stdout = old_stdout
 
         self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
@@ -241,7 +110,7 @@ class TestOpusGet(unittest.TestCase):
         files = OpusGet(directory='RF', release='v1', preprocess='xml',
             list_resources=True).get_files()
         sys.stdout = old_stdout
-        self.assertEqual(len(printout.getvalue().split('\n')), 23)
+        self.assertEqual(len(printout.getvalue().split('\n')), 18)
 
 if __name__ == '__main__':
     unittest.main()
