@@ -1,7 +1,16 @@
 import os
 import sqlite3
+import gzip
 
-DB_FILE = os.environ["OPUSAPI_DB"]
+DB_FILE = os.environ.get('OPUSAPI_DB')
+
+if DB_FILE == None:
+    DB_FILE = os.path.join(os.path.dirname(__file__), 'opusdata.db')
+    if not os.path.isfile(DB_FILE):
+        with gzip.open(DB_FILE+'.gz') as gzfile:
+            data = gzfile.read()
+        with open(DB_FILE, 'wb') as outfile:
+            outfile.write(data)
 
 def clean_up_parameters(parameters):
     remove = []

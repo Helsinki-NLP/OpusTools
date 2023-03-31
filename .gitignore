@@ -11,4 +11,3 @@ filter_files
 htmlcov
 *.xml
 *.zip
-*.gz
