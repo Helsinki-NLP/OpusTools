@@ -1,6 +1,7 @@
 import urllib.request
 import sqlite3
 import logging
+import os
 
 from ruamel.yaml import YAML, scanner, reader
 
@@ -155,13 +156,14 @@ def remove_missing_items(cur):
     sql = 'UPDATE opusfile SET updated=0'
     cur.execute(sql)
 
-def main():
+def update_db():
     yaml = YAML()
 
     logging.basicConfig(filename='error.log', level=logging.ERROR,
             format='%(asctime)s %(levelname)s:%(name)s: %(message)s', datefmt='%x %X')
 
-    con = sqlite3.connect('opusdata.db')
+    db_file = os.path.join(os.path.dirname(__file__), 'opusdata.db')
+    con = sqlite3.connect(db_file)
     cur = con.cursor()
 
     create_table(cur)
@@ -218,6 +220,9 @@ def main():
 
     con.commit()
     con.close()
+
+def main():
+    update_db()
 
 if __name__ == "__main__":
     main()
