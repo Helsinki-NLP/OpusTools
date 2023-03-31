@@ -113,9 +113,10 @@ class OpusGet:
         ret_corpora = []
         for c in corpora:
             filename = self.make_file_name(c)
+            fileinfo = self.get_file_info_output(c)
             if os.path.isfile(filename):
                 if self.list_resources:
-                    print('        {} already exists'.format(filename))
+                    print(f'        {filename} already exists | {fileinfo}')
             else:
                 ret_corpora.append(c)
                 total_size += c['size']
@@ -152,10 +153,24 @@ class OpusGet:
                     print('Unable to retrieve the data.')
                     return
 
+    def get_file_info_output(self, c):
+        doc_name = f"{c['documents']} documents, "
+        if c['documents'] == '':
+            doc_name = ''
+        seg_name = 'alignment pairs'
+        src_tok_name = 'source '
+        target_tokens = f", {c['target_tokens']} target tokens"
+        if c['target_tokens'] == '':
+            seg_name = 'sentences'
+            src_tok_name, target_tokens = '', ''
+        output = f"{doc_name}{c['alignment_pairs']} {seg_name}, {c['source_tokens']} {src_tok_name}tokens{target_tokens} (id {c['id']})"
+        return output
+
     def print_files(self, corpora, total_size):
         """Print file list."""
         for c in corpora:
-            print('{0:>7} {1:s}'.format(self.format_size(c['size']), c['url']))
+            output = '{0:>7} {1:s}'.format(self.format_size(c['size']), c['url'])
+            print(f'{output} | {self.get_file_info_output(c)}')
         print('\n{0:>7} {1:s}'.format(total_size, 'Total size'))
 
     def get_files(self):
