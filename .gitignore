@@ -11,3 +11,4 @@ filter_files
 htmlcov
 *.xml
 *.zip
+opustools/opusdata.db
