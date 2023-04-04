@@ -484,7 +484,9 @@ arguments:
                       Set download directory (default=current directory)
 -q, --suppress_prompts
                       Download necessary files without prompting "(y/n)"
--u, --update_db       Update the local corpus database. This could take up to 1 hour.
+-u [log_type], --update_db [log_type]
+                      Update the local corpus database. This could take up to 1 hour. Use "-u
+                      warnings" to log warnings in addition to errors in "opusdb_update_error.log"
 -db DATABASE, --database DATABASE
                       Use your custom sqlite db file
 ```

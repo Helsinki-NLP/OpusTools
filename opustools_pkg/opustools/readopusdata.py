@@ -156,11 +156,15 @@ def remove_missing_items(cur):
     sql = 'UPDATE opusfile SET updated=0'
     cur.execute(sql)
 
-def update_db(db_file=None):
+def update_db(db_file=None, log_type='errors'):
     yaml = YAML()
 
-    logging.basicConfig(filename='error.log', level=logging.ERROR,
-            format='%(asctime)s %(levelname)s:%(name)s: %(message)s', datefmt='%x %X')
+    if log_type == 'warnings':
+        logging.basicConfig(filename='opusdb_update_error.log', level=logging.WARNING,
+                format='%(asctime)s %(levelname)s:%(name)s: %(message)s', datefmt='%x %X')
+    else:
+        logging.basicConfig(filename='opusdb_update_error.log', level=logging.ERROR,
+                format='%(asctime)s %(levelname)s:%(name)s: %(message)s', datefmt='%x %X')
 
     if not db_file:
         db_file = os.path.join(os.path.dirname(__file__), 'opusdata.db')

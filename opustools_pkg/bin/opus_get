@@ -27,7 +27,7 @@ parser.add_argument('-dl', '--download_dir',
 parser.add_argument('-q', '--suppress_prompts',
     help='Download necessary files without prompting "(y/n)"',
     action='store_true')
-parser.add_argument('-u', '--update_db', help='Update the local corpus database. This could take up to 1 hour.', action='store_true')
+parser.add_argument('-u', '--update_db', help='Update the local corpus database. This could take up to 1 hour. Use "-u warnings" to log warnings in addition to errors in "opusdb_update_error.log"', nargs='?', default='errors', metavar='log_type')
 parser.add_argument('-db', '--database', help='Use your custom sqlite db file')
 
 args = parser.parse_args()
@@ -36,9 +36,9 @@ if args.update_db:
     if not args.suppress_prompts:
         answer = input('Starting database update, could take up to 1 hour. Continue? (y/n) ')
         if answer in ['', 'y']:
-            update_db(args.database)
+            update_db(args.database, args.update_db)
     else:
-        update_db(args.database)
+        update_db(args.database, args.update_db)
 else:
     del args.update_db
     OpusGet(**vars(args)).get_files()
