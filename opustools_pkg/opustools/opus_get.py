@@ -4,14 +4,14 @@ import argparse
 import sys
 import os.path
 
-from .db_operations import clean_up_parameters, run_corpora_query, run_languages_query, get_corpora
+from .db_operations import clean_up_parameters, run_corpora_query, run_languages_query, get_corpora, set_database
 
 class OpusGet:
 
     def __init__(self, source=None, target=None, directory=None,
             release='latest', preprocess='xml', list_resources=False,
             list_languages=False, list_corpora=False, download_dir='.',
-            online_api=False, suppress_prompts=False):
+            online_api=False, suppress_prompts=False, database=None):
         """Download files from OPUS.
 
         Keyword arguments:
@@ -26,11 +26,14 @@ class OpusGet:
         online_api -- Search resource from the online OPUS-API instead of the local database.
         download_dir -- Directory where files will be downloaded (default .)
         suppress_prompts -- Download files without prompting "(y/n)"
+        database -- Use custom sqlite db file
         """
 
         self.list_languages = list_languages
         self.list_corpora = list_corpora
         self.online_api = online_api
+        if database:
+            set_database(database)
 
         if source and target:
             self.fromto = [source, target]

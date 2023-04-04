@@ -12,6 +12,10 @@ if DB_FILE == None:
         with open(DB_FILE, 'wb') as outfile:
             outfile.write(data)
 
+def set_database(db_file):
+    global DB_FILE
+    DB_FILE = db_file
+
 def clean_up_parameters(parameters):
     remove = []
     valid_keys = ['corpus', 'id', 'latest', 'preprocessing', 'source', 'target', 'version', 'corpora', 'languages']

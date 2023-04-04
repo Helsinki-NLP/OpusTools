@@ -156,13 +156,15 @@ def remove_missing_items(cur):
     sql = 'UPDATE opusfile SET updated=0'
     cur.execute(sql)
 
-def update_db():
+def update_db(db_file=None):
     yaml = YAML()
 
     logging.basicConfig(filename='error.log', level=logging.ERROR,
             format='%(asctime)s %(levelname)s:%(name)s: %(message)s', datefmt='%x %X')
 
-    db_file = os.path.join(os.path.dirname(__file__), 'opusdata.db')
+    if not db_file:
+        db_file = os.path.join(os.path.dirname(__file__), 'opusdata.db')
+
     con = sqlite3.connect(db_file)
     cur = con.cursor()
 

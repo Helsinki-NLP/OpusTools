@@ -473,10 +473,20 @@ arguments:
 -p {raw,xml,parsed,mono,moses,tmx,truecaser,ud,freq,smt,dic}, --preprocess {raw,xml,parsed,mono,moses,tmx,truecaser,ud,freq,smt,dic}
                       Preprocess type
 -l, --list_resources  List resources
+-ll, --list_languages
+                      List available languages. Use -d to find languages for a given corpus and -s
+                      for a given source language. Use both to find target language for a given
+                      source language in a given corpus.
+-lc, --list_corpora   List available corpora. Use -s to find corpora for a given language and use
+                      both -s and -t to find corpora for a given language pair.
+-o, --online_api      Search resources from the online OPUS-API instead of the local database.
 -dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
                       Set download directory (default=current directory)
 -q, --suppress_prompts
                       Download necessary files without prompting "(y/n)"
+-u, --update_db       Update the local corpus database. This could take up to 1 hour.
+-db DATABASE, --database DATABASE
+                      Use your custom sqlite db file
 ```
 
 ### Description
@@ -519,6 +529,18 @@ List all en-sv files in the whole OPUS:
 
 ```
 opus_get --source en --target sv --list
+```
+
+Find available target languages for English in RF:
+
+```
+opus_get --list_languages --directory RF --source en
+```
+
+Find all corpora that contain the language pair en-sv:
+
+```
+opus_get --list_corpora --source en --target sv
 ```
 
 ---

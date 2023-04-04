@@ -28,18 +28,17 @@ parser.add_argument('-q', '--suppress_prompts',
     help='Download necessary files without prompting "(y/n)"',
     action='store_true')
 parser.add_argument('-u', '--update_db', help='Update the local corpus database. This could take up to 1 hour.', action='store_true')
+parser.add_argument('-db', '--database', help='Use your custom sqlite db file')
 
 args = parser.parse_args()
 
 if args.update_db:
     if not args.suppress_prompts:
-        answer = input('Starting database update, could take up to 1 hour. Continue? (y/n)')
+        answer = input('Starting database update, could take up to 1 hour. Continue? (y/n) ')
         if answer in ['', 'y']:
-            update_db()
-        else:
-            exit()
+            update_db(args.database)
     else:
-        update_db()
+        update_db(args.database)
 else:
     del args.update_db
     OpusGet(**vars(args)).get_files()
