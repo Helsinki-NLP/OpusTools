@@ -3,8 +3,9 @@ import json
 import argparse
 import sys
 import os.path
+import gzip
 
-from .db_operations import clean_up_parameters, run_corpora_query, run_languages_query, get_corpora, set_database
+from .db_operations import DbOperations
 
 class OpusGet:
 
@@ -29,11 +30,21 @@ class OpusGet:
         database -- Use custom sqlite db file
         """
 
+        if database:
+            DB_FILE = database
+        else:
+            DB_FILE = os.path.join(os.path.dirname(__file__), 'opusdata.db')
+            if not os.path.isfile(DB_FILE):
+                with gzip.open(DB_FILE+'.gz') as gzfile:
+                    data = gzfile.read()
+                with open(DB_FILE, 'wb') as outfile:
+                    outfile.write(data)
+
+        self.dbo = DbOperations(db_file=DB_FILE)
+
         self.list_languages = list_languages
         self.list_corpora = list_corpora
         self.online_api = online_api
-        if database:
-            set_database(database)
 
         if source and target:
             self.fromto = [source, target]
@@ -111,7 +122,7 @@ class OpusGet:
             data = self.get_response(self.url)
             corpora = data['corpora']
         else:
-            corpora = get_corpora(self.parameters)
+            corpora = self.dbo.get_corpora(self.parameters)
 
         ret_corpora = []
         for c in corpora:
@@ -183,14 +194,14 @@ class OpusGet:
                 if self.online_api:
                     languages = self.get_response(self.url+'languages=True')['languages']
                 else:
-                    languages = run_languages_query(self.parameters)
+                    languages = self.dbo.run_languages_query(self.parameters)
                 print(', '.join([str(l) for l in languages]))
                 return
             elif self.list_corpora:
                 if self.online_api:
                     corpus_list = self.get_response(self.url+'corpora=True')['corpora']
                 else:
-                    corpus_list = run_corpora_query(self.parameters)
+                    corpus_list = self.dbo.run_corpora_query(self.parameters)
                 print(', '.join([str(c) for c in corpus_list]))
                 return
             else:

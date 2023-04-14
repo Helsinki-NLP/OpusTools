@@ -29,7 +29,7 @@ def add_to_root_dir(corpus=None, source=None, target=None,
 
     OpusGet(directory=corpus, source=source, target=target, release=version,
         preprocess=preprocess, download_dir=root_dir, suppress_prompts=True,
-        ).get_files()
+        database='tests/testdata.db').get_files()
 
     source_zip = '{corpus}_{version}_{preprocess}_{source}.zip'.format(
         corpus=corpus, version=version, preprocess=preprocess, source=source)

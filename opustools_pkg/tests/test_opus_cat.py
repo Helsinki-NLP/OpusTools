@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from opustools import OpusCat, OpusGet
+from opustools import OpusCat
 from tests import add_to_root_dir
 
 class TestOpusCat(unittest.TestCase):

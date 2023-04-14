@@ -78,9 +78,9 @@ class TestOpusGet(unittest.TestCase):
 
         self.assertEqual(printout.getvalue(),
             '        {tempdir}/RF_latest_xml_en-sv.xml.gz already exi'
-            'sts | 2 documents, 219 alignment pairs, 4393 source tokens, 2905 target tokens (id 140749)\n        {tempdir}/RF_latest_xml_en.zip already exis'
-            'ts | 2 documents, 181 alignment pairs, 4393 source tokens, None target tokens (id 140750)\n        {tempdir}/RF_latest_xml_sv.zip already exist'
-            's | 4 documents, 298 alignment pairs, 3456 source tokens, None target tokens (id 140756)\n\n   0 KB Total size\n'.format(tempdir=self.tempdir))
+            'sts | 2 documents, 219 alignment pairs, 2905 source tokens, 4393 target tokens (id 350868)\n        {tempdir}/RF_latest_xml_en.zip already exis'
+            'ts | 2 documents, 181 sentences, 4393 tokens (id 350890)\n        {tempdir}/RF_latest_xml_sv.zip already exist'
+            's | 4 documents, 298 sentences, 3456 tokens (id 350908)\n\n   0 KB Total size\n'.format(tempdir=self.tempdir))
 
     @mock.patch('opustools.opus_get.input', create=True)
     def test_dont_download_files_that_are_already_in_path(self, mocked_input):
