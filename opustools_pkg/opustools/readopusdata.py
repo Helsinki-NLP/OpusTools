@@ -189,9 +189,9 @@ def update_db(db_file=None, log_type='errors'):
             if not corpus:
                 logging.warning(f'{info}, corpus name missing')
             print(f'Processing corpus {corpus}')
-            latest_v = gen_info.get('latest release')
+            latest_v = gen_info.get('latest_release')
             if not latest_v:
-                logging.error(f'{info}, latest release missing')
+                logging.error(f'{info}, latest release_missing')
         elif len(info_s) == 3:
             version = info_s[1]
             if not corpus:
