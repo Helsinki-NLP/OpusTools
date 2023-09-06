@@ -32,9 +32,9 @@ class TestDbOperations(unittest.TestCase):
     def test_get_all_preprocessings_for_latest_bilingual(self):
         params = {'source': 'en', 'target': 'fi', 'corpus': 'OpenSubtitles', 'latest': 'True'}
         ret = self.dbo.run_default_query(params)
-        self.assertEqual(len(ret), 7)
+        self.assertEqual(len(ret), 19)
         for i in ret:
-            self.assertTrue(i['id'] in [126145, 128126, 130626, 130627, 133658, 136272, 136273])
+            self.assertTrue(i['id'] in [126145, 128126, 130626, 130627, 133658, 136272, 136273, 127362, 127435, 127436, 129380, 129423, 136362, 127368, 127447, 127448, 129385, 129429, 136943])
 
     def test_get_specific_preprocessing_bilingual(self):
         params = {'source': 'en', 'target': 'fi', 'corpus': 'OpenSubtitles', 'preprocessing': 'moses',  'latest': 'True'}

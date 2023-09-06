@@ -37,6 +37,20 @@ class DbOperations:
         sql_command = f'SELECT {", ".join(columns)} FROM opusfile WHERE '+' AND '.join([f'{k} = "{v}"' for k, v in parameters.items()]) + suffix
         keys, value_list = self.run_query(sql_command)
         ret = [{k: v for k, v in zip(keys,values)} for values in value_list]
+        if 'preprocessing' not in parameters.keys() and parameters.get('target'):
+            param_mono_src = parameters.copy()
+            param_mono_src['target'] = ''
+            sql_command = f'SELECT {", ".join(columns)} FROM opusfile WHERE '+' AND '.join([f'{k} = "{v}"' for k, v in param_mono_src.items()]) + suffix
+            keys, value_list = self.run_query(sql_command)
+            ret = ret + [{k: v for k, v in zip(keys,values)} for values in value_list]
+
+            param_mono_trg = parameters.copy()
+            param_mono_trg['source'] = parameters['target']
+            param_mono_trg['target'] = ''
+            sql_command = f'SELECT {", ".join(columns)} FROM opusfile WHERE '+' AND '.join([f'{k} = "{v}"' for k, v in param_mono_trg.items()]) + suffix
+            keys, value_list = self.run_query(sql_command)
+            ret = ret + [{k: v for k, v in zip(keys,values)} for values in value_list]
+
         return ret
 
     def run_corpora_query(self, parameters):
