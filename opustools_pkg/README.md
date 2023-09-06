@@ -479,7 +479,7 @@ arguments:
                       source language in a given corpus.
 -lc, --list_corpora   List available corpora. Use -s to find corpora for a given language and use
                       both -s and -t to find corpora for a given language pair.
--o, --online_api      Search resources from the online OPUS-API instead of the local database.
+--local_db            Search resources from the local database instead of the online OPUS-API.
 -dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
                       Set download directory (default=current directory)
 -q, --suppress_prompts

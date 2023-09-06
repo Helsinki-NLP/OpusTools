@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="opustools",
-    version="1.5.4",
+    version="1.5.5",
     author="Mikko Aulamo",
     author_email="mikko.aulamo@helsinki.fi",
     description="Tools to read OPUS",

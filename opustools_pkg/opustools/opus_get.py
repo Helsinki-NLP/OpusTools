@@ -12,7 +12,7 @@ class OpusGet:
     def __init__(self, source=None, target=None, directory=None,
             release='latest', preprocess='xml', list_resources=False,
             list_languages=False, list_corpora=False, download_dir='.',
-            online_api=False, suppress_prompts=False, database=None):
+            local_db=False, suppress_prompts=False, database=None):
         """Download files from OPUS.
 
         Keyword arguments:
@@ -24,7 +24,7 @@ class OpusGet:
         list_resource -- List resources instead of downloading
         list_languages -- List available languages
         list_corpora -- List available corpora
-        online_api -- Search resource from the online OPUS-API instead of the local database.
+        local_db -- Search resources from the local database instead of the online OPUS-API.
         download_dir -- Directory where files will be downloaded (default .)
         suppress_prompts -- Download files without prompting "(y/n)"
         database -- Use custom sqlite db file
@@ -44,7 +44,7 @@ class OpusGet:
 
         self.list_languages = list_languages
         self.list_corpora = list_corpora
-        self.online_api = online_api
+        self.local_db = local_db
 
         if source and target:
             self.fromto = [source, target]
@@ -118,11 +118,11 @@ class OpusGet:
         """Receive corpus data."""
         total_size = 0
 
-        if self.online_api:
+        if self.local_db:
+            corpora = self.dbo.get_corpora(self.parameters)
+        else:
             data = self.get_response(self.url)
             corpora = data['corpora']
-        else:
-            corpora = self.dbo.get_corpora(self.parameters)
 
         ret_corpora = []
         for c in corpora:
@@ -191,17 +191,17 @@ class OpusGet:
         """Output corpus file information/data."""
         try:
             if self.list_languages:
-                if self.online_api:
-                    languages = self.get_response(self.url+'languages=True')['languages']
-                else:
+                if self.local_db:
                     languages = self.dbo.run_languages_query(self.parameters)
+                else:
+                    languages = self.get_response(self.url+'languages=True')['languages']
                 print(', '.join([str(l) for l in languages]))
                 return
             elif self.list_corpora:
-                if self.online_api:
-                    corpus_list = self.get_response(self.url+'corpora=True')['corpora']
-                else:
+                if self.local_db:
                     corpus_list = self.dbo.run_corpora_query(self.parameters)
+                else:
+                    corpus_list = self.get_response(self.url+'corpora=True')['corpora']
                 print(', '.join([str(c) for c in corpus_list]))
                 return
             else:

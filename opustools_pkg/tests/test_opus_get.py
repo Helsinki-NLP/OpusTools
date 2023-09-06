@@ -32,7 +32,7 @@ class TestOpusGet(unittest.TestCase):
 
     def test_get_files_invalid_url(self):
         opg = OpusGet(directory='RF', source='en', target='sv',
-            list_resources=True, online_api=True)
+            list_resources=True)
         opg.url = 'http://slkdfjlks'
         old_stdout = sys.stdout
         printout = io.StringIO()
@@ -64,13 +64,13 @@ class TestOpusGet(unittest.TestCase):
         printout = io.StringIO()
         sys.stdout = printout
         OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
-            download_dir=self.tempdir).get_files()
+            download_dir=self.tempdir, local_db=True).get_files()
         sys.stdout = old_stdout
         old_stdout = sys.stdout
         printout = io.StringIO()
         sys.stdout = printout
         OpusGet(directory='RF', source='en', target='sv', preprocess='xml',
-            download_dir=self.tempdir, list_resources=True).get_files()
+            download_dir=self.tempdir, list_resources=True, local_db=True).get_files()
         sys.stdout = old_stdout
         os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en-sv.xml.gz'))
         os.remove(os.path.join(self.tempdir, 'RF_latest_xml_en.zip'))
@@ -108,7 +108,7 @@ class TestOpusGet(unittest.TestCase):
         printout = io.StringIO()
         sys.stdout = printout
         files = OpusGet(directory='RF', release='v1', preprocess='xml',
-            list_resources=True).get_files()
+            list_resources=True, local_db=True).get_files()
         sys.stdout = old_stdout
         self.assertEqual(len(printout.getvalue().split('\n')), 18)
 
