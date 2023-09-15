@@ -1,0 +1,30 @@
+name: Upload Python Package
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  run_tests:
+    defaults:
+      run:
+        working-directory: opustools_pkg
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e .[all]
+    - name: Test with unittest
+      run: |
+          python -m unittest discover tests

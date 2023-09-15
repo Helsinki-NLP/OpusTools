@@ -12,6 +12,10 @@ Tools for accessing and processing OPUS data.
 
 `pip install opustools`
 
+`pip install opustools[langid]` to use `opus_langid`
+
+`pip install opustools[all]` to install all optional requirements
+
 ---
 
 ## opus_read

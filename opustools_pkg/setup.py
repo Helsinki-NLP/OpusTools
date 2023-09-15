@@ -3,9 +3,15 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+install_requires = ['ruamel.yaml']
+
+langid_require = ['pycld2', 'langid']
+
+all_require = langid_require
+
 setuptools.setup(
     name="opustools",
-    version="1.5.5",
+    version="1.5.6",
     author="Mikko Aulamo",
     author_email="mikko.aulamo@helsinki.fi",
     description="Tools to read OPUS",
@@ -21,4 +27,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ),
+    install_requires=install_requires,
+    extras_require={'langid': langid_require, 'all': all_require}
 )
