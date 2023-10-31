@@ -1,4 +1,5 @@
 import os
+import shutil
 import re
 
 from .parse.alignment_parser import AlignmentParser
@@ -196,6 +197,26 @@ class OpusRead:
         self.of_handler = OpusFileHandler(
                 download_dir, source_zip, target_zip, directory, release,
                 preprocess, self.fromto, suppress_prompts)
+
+        if preprocess == 'moses':
+            # If preprocessing is moses, download
+            moses_names = self.of_handler.open_moses_files()
+            if self.write:
+                if len(self.write) == 2:
+                    if not self.switch_langs:
+                        shutil.move(moses_names[0], os.path.join(download_dir, self.write[0]))
+                        shutil.move(moses_names[1], os.path.join(download_dir, self.write[1]))
+                    else:
+                        shutil.move(moses_names[0], os.path.join(download_dir, self.write[1]))
+                        shutil.move(moses_names[1], os.path.join(download_dir, self.write[0]))
+                    moses_names = self.write
+                else:
+                    print('"moses" preprocessing requires two output file names. Using default names.')
+            else:
+                shutil.move(moses_names[0], os.path.join(download_dir, moses_names[0]))
+                shutil.move(moses_names[1], os.path.join(download_dir, moses_names[1]))
+            print(f'Moses files written to {", ".join([download_dir+"/"+n for n in moses_names])}')
+            exit()
 
         store_attrs = False
         if write_mode == "links" or write_ids != None:

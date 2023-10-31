@@ -19,8 +19,8 @@ parser.add_argument('-r', '--release', help='Release (default=latest)',
     metavar='version',
     default='latest')
 parser.add_argument('-p', '--preprocess',
-    help='Preprocess-type (raw, xml or parsed, default=xml)',
-    default='xml', choices=['raw', 'xml', 'parsed'])
+    help='Preprocess-type (raw, xml, parsed or moses, default=xml)',
+    default='xml', choices=['raw', 'xml', 'parsed', 'moses'])
 parser.add_argument('-m', '--maximum', help='Maximum number of alignments',
     default=-1, type=int)
 parser.add_argument('-S', '--src_range',

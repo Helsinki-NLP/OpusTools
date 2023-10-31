@@ -38,6 +38,19 @@ class OpusFileHandler:
         og = OpusGet(**arguments)
         og.get_files()
 
+    def open_moses_files(self):
+        moses_zip_name = os.path.join(self.download_dir, f'{self.directory}_{self.release}_moses_'
+                f'{self.fromto[0]}-{self.fromto[1]}.txt.zip')
+        if not os.path.isfile(moses_zip_name):
+            self.download_files()
+        moses_zip = zipfile.ZipFile(moses_zip_name, 'r')
+        ret_file_names = []
+        for fn in moses_zip.filelist:
+            if fn.filename.split('.')[-1] in self.fromto:
+                moses_zip.extract(fn.filename)
+                ret_file_names.append(fn.filename)
+        return sorted(ret_file_names)
+
     def open_alignment_file(self, align_name):
         """Open alignment file. Look first for specified file, then
         look for pre-downloaded local file, and finally, download

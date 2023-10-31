@@ -24,6 +24,17 @@ def pairPrinterToVariable(**kwargs):
     sys.stdout = old_stdout
     return printout.getvalue()
 
+def preMosesToVariable(**kwargs):
+    old_stdout = sys.stdout
+    printout = io.StringIO()
+    sys.stdout = printout
+    try:
+        OpusRead(**kwargs)
+    except SystemExit as e:
+        pass
+    sys.stdout = old_stdout
+    return printout.getvalue()
+
 def add_to_root_dir(corpus=None, source=None, target=None,
         version='latest', preprocess=None, root_dir=None):
 
@@ -1939,6 +1950,44 @@ class TestOpusRead(unittest.TestCase):
                 root_directory=self.root_directory, N='96')
         self.assertTrue('# en/1988.xml.gz' in var)
         self.assertTrue('# en/1996.xml.gz' not in var)
+
+    def test_moses_preprocessing(self):
+        var = preMosesToVariable(directory='RF', source='en', target='sv',
+                    download_dir=self.tempdir1, suppress_prompts=True,
+                    root_directory=self.root_directory, preprocess='moses')
+        self.assertTrue('Moses files written to ' in var)
+        self.assertTrue('RF.en-sv.en' in var)
+        self.assertTrue('RF.en-sv.sv' in var)
+        with open(os.path.join(self.tempdir1, 'RF.en-sv.en')) as moses_en:
+            self.assertEqual(moses_en.readlines()[0][:41], 'Statement of Government Policy by the Pri')
+        with open(os.path.join(self.tempdir1, 'RF.en-sv.sv')) as moses_sv:
+            self.assertEqual(moses_sv.readlines()[0][:41], 'REGERINGSFÖRKLARING.\n')
+
+        var = preMosesToVariable(directory='RF', source='en', target='sv',
+                    download_dir=self.tempdir1, suppress_prompts=True,
+                    root_directory=self.root_directory, preprocess='moses',
+                    write=['rf.moses'])
+        self.assertTrue('"moses" preprocessing requires two output file '
+            'names. Using default names.\nMoses files written to ' in var)
+        self.assertTrue('RF.en-sv.en' in var)
+        self.assertTrue('RF.en-sv.sv' in var)
+
+        var = preMosesToVariable(directory='RF', source='en', target='sv',
+                    download_dir=self.tempdir1, suppress_prompts=True,
+                    root_directory=self.root_directory, preprocess='moses',
+                    write=['rf.moses.en', 'rf.moses.sv'])
+        self.assertTrue('Moses files written to ' in var)
+        self.assertTrue('rf.moses.en' in var)
+        self.assertTrue('rf.moses.sv' in var)
+
+        var = preMosesToVariable(directory='RF', source='sv', target='en',
+                    download_dir=self.tempdir1, suppress_prompts=True,
+                    root_directory=self.root_directory, preprocess='moses',
+                    write=['rf.moses.sv', 'rf.moses.en'])
+        with open(os.path.join(self.tempdir1, 'rf.moses.en')) as moses_en:
+            self.assertEqual(moses_en.readlines()[0][:41], 'Statement of Government Policy by the Pri')
+        with open(os.path.join(self.tempdir1, 'rf.moses.sv')) as moses_sv:
+            self.assertEqual(moses_sv.readlines()[0][:41], 'REGERINGSFÖRKLARING.\n')
 
 if __name__ == '__main__':
     unittest.main()
