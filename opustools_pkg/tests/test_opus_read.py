@@ -59,13 +59,16 @@ def add_to_root_dir(corpus=None, source=None, target=None,
         os.path.join(root_dir, corpus, version, 'xml',
             source+'-'+target+'.xml.gz'))
 
+OPUS_TEMP = 'tmp_opus_read_temp'
+OPUS_ROOT = 'tmp_opus_read_root'
+
 class TestOpusRead(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        if ('OPUSREAD_TEST_TEMPDIR' in os.environ.keys() and
-            os.path.exists(os.environ['OPUSREAD_TEST_TEMPDIR'])):
-                self.tempdir1 = os.environ['OPUSREAD_TEST_TEMPDIR']
+        if ('OPUS_TEST_SAVE' in os.environ.keys() and
+            os.path.exists(os.path.join(os.environ['OPUS_TEST_SAVE'], OPUS_TEMP))):
+                self.tempdir1 = os.path.join(os.environ['OPUS_TEST_SAVE'], OPUS_TEMP)
         else:
             self.tempdir1 = tempfile.mkdtemp()
             os.mkdir(os.path.join(self.tempdir1, 'test_files'))
@@ -189,9 +192,9 @@ class TestOpusRead(unittest.TestCase):
                 'id="SL4"/>\n<link xtargets="s5.0;s5.0" id="SL5.0"/>\n  '
                 '</linkGrp>\n</cesAlign>\n')
 
-        if ('OPUSREAD_TEST_ROOTDIR' in os.environ.keys() and
-            os.path.exists(os.environ['OPUSREAD_TEST_ROOTDIR'])):
-            self.root_directory = os.environ['OPUSREAD_TEST_ROOTDIR']
+        if ('OPUS_TEST_SAVE' in os.environ.keys() and
+            os.path.exists(os.path.join(os.environ['OPUS_TEST_SAVE'], OPUS_ROOT))):
+                self.root_directory = os.path.join(os.environ['OPUS_TEST_SAVE'], OPUS_ROOT)
         else:
             self.root_directory = tempfile.mkdtemp()
 
@@ -265,10 +268,12 @@ class TestOpusRead(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        if ('OPUSREAD_TEST_SAVE' in os.environ.keys() and
-                os.environ['OPUSREAD_TEST_SAVE'] == 'true'):
-            print('\nTEMPDIR:', self.tempdir1)
-            print('ROOTDIR:', self.root_directory)
+        if 'OPUS_TEST_SAVE' in os.environ.keys():
+            save_path = os.environ['OPUS_TEST_SAVE']
+            if not os.path.exists(os.path.join(save_path, OPUS_TEMP)):
+                shutil.copytree(self.tempdir1, os.path.join(save_path, OPUS_TEMP))
+            if not os.path.exists(os.path.join(save_path, OPUS_ROOT)):
+                shutil.copytree(self.root_directory, os.path.join(save_path, OPUS_ROOT))
         else:
             shutil.rmtree(self.tempdir1)
             shutil.rmtree(self.root_directory)

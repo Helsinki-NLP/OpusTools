@@ -9,22 +9,25 @@ from unittest import mock
 from opustools import OpusCat
 from tests import add_to_root_dir
 
+OPUS_TEMP = 'tmp_opus_cat_temp'
+OPUS_ROOT = 'tmp_opus_cat_root'
+
 class TestOpusCat(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
         self.maxDiff = None
 
-        if ('OPUSCAT_TEST_TEMPDIR' in os.environ.keys() and
-            os.path.exists(os.environ['OPUSCAT_TEST_TEMPDIR'])):
-                self.tempdir1 = os.environ['OPUSCAT_TEST_TEMPDIR']
+        if ('OPUS_TEST_SAVE' in os.environ.keys() and
+            os.path.exists(os.path.join(os.environ['OPUS_TEST_SAVE'], OPUS_TEMP))):
+                self.tempdir1 = os.path.join(os.environ['OPUS_TEST_SAVE'], OPUS_TEMP)
         else:
             self.tempdir1 = tempfile.mkdtemp()
             os.mkdir(os.path.join(self.tempdir1, 'test_files'))
 
-        if ('OPUSCAT_TEST_ROOTDIR' in os.environ.keys() and
-            os.path.exists(os.environ['OPUSCAT_TEST_ROOTDIR'])):
-            self.root_directory = os.environ['OPUSCAT_TEST_ROOTDIR']
+        if ('OPUS_TEST_SAVE' in os.environ.keys() and
+            os.path.exists(os.path.join(os.environ['OPUS_TEST_SAVE'], OPUS_ROOT))):
+                self.root_directory = os.path.join(os.environ['OPUS_TEST_SAVE'], OPUS_ROOT)
         else:
             self.root_directory = tempfile.mkdtemp()
 
@@ -36,10 +39,12 @@ class TestOpusCat(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        if ('OPUSCAT_TEST_SAVE' in os.environ.keys() and
-                os.environ['OPUSCAT_TEST_SAVE'] == 'true'):
-            print('\nTEMPDIR:', self.tempdir1)
-            print('ROOTDIR:', self.root_directory)
+        if 'OPUS_TEST_SAVE' in os.environ.keys():
+            save_path = os.environ['OPUS_TEST_SAVE']
+            if not os.path.exists(os.path.join(save_path, OPUS_TEMP)):
+                shutil.copytree(self.tempdir1, os.path.join(save_path, OPUS_TEMP))
+            if not os.path.exists(os.path.join(save_path, OPUS_ROOT)):
+                shutil.copytree(self.root_directory, os.path.join(save_path, OPUS_ROOT))
         else:
             shutil.rmtree(self.tempdir1)
             shutil.rmtree(self.root_directory)

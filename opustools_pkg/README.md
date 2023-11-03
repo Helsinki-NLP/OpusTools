@@ -24,7 +24,7 @@ Tools for accessing and processing OPUS data.
 
 ```
 usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
-                 [-p {raw,xml,parsed}] [-m M] [-S S] [-T T] [-a attribute]
+                 [-p {raw,xml,parsed,moses}] [-m M] [-S S] [-T T] [-a attribute]
                  [-tr TR] [-ln] [-w file_name [file_name ...]]
                  [-wm {normal,moses,tmx,links}] [-pn] [-rd path_to_dir]
                  [-af path_to_file] [-sz path_to_zip] [-tz path_to_zip]
@@ -113,10 +113,10 @@ arguments:
                     Set download directory (default=current directory)
 -pi, --preserve_inline_tags
                     Preserve inline tags within sentences
--n regex              Get only documents that match the regex
--N regex              Skip all documents that match the regex
+-n regex            Get only documents that match the regex
+-N regex            Skip all documents that match the regex
 -cs CHUNK_SIZE, --chunk_size CHUNK_SIZE
-                      Number of sentence pairs in chunks to be processed (default=1000000)
+                    Number of sentence pairs in chunks to be processed (default=1000000)
 -v, --verbose       Print progress messages
 ```
 
@@ -144,9 +144,23 @@ XCES align format. Set the "-wm" flag to "links" to enable this mode.
 
 The `--chunk_size` parameter can be used to adjust the number of sentence pairs to be processed per chunk. The XCES format can contain source and target sentence ids in a non-sequential random order. This means that we have to store sentence pairs from entire documents to make sure that all sentence pairs are found. This is not a problem for corpora that are split into multiple smaller documents, but this can lead to huge memory usage for big corpora that consist of only a single document, e.g. WikiMatrix. The `--chunk_size` parameter is a compromise to conserve memory at the expense of time. `opus_read` collects as many alignment links as `--chunk_size` indicates, parses the entire source and target sentence documents, and outputs the sentence pairs. This process is repeated until all sentence pairs from the document pair have been processed. This means that entire documents are re-parsed each time a new chunk is processed. For example, if a document pair has 10,000,000 sentence pairs and you use the default chunk size of 1,000,000, which uses roughly 1.5 Gb of memory, the memory usage will be one tenth of what it would be without the chunk size restriction, but the processing will take ten times longer. This is not an optimal solution and we are looking for a better one. To disable chunking, set the parameter to -1.
 
+**Moses files**
+
+It is also possible to download moses files directly without having to do any XML parsing. This enables a quicker access to corpora but loses all filtering options as filtering is done based on the XCES structure and metadata. The moses files contain all non-empty alignments but includes duplicates. To download moses files with `opus_read` set the `preprocess` flag to `moses`. This downloads a moses zip archive and extracts the source and target files, for example:
+
+```
+opus_read --directory RF \
+    --source en \
+    --target sv \
+    --preprocess moses \
+    --write en-sv.en en-sv.sv
+```
+
+To download a wider range of different file types, see [opus_get](#opus_get).
+
 **Examples:**
 
-Read sentence alignment in XCES align format. Necessary files will be downloaded if they are not found locally:
+Read sentence alignment in XCES align format. Necessary files will be downloaded automatically if they are not found locally:
 
 `opus_read --directory RF --source en --target sv`
 

@@ -149,13 +149,6 @@ class OpusRead:
         if write_ids:
             self.id_file = file_open(write_ids, 'w', encoding='utf-8')
 
-        if write:
-            if write_mode == 'moses' and len(write) == 2:
-                self.mosessrc = file_open(write[0], mode='w', encoding='utf-8')
-                self.mosestrg = file_open(write[1], mode='w', encoding='utf-8')
-            else:
-                self.resultfile = file_open(write[0], mode='w', encoding='utf-8')
-
         self.write_mode = write_mode
         self.write = write
         self.maximum = maximum
@@ -217,6 +210,13 @@ class OpusRead:
                 shutil.move(moses_names[1], os.path.join(download_dir, moses_names[1]))
             print(f'Moses files written to {", ".join([download_dir+"/"+n for n in moses_names])}')
             exit()
+
+        if write:
+            if write_mode == 'moses' and len(write) == 2:
+                self.mosessrc = file_open(write[0], mode='w', encoding='utf-8')
+                self.mosestrg = file_open(write[1], mode='w', encoding='utf-8')
+            else:
+                self.resultfile = file_open(write[0], mode='w', encoding='utf-8')
 
         store_attrs = False
         if write_mode == "links" or write_ids != None:

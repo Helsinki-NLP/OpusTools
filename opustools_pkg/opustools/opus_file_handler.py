@@ -49,6 +49,7 @@ class OpusFileHandler:
             if fn.filename.split('.')[-1] in self.fromto:
                 moses_zip.extract(fn.filename)
                 ret_file_names.append(fn.filename)
+        moses_zip.close()
         return sorted(ret_file_names)
 
     def open_alignment_file(self, align_name):
