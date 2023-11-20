@@ -112,6 +112,28 @@ class TestOpusGet(unittest.TestCase):
         sys.stdout = old_stdout
         self.assertEqual(len(printout.getvalue().split('\n')), 18)
 
+    def test_indonesian(self):
+        old_stdout = sys.stdout
+        printout = io.StringIO()
+
+        sys.stdout = printout
+        files = OpusGet(directory='bible-uedin', source='id', target='en', preprocess='xml',
+            list_resources=True, local_db=True).get_files()
+        sys.stdout = old_stdout
+        self.assertEqual(len(printout.getvalue().split('\n')), 6)
+
+        sys.stdout = printout
+        files = OpusGet(list_languages=True, directory='bible-uedin', source='id',
+                list_resources=True, local_db=True).get_files()
+        sys.stdout = old_stdout
+        self.assertEqual(len(printout.getvalue().split('\n')[-2].split(',')), 101)
+
+        sys.stdout = printout
+        files = OpusGet(list_corpora=True, source='id',
+                list_resources=True, local_db=True).get_files()
+        sys.stdout = old_stdout
+        self.assertEqual(len(printout.getvalue().split('\n')[-2].split(',')), 24)
+
 if __name__ == '__main__':
     unittest.main()
 
