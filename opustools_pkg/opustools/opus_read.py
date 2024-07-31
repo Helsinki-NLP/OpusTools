@@ -141,11 +141,6 @@ class OpusRead:
                 target_zip = os.path.join(root_directory, directory, release,
                     preprocess, self.fromto[1]+'.zip')
 
-        self.resultfile = None
-        self.mosessrc = None
-        self.mosestrg = None
-
-        self.id_file = None
         if write_ids:
             self.id_file = file_open(write_ids, 'w', encoding='utf-8')
 
@@ -156,7 +151,7 @@ class OpusRead:
         if print_annotations:
             self.preprocess = 'parsed'
 
-        self.write_ids=write_ids
+        self.write_ids = write_ids
 
         self.preserve = preserve_inline_tags
 
@@ -192,31 +187,7 @@ class OpusRead:
                 preprocess, self.fromto, suppress_prompts)
 
         if preprocess == 'moses':
-            # If preprocessing is moses, download
-            moses_names = self.of_handler.open_moses_files()
-            if self.write:
-                if len(self.write) == 2:
-                    if not self.switch_langs:
-                        shutil.move(moses_names[0], os.path.join(download_dir, self.write[0]))
-                        shutil.move(moses_names[1], os.path.join(download_dir, self.write[1]))
-                    else:
-                        shutil.move(moses_names[0], os.path.join(download_dir, self.write[1]))
-                        shutil.move(moses_names[1], os.path.join(download_dir, self.write[0]))
-                    moses_names = self.write
-                else:
-                    print('"moses" preprocessing requires two output file names. Using default names.')
-            else:
-                shutil.move(moses_names[0], os.path.join(download_dir, moses_names[0]))
-                shutil.move(moses_names[1], os.path.join(download_dir, moses_names[1]))
-            print(f'Moses files written to {", ".join([download_dir+"/"+n for n in moses_names])}')
-            exit()
-
-        if write:
-            if write_mode == 'moses' and len(write) == 2:
-                self.mosessrc = file_open(write[0], mode='w', encoding='utf-8')
-                self.mosestrg = file_open(write[1], mode='w', encoding='utf-8')
-            else:
-                self.resultfile = file_open(write[0], mode='w', encoding='utf-8')
+            return
 
         store_attrs = False
         if write_mode == "links" or write_ids != None:
@@ -228,8 +199,40 @@ class OpusRead:
                 leave_non_alignments_out)
 
     def printPairs(self):
+        print("printPairs called!")
+        resultfile = None
+        mosessrc = None
+        mosestrg = None
+        id_file = None
 
-        self.add_file_header(self.resultfile)
+        if self.write_ids:
+            id_file = file_open(self.write_ids, 'w', encoding='utf-8')
+
+        if self.write:
+            if self.write_mode == 'moses' and len(self.write) == 2:
+                mosessrc = file_open(self.write[0], mode='w', encoding='utf-8')
+                mosestrg = file_open(self.write[1], mode='w', encoding='utf-8')
+            else:
+                resultfile = file_open(self.write[0], mode='w', encoding='utf-8')
+
+        if self.preprocess == 'moses':
+            # If preprocessing is moses, download
+            moses_names = self.of_handler.open_moses_files()
+            if self.write:
+                if len(self.write) == 2:
+                    if not self.switch_langs:
+                        shutil.move(moses_names[0], self.write[0])
+                        shutil.move(moses_names[1], self.write[1])
+                    else:
+                        shutil.move(moses_names[0], self.write[1])
+                        shutil.move(moses_names[1], self.write[0])
+                    moses_names = self.write
+                else:
+                    print('"moses" preprocessing requires two output file names. Using default names.')
+            print(f'Moses files written to {", ".join(moses_names)}')
+            return
+
+        self.add_file_header(resultfile)
 
         src_parser = None
         trg_parser = None
@@ -285,7 +288,7 @@ class OpusRead:
                     continue
 
             self.add_doc_names(src_doc_name, trg_doc_name,
-                    self.resultfile, self.mosessrc, self.mosestrg)
+                    resultfile, mosessrc, mosestrg)
 
             len_link_list = len(link_list)
 
@@ -303,8 +306,8 @@ class OpusRead:
 
                 link_attr = attrs_list[i] if i < len(attrs_list) else None
 
-                self.out_put_pair(src_result, trg_result, self.resultfile,
-                        self.mosessrc, self.mosestrg, link_attr, self.id_file,
+                self.out_put_pair(src_result, trg_result, resultfile,
+                        mosessrc, mosestrg, link_attr, id_file,
                         src_doc_name, trg_doc_name)
 
                 total += 1
@@ -312,7 +315,7 @@ class OpusRead:
                     stop = True
                     break
 
-            self.add_doc_ending(self.resultfile)
+            self.add_doc_ending(resultfile)
 
             if self.verbose and self.write:
                 print("\033[F\033[F\033[F", end="")
@@ -323,19 +326,18 @@ class OpusRead:
         if self.verbose and self.write:
             print("\n\n")
 
-        self.add_file_ending(self.resultfile)
+        self.add_file_ending(resultfile)
 
         self.alignmentParser.bp.close_document()
 
         if self.write:
-            if self.write_mode == 'moses' and self.mosessrc:
-                self.mosessrc.close()
-                self.mosestrg.close()
+            if self.write_mode == 'moses' and mosessrc:
+                mosessrc.close()
+                mosestrg.close()
             else:
-                self.resultfile.close()
+                resultfile.close()
 
         if self.write_ids:
-            self.id_file.close()
+            id_file.close()
 
         self.of_handler.close_zipfiles()
-
