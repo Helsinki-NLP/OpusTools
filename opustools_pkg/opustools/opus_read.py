@@ -110,21 +110,12 @@ class OpusRead:
             self.verbose = True
 
         if self.switch_langs:
-            temp = src_range
-            src_range = tgt_range
-            tgt_range = temp
-            temp = src_cld2
-            src_cld2 = trg_cld2
-            trg_cld2 = temp
-            temp = src_langid
-            src_langid = trg_langid
-            trg_langid = temp
-            temp = source_zip
-            source_zip = target_zip
-            target_zip = temp
-            temp = source_annotations.copy()
-            source_annotations = target_annotations.copy()
-            target_annotations = temp.copy()
+            src_range, tgt_range = tgt_range, src_range
+            src_cld2, trg_cld2 = trg_cld2, src_cld2
+            src_langid, trg_langid = trg_langid, src_langid
+            source_zip, target_zip = target_zip, source_zip
+            source_annotations, target_annotations = \
+                target_annotations.copy(), source_annotations.copy()
 
         lang_filters = [src_cld2, src_langid, trg_cld2, trg_langid]
 
