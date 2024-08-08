@@ -147,9 +147,6 @@ class OpusRead:
                     root_directory, directory, release,
                     preprocess, self.fromto[1]+'.zip')
 
-        if write_ids:
-            self.id_file = file_open(write_ids, 'w', encoding='utf-8')
-
         self.write_mode = write_mode
         self.write = write
         self.maximum = maximum
@@ -230,6 +227,7 @@ class OpusRead:
             if not self.write or len(self.write) != 2:
                 # Write to current path and return
                 if self.write and len(self.write) != 2:
+                    resultfile.close()
                     logger.warning('"moses" preprocessing requires two output '
                                    'file names. Using default names.')
                 moses_names = self.of_handler.open_moses_files(
