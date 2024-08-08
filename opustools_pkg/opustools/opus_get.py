@@ -2,7 +2,7 @@ import urllib.request
 import json
 import argparse
 import sys
-import os.path
+import os
 import gzip
 
 from .db_operations import DbOperations
@@ -12,7 +12,7 @@ class OpusGet:
     def __init__(self, source=None, target=None, directory=None,
             release='latest', preprocess='xml', list_resources=False,
             list_languages=False, list_corpora=False, download_dir='.',
-            local_db=False, suppress_prompts=False, database=None):
+            local_db=False, suppress_prompts=False, database='~/.OpusTools/opusdata.db'):
         """Download files from OPUS.
 
         Keyword arguments:
@@ -25,26 +25,25 @@ class OpusGet:
         list_languages -- List available languages
         list_corpora -- List available corpora
         local_db -- Search resources from the local database instead of the online OPUS-API.
+        database -- Sqlite db file location (default ~/.OpusTools/opusdata.db)
         download_dir -- Directory where files will be downloaded (default .)
         suppress_prompts -- Download files without prompting "(y/n)"
-        database -- Use custom sqlite db file
         """
-
-        if database:
-            DB_FILE = database
-        else:
-            DB_FILE = os.path.join(os.path.dirname(__file__), 'opusdata.db')
-            if not os.path.isfile(DB_FILE):
-                with gzip.open(DB_FILE+'.gz') as gzfile:
-                    data = gzfile.read()
-                with open(DB_FILE, 'wb') as outfile:
-                    outfile.write(data)
-
-        self.dbo = DbOperations(db_file=DB_FILE)
 
         self.list_languages = list_languages
         self.list_corpora = list_corpora
         self.local_db = local_db
+
+        database = os.path.expanduser(database)
+        if self.local_db:
+            if not os.path.isfile(database):
+                compressed_db = os.path.join(os.path.dirname(__file__), 'opusdata.db.gz')
+                with gzip.open(compressed_db) as gzfile:
+                    data = gzfile.read()
+                os.makedirs(os.path.dirname(database), exist_ok=True)
+                with open(database, 'wb') as outfile:
+                    outfile.write(data)
+        self.dbo = DbOperations(db_file=database)
 
         if source and target:
             self.fromto = [source, target]

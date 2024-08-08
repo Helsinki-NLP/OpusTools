@@ -473,7 +473,8 @@ opus_cat --directory RF --language en --file_name RF/xml/en/1996.xml
 ```
 usage: opus_get [-h] [-s SOURCE] [-t TARGET] [-d DIRECTORY] [-r RELEASE]
                 [-p {raw,xml,parsed,mono,moses,tmx,truecaser,ud,freq,smt,dic}]
-                [-l] [-dl DOWNLOAD_DIR] [-q]
+                [-l] [-ll] [-lc] [--local_db] [-db DATABASE]
+                [-dl DOWNLOAD_DIR] [-q] [-u] [-w]
 ```
 
 arguments:
@@ -498,15 +499,15 @@ arguments:
 -lc, --list_corpora   List available corpora. Use -s to find corpora for a given language and use
                       both -s and -t to find corpora for a given language pair.
 --local_db            Search resources from the local database instead of the online OPUS-API.
+-db DATABASE, --database DATABASE
+                      Sqlite db file location
 -dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
                       Set download directory (default=current directory)
 -q, --suppress_prompts
                       Download necessary files without prompting "(y/n)"
--u [log_type], --update_db [log_type]
-                      Update the local corpus database. This could take up to 1 hour. Use "-u
-                      warnings" to log warnings in addition to errors in "opusdb_update_error.log"
--db DATABASE, --database DATABASE
-                      Use your custom sqlite db file
+-u, --update_db       Update the local corpus database. This could take up to 1 hour."
+-w, --warnings        When updating the local database, log warnings in addition to errors in
+                      "opusdb_update_error.log"
 ```
 
 ### Description

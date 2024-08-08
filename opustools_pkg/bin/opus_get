@@ -22,6 +22,7 @@ parser.add_argument('-lc', '--list_corpora', help='List available corpora. Use -
     action='store_true')
 parser.add_argument('--local_db', help='Search resources from the local database instead of the online OPUS-API.',
     action='store_true')
+parser.add_argument('-db', '--database', help='Sqlite db file location', default='~/.OpusTools/opusdata.db')
 parser.add_argument('-dl', '--download_dir',
     help='Set download directory (default=current directory)', default='.')
 parser.add_argument('-q', '--suppress_prompts',
@@ -29,7 +30,6 @@ parser.add_argument('-q', '--suppress_prompts',
     action='store_true')
 parser.add_argument('-u', '--update_db', help='Update the local corpus database. This could take up to 1 hour."', action='store_true')
 parser.add_argument('-w', '--warnings', help='When updating the local database, log warnings in addition to errors in "opusdb_update_error.log"', action='store_const', const='warnings', default='errors')
-parser.add_argument('-db', '--database', help='Use your custom sqlite db file')
 
 args = parser.parse_args()
 
