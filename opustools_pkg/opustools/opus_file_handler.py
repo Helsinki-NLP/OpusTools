@@ -38,7 +38,7 @@ class OpusFileHandler:
         og = OpusGet(**arguments)
         og.get_files()
 
-    def open_moses_files(self):
+    def open_moses_files(self, outpath=None):
         moses_zip_name = os.path.join(self.download_dir, f'{self.directory}_{self.release}_moses_'
                 f'{self.fromto[0]}-{self.fromto[1]}.txt.zip')
         if not os.path.isfile(moses_zip_name):
@@ -47,7 +47,7 @@ class OpusFileHandler:
         ret_file_names = []
         for fn in moses_zip.filelist:
             if fn.filename.split('.')[-1] in self.fromto:
-                moses_zip.extract(fn.filename)
+                moses_zip.extract(fn.filename, path=outpath)
                 ret_file_names.append(fn.filename)
         moses_zip.close()
         return sorted(ret_file_names)
@@ -150,4 +150,3 @@ class OpusFileHandler:
         if self.zip_opened:
             self.src_zip.close()
             self.trg_zip.close()
-

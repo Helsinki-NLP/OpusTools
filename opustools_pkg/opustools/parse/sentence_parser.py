@@ -1,4 +1,7 @@
+import sys
+
 from .block_parser import BlockParser, BlockParserError
+
 
 class SentenceParserError(Exception):
 
@@ -160,7 +163,7 @@ class SentenceParser:
             bp.close_document()
             if verbose:
                 bp.report_progress(cur_pos)
-                print("")
+                print("", file=sys.stderr)
         except BlockParserError as e:
             raise SentenceParserError(
                 'Error while parsing sentence file: {error}'.format(error=e.args[0]))
@@ -199,4 +202,3 @@ class SentenceParser:
             attrsList.append(attrs)
 
         return sentence, attrsList
-
