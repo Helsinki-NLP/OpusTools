@@ -42,10 +42,23 @@ def parse_type(preprocessing, get_annotations):
                 sentence.append(data)
         return sentence, maximum
 
+    def xml_raw(bp, block, sentence, no_ids, maximum):
+        if block.name == 's':
+            sid = block.attributes['id']
+            sentence = block.data.strip()
+            if no_ids:
+                print(sentence)
+            else:
+                print(f'("{sid}")>{sentence}')
+            maximum -= 1
+        return sentence, maximum
+
     if preprocessing == 'xml':
         return xml_parse
-    if preprocessing == 'parsed':
+    elif preprocessing == 'parsed':
         return parsed_parse
+    elif preprocessing == 'raw':
+        return xml_raw
 
 class SentenceParser(SentenceParser):
 
@@ -68,7 +81,7 @@ class SentenceParser(SentenceParser):
 class OpusCat:
 
     def __init__(self, directory=None, language=None, no_ids=False,
-            maximum=-2, plain=False, file_name=None, release='latest',
+            maximum=-2, preprocess='xml', plain=False, file_name=None, release='latest',
             print_annotations=False, set_attribute=['pos', 'lem'],
             change_annotation_delimiter='|',
             root_directory='/projappl/nlpl/data/OPUS', download_dir='.' ):
@@ -79,6 +92,7 @@ class OpusCat:
         language -- Language of the corpus
         no_ids -- Print sentences without ids in plain mode
         maximum -- Maximum number of sentences to be printed (default all)
+        preprocess -- Either xml (tokenized) or raw (untokenized) (default xml)
         plain -- Print sentence in plain text
         file_name -- Print a specific file within a corpus
         release -- Corpus release version (default latest)
@@ -101,19 +115,19 @@ class OpusCat:
         self.file_name = file_name
         self.plain = plain
 
-
-        self.preprocess = 'xml'
+        self.preprocess = preprocess
+        parser_pp = preprocess
         if print_annotations:
-            self.preprocess = 'parsed'
+            parser_pp = 'parsed'
 
-        spar = SentenceParser(None, self.preprocess,
+        spar = SentenceParser(None, parser_pp,
             self.set_attribute, self.change_annotation_delimiter)
-        self.parse_block = parse_type(self.preprocess, spar.get_annotations)
+        self.parse_block = parse_type(parser_pp, spar.get_annotations)
 
         self.openFiles(
-            os.path.join(download_dir, directory+'_'+release+'_xml_'+
+            os.path.join(download_dir, directory+'_'+release+'_'+preprocess+'_'+
                 language+'.zip'),
-            os.path.join(root_directory, directory, release, 'xml',
+            os.path.join(root_directory, directory, release, preprocess,
                 language+'.zip'))
 
     def openFiles(self, localfile, defaultpath):
@@ -130,7 +144,7 @@ class OpusCat:
                 '-p', 'xml', '-l', '-r', self.release, '-dl',
                 self.download_dir]
             arguments={'directory': self.directory, 'source': self.language,
-                'target': '', 'preprocess': 'xml', 'list_resources': True,
+                'target': '', 'preprocess': self.preprocess, 'list_resources': True,
                 'release': self.release, 'download_dir': self.download_dir}
             og = OpusGet(**arguments)
             og.get_files()
@@ -151,7 +165,10 @@ class OpusCat:
             maximum = self.maximum
             stop = False
             sentence = []
-            bp = BlockParser(f, data_tag='w', doc_size=0)
+            if self.preprocess == 'raw':
+                bp = BlockParser(f, data_tag='s', doc_size=0)
+            else:
+                bp = BlockParser(f, data_tag='w', doc_size=0)
             blocks, cur_pos = bp.get_complete_blocks(0)
             while blocks:
                 for block in blocks:

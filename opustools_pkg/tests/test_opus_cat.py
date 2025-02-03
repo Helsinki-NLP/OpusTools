@@ -36,6 +36,11 @@ class TestOpusCat(unittest.TestCase):
             add_to_root_dir(corpus='RF', source='en', target='sv',
                 preprocess='xml', root_dir=self.root_directory)
 
+            os.makedirs(os.path.join(self.root_directory, 'RF', 'latest',
+                'raw'))
+            add_to_root_dir(corpus='RF', source='en', target='sv',
+                preprocess='raw', root_dir=self.root_directory)
+
             os.makedirs(os.path.join(self.root_directory, 'RF', 'v1',
                 'xml'))
             add_to_root_dir(corpus='RF', source='en', target='sv',
@@ -70,6 +75,15 @@ class TestOpusCat(unittest.TestCase):
             """m to put to use all good initiatives , to work for bro"""
             """ad solutions and to pursue a policy in the interests o"""
             """f the whole nation .\n""")
+
+    def test_printing_sentences_raw(self):
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            plain=True, preprocess='raw', root_directory=self.root_directory)
+        self.assertEqual(var[-180:],
+            """("s72.1")>It is the Government's resposibility and ai"""
+            """m to put to use all good initiatives, to work for bro"""
+            """ad solutions and to pursue a policy in the interests o"""
+            """f the whole nation.\n""")
 
     def test_printing_sentences_with_limit(self):
         var = self.printSentencesToVariable(directory='RF', language='en',
