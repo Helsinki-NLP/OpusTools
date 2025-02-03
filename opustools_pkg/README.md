@@ -397,9 +397,9 @@ All aboard the OPUS Express! Create test/dev/train sets from OPUS data.
 ### Usage
 
 ```
-usage: opus_cat [-h] -d DIRECTORY -l LANGUAGE [-i] [-m MAXIMUM] [-p]
-                [-f FILE_NAME] [-r RELEASE] [-pa]
-                [-sa SET_ATTRIBUTE [SET_ATTRIBUTE ...]]
+usage: opus_cat [-h] -d DIRECTORY -l LANGUAGE [-i] [-m MAXIMUM]
+                [-pp {raw,xml}] [-p] [-f FILE_NAME]
+                [-r RELEASE] [-pa] [-sa SET_ATTRIBUTE [SET_ATTRIBUTE ...]]
                 [-ca CHANGE_ANNOTATION_DELIMITER] [-rd path_to_dir]
                 [-dl DOWNLOAD_DIR]
 ```
@@ -407,31 +407,32 @@ usage: opus_cat [-h] -d DIRECTORY -l LANGUAGE [-i] [-m MAXIMUM] [-p]
 arguments:
 
 ```
--h, --help            show this help message and exit
--d DIRECTORY, --directory DIRECTORY
-                      Corpus name
--l LANGUAGE, --language LANGUAGE
-                      Language
--i, --no_ids          Print without ids when using -p
--m MAXIMUM, --maximum MAXIMUM
-                      Maximum number of sentences
--p, --plain           Print in plain txt
--f FILE_NAME, --file_name FILE_NAME
-                      File name (if not given, prints all files)
--r RELEASE, --release RELEASE
-                      Release (default=latest)
--pa, --print_annotations
-                      Print annotations, if they exist
--sa SET_ATTRIBUTE [SET_ATTRIBUTE ...], --set_attribute SET_ATTRIBUTE [SET_ATTRIBUTE ...]
-                      Set sentence annotation attributes to be printed, e.g.
-                      -sa pos lem. To print all available attributes use -sa
-                      all_attrs (default=pos,lem)
--ca CHANGE_ANNOTATION_DELIMITER, --change_annotation_delimiter CHANGE_ANNOTATION_DELIMITER
-                      Change annotation delimiter (default=|)
--rd path_to_dir, --root_directory path_to_dir
-                      Change root directory (default=/proj/nlpl/data/OPUS)
--dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
-                      Set download directory (default=current directory)
+  -h, --help            show this help message and exit
+  -d DIRECTORY, --directory DIRECTORY
+                        Corpus name
+  -l LANGUAGE, --language LANGUAGE
+                        Language
+  -i, --no_ids          Print without ids when using -p
+  -m MAXIMUM, --maximum MAXIMUM
+                        Maximum number of sentences
+  -pp {raw,xml}, --preprocess {raw,xml}
+                        Preprocess-type (raw, xml, default=xml)
+  -p, --plain           Print in plain txt
+  -f FILE_NAME, --file_name FILE_NAME
+                        File name (if not given, prints all files)
+  -r RELEASE, --release RELEASE
+                        Release (default=latest)
+  -pa, --print_annotations
+                        Print annotations, if they exist
+  -sa SET_ATTRIBUTE [SET_ATTRIBUTE ...], --set_attribute SET_ATTRIBUTE [SET_ATTRIBUTE ...]
+                        Set sentence annotation attributes to be printed, e.g. -sa pos lem.
+                        To print all available attributes use -sa all_attrs (default=pos,lem)
+  -ca CHANGE_ANNOTATION_DELIMITER, --change_annotation_delimiter CHANGE_ANNOTATION_DELIMITER
+                        Change annotation delimiter (default=|)
+  -rd path_to_dir, --root_directory path_to_dir
+                        Change root directory (default=/projappl/nlpl/data/OPUS)
+  -dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
+                        Set download directory (default=current directory)
 ```
 
 ### Description
@@ -519,7 +520,7 @@ Download files from OPUS
 List available files in RF corpus for en-sv language pair:
 
 ```
-opus_get --directory RF --source en --target sv --list
+opus_get --directory RF --source en --target sv --list_resources
 ```
 
 Download RF corpus for en-sv:
@@ -537,19 +538,19 @@ opus_get --directory RF --source en --target sv --download_dir RF_files
 List all files in RF that include English:
 
 ```
-opus_get --directory RF --source en --list
+opus_get --directory RF --source en --list_resources
 ```
 
 List all files for all language pairs in RF:
 
 ```
-opus_get --directory RF --list
+opus_get --directory RF --list_resources
 ```
 
 List all en-sv files in the whole OPUS:
 
 ```
-opus_get --source en --target sv --list
+opus_get --source en --target sv --list_resources
 ```
 
 Find available target languages for English in RF:

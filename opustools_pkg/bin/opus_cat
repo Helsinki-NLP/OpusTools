@@ -15,7 +15,7 @@ parser.add_argument('-m', '--maximum',
     help='Maximum number of sentences', default=-2, type=int)
 parser.add_argument('-pp', '--preprocess',
     help='Preprocess-type (raw, xml, default=xml)',
-    default='xml', choices=['raw', 'xml', 'parsed', 'moses'])
+    default='xml', choices=['raw', 'xml'])
 parser.add_argument('-p', '--plain', help='Print in plain txt',
     action='store_true')
 parser.add_argument('-f', '--file_name',
@@ -33,9 +33,9 @@ parser.add_argument('-ca', '--change_annotation_delimiter',
     help='Change annotation delimiter (default=|)',
     default='|')
 parser.add_argument('-rd', '--root_directory',
-    help='Change root directory (default=/proj/nlpl/data/OPUS)',
+    help='Change root directory (default=/projappl/nlpl/data/OPUS)',
     metavar='path_to_dir',
-    default='/proj/nlpl/data/OPUS')
+    default='/projappl/nlpl/data/OPUS')
 parser.add_argument('-dl', '--download_dir',
     help='Set download directory (default=current directory)',
     default='.')
