@@ -2,7 +2,6 @@ import os
 import shutil
 import zipfile
 import argparse
-import cgi
 import tempfile
 import re
 

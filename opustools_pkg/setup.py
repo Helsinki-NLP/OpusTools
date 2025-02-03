@@ -11,7 +11,7 @@ all_require = langid_require
 
 setuptools.setup(
     name="opustools",
-    version="1.7.0",
+    version="1.7.1",
     author="Mikko Aulamo",
     author_email="mikko.aulamo@helsinki.fi",
     description="Tools to read OPUS",
