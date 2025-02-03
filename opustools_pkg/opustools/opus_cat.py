@@ -71,7 +71,7 @@ class OpusCat:
             maximum=-2, plain=False, file_name=None, release='latest',
             print_annotations=False, set_attribute=['pos', 'lem'],
             change_annotation_delimiter='|',
-            root_directory='/proj/nlpl/data/OPUS', download_dir='.' ):
+            root_directory='/projappl/nlpl/data/OPUS', download_dir='.' ):
         """Print the contents of a xml sentence file.
 
         Keyword arguments:
@@ -86,7 +86,7 @@ class OpusCat:
         set_attribute -- Set annotation attributes (default pos,lem)
         change_annotation_delimiter -- Change annotation delimiter (default |)
         root_directory -- Root directory for corpus files
-            (default /proj/nlpl/data/OPUS)
+            (default /projappl/nlpl/data/OPUS)
         download_dir -- Directory where files will be downloaded (default .)
         """
 
