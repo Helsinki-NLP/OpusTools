@@ -33,9 +33,13 @@ class TestOpusCat(unittest.TestCase):
 
             os.makedirs(os.path.join(self.root_directory, 'RF', 'latest',
                 'xml'))
-
             add_to_root_dir(corpus='RF', source='en', target='sv',
                 preprocess='xml', root_dir=self.root_directory)
+
+            os.makedirs(os.path.join(self.root_directory, 'RF', 'v1',
+                'xml'))
+            add_to_root_dir(corpus='RF', source='en', target='sv',
+                preprocess='xml', version='v1', root_dir=self.root_directory)
 
     @classmethod
     def tearDownClass(self):
@@ -147,6 +151,11 @@ class TestOpusCat(unittest.TestCase):
         sys.stdout = old_stdout
         self.assertTrue('No file found' in printout.getvalue())
 
+    def test_different_version(self):
+        var = self.printSentencesToVariable(directory='RF', language='en',
+            maximum=2, release='v1', root_directory=self.root_directory)
+        self.assertEqual(var[-38:],
+            '"w3.1.4" deprel="null">)</w>\n</s></p>\n')
 
 if __name__ == '__main__':
     unittest.main()

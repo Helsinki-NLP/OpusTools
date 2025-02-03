@@ -113,7 +113,7 @@ class OpusCat:
         self.openFiles(
             os.path.join(download_dir, directory+'_'+release+'_xml_'+
                 language+'.zip'),
-            os.path.join(root_directory, directory, 'latest', 'xml',
+            os.path.join(root_directory, directory, release, 'xml',
                 language+'.zip'))
 
     def openFiles(self, localfile, defaultpath):
