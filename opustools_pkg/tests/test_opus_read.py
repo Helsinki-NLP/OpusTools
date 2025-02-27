@@ -165,6 +165,18 @@ class TestOpusRead(unittest.TestCase):
                         'xtargets="s8.1;s8.1" id="SL8.1"/>\n<link xtargets="s167.0'
                         ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n')
 
+            with open(os.path.join(self.tempdir1, 'books_alignment_nonalpha.xml'),
+                      'w') as f:
+                f.write('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE '
+                        'cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+                        '<cesAlign version="1.0">\n<linkGrp targType="s" fromDoc="sv/'
+                        '1996.xml.gz" '
+                        'toDoc="en/1996.xml.gz" '
+                        '>\n<link xtargets="s1;s1" id="SL1"/>\n<link xtargets="s4;s4" '
+                        'id="SL4"/>\n<link xtargets="s5.0;s5.0" id="SL5.0"/>\n<link '
+                        'xtargets="s8.1;s8.1" id="SL8.1"/>\n<link xtargets="s167.0'
+                        ';s167.0" id="SL167.0"/>\n  </linkGrp>\n</cesAlign>\n')
+
             with gzip.open(os.path.join(self.tempdir1,
                                         'RF_v1_xml_en-sv.xml.gz'), 'wb') as f:
                 with open(os.path.join(self.tempdir1, 'books_alignment.xml'),
@@ -229,15 +241,15 @@ class TestOpusRead(unittest.TestCase):
                             version='v1', preprocess='xml', root_dir=self.root_directory)
 
             os.makedirs(os.path.join(self.root_directory, 'OpenSubtitles',
-                                     'latest', 'raw'))
+                                     'v2018', 'raw'))
             os.makedirs(os.path.join(self.root_directory, 'OpenSubtitles',
-                                     'latest', 'xml'))
+                                     'v2018', 'xml'))
 
             add_to_root_dir(corpus='OpenSubtitles', source='eo', target='tl',
-                            preprocess='raw', root_dir=self.root_directory)
+                            version='v2018', preprocess='raw', root_dir=self.root_directory)
 
             add_to_root_dir(corpus='OpenSubtitles', source='eo', target='tl',
-                            preprocess='xml', root_dir=self.root_directory)
+                            version='v2018', preprocess='xml', root_dir=self.root_directory)
 
             os.makedirs(os.path.join(self.root_directory, 'Books',
                                      'latest', 'xml'))
@@ -400,7 +412,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_normal_raw_print_OpenSubtitles(self):
         with mock.patch('sys.stdout', new=io.StringIO()) as output:
-            OpusRead(directory='OpenSubtitles', source='eo',
+            OpusRead(directory='OpenSubtitles', source='eo', release='v2018',
                      target='tl', maximum=1, preprocess='raw',
                      root_directory=self.root_directory).printPairs()
             var = output.getvalue()
@@ -1452,12 +1464,12 @@ class TestOpusRead(unittest.TestCase):
                      release='v1', maximum=1, trg_cld2=['un', '0'],
                      src_cld2=['fi', '0.97'], trg_langid=['en', '0.17'],
                      src_langid=['fi', '1'],
-                     alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+                     alignment_file=os.path.join(self.tempdir1, 'books_alignment_nonalpha.xml'),
                      download_dir=self.tempdir1).printPairs()
             var = output.getvalue()
             self.assertIn(
-                '\n# en/1996.xml.gz\n'
-                '# sv/1996.xml.gz\n'
+                '\n# sv/1996.xml.gz\n'
+                '# en/1996.xml.gz\n'
                 '\n================================'
                 '\n(src)="s8.1">Luulenpa että sinulla'
                 '\n(trg)="s8.1">I believe'
@@ -1546,15 +1558,15 @@ class TestOpusRead(unittest.TestCase):
 
     def test_use_given_zip_files_unalphabetical(self):
         with mock.patch('sys.stdout', new=io.StringIO()) as output:
-            OpusRead(directory='RF', target='en', source='sv',
+            OpusRead(directory='RF', target='sv', source='en',
                      maximum=1, target_zip=os.path.join(self.tempdir1, 'en.zip'),
                      source_zip=os.path.join(self.tempdir1, 'sv.zip'),
-                     alignment_file=os.path.join(self.tempdir1, 'books_alignment.xml'),
+                     alignment_file=os.path.join(self.tempdir1, 'books_alignment_nonalpha.xml'),
                      root_directory=self.root_directory).printPairs()
             var = output.getvalue()
             self.assertIn(
-                '\n# en/1996.xml.gz'
                 '\n# sv/1996.xml.gz'
+                '\n# en/1996.xml.gz'
                 '\n\n================================'
                 '\n(src)="s1">Source : Project Gutenberg'
                 '\n(trg)="s1">Source&<>"\' : manybooks.netAudiobook available here'
@@ -1654,7 +1666,7 @@ class TestOpusRead(unittest.TestCase):
     def test_writing_time_tags_xml(self):
         with mock.patch('sys.stdout', new=io.StringIO()) as output:
             OpusRead(directory='OpenSubtitles', source='eo',
-                     target='tl', maximum=1, preserve_inline_tags=True,
+                     target='tl', maximum=1, release='v2018', preserve_inline_tags=True,
                      root_directory=self.root_directory).printPairs()
             var = output.getvalue()
             self.assertIn(
@@ -1668,7 +1680,7 @@ class TestOpusRead(unittest.TestCase):
     def test_writing_time_tags_raw(self):
         with mock.patch('sys.stdout', new=io.StringIO()) as output:
             OpusRead(directory='OpenSubtitles', source='eo',
-                     target='tl', maximum=1, preserve_inline_tags=True,
+                     target='tl', maximum=1, release='v2018', preserve_inline_tags=True,
                      preprocess='raw',
                      root_directory=self.root_directory).printPairs()
             var = output.getvalue()
@@ -1876,7 +1888,7 @@ class TestOpusRead(unittest.TestCase):
 
     def test_leave_non_alignments_out(self):
         with mock.patch('sys.stdout', new=io.StringIO()) as output:
-            OpusRead(directory='RF', target='en', source='sv',
+            OpusRead(directory='RF', source='en', target='sv',
                      alignment_file=os.path.join(self.tempdir1, 'non_alignment.xml'),
                      leave_non_alignments_out=True,
                      root_directory=self.root_directory).printPairs()

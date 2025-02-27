@@ -98,7 +98,11 @@ class OpusRead:
         verbose -- Print progress messages
         """
 
-        self.fromto = sorted([source, target])
+        if alignment_file == -1:
+            self.fromto = sorted([source, target])
+        else:
+            self.fromto = [source, target]
+
         fromto_copy = [source, target]
         self.switch_langs = fromto_copy != self.fromto
 
