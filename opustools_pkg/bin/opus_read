@@ -130,6 +130,8 @@ parser.add_argument('-N',
 parser.add_argument('-cs', '--chunk_size',
     help='Number of sentence pairs in chunks to be processed (default=1000000)',
     default=1000000, type=int)
+parser.add_argument('--doc_level', help='Print full documents',
+    action='store_true')
 parser.add_argument('-v', '--verbose',
     help='Print progress messages when writing results to files',
     action='store_true')

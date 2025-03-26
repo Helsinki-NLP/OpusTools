@@ -82,6 +82,7 @@ def doc_ending_type(wmode, write):
 
     linkend = ' </linkGrp>\n'
     normalend = '\n================================\n'
+    docend= '\n'
 
     def normal_write(resultfile):
         resultfile.write(normalend)
@@ -91,19 +92,27 @@ def doc_ending_type(wmode, write):
         resultfile.write(linkend)
     def link_print(resultfile):
         print(linkend, end='')
+    def doc_write(resultfile):
+        resultfile.write(docend)
+    def doc_print(resultfile):
+        print(docend, end='')
     def nothing(resultfile):
         pass
 
     if write:
-        if wmode == 'normal':
+        if wmode in ['normal', 'normaldoc']:
             return normal_write
         if wmode == 'links':
             return link_write
+        if wmode == 'mosesdoc':
+            return doc_write
     else:
-        if wmode == 'normal':
+        if wmode in ['normal', 'normaldoc']:
             return normal_print
         if wmode == 'links':
             return link_print
+        if wmode == 'mosesdoc':
+            return doc_print
     return nothing
 
 def file_ending_type(wmode, write):

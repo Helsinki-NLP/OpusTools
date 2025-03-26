@@ -23,6 +23,14 @@ def parse_type(preprocess, preserve, get_annotations):
         sentence = []
         return sentence
 
+    def parse_s_doc(block, sentence, sentences, doc_level_ids):
+        sid = block.attributes['id']
+        sentence = ' '.join(sentence)
+        sentences[sid] = (sentence, block.attributes)
+        doc_level_ids.append(sid)
+        sentence = []
+        return sentence
+
     def parse_s_raw(block, sentence, sentences):
         sid = block.attributes['id']
         sentence.append(block.data.strip())
@@ -31,9 +39,25 @@ def parse_type(preprocess, preserve, get_annotations):
         sentence = []
         return sentence
 
+    def parse_s_raw_doc(block, sentence, sentences, doc_level_ids):
+        sid = block.attributes['id']
+        sentence.append(block.data.strip())
+        sentence = ' '.join(sentence)
+        sentences[sid] = (sentence, block.attributes)
+        doc_level_ids.append(sid)
+        sentence = []
+        return sentence
+
     def parse_w(bp, block, sentence, id_set):
         s_parent = bp.tag_in_parents('s', block)
         if s_parent and s_parent.attributes['id'] in id_set:
+            data = block.data.strip()
+            sentence.append(data)
+        return sentence
+
+    def parse_w_doc(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent:
             data = block.data.strip()
             sentence.append(data)
         return sentence
@@ -46,12 +70,25 @@ def parse_type(preprocess, preserve, get_annotations):
             sentence.append(data)
         return sentence
 
+    def parse_w_parsed_doc(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent:
+            data = block.data.strip()
+            data += get_annotations(block)
+            sentence.append(data)
+        return sentence
+
     def parse_time(bp, block, sentence, id_set):
         s_parent = bp.tag_in_parents('s', block)
         if s_parent and s_parent.attributes['id'] in id_set:
             sentence.append(block.get_raw_tag())
         return sentence
 
+    def parse_time_doc(bp, block, sentence, id_set):
+        s_parent = bp.tag_in_parents('s', block)
+        if s_parent:
+            sentence.append(block.get_raw_tag())
+        return sentence
 
     def xml(bp, block, sentence, sentences, id_set):
         if block.name == 's' and block.attributes['id'] in id_set:
@@ -60,9 +97,21 @@ def parse_type(preprocess, preserve, get_annotations):
             sentence = parse_w(bp, block, sentence, id_set)
         return sentence
 
+    def xml_doc(bp, block, sentence, sentences, id_set, doc_level_ids):
+        if block.name == 's':
+            sentence = parse_s_doc(block, sentence, sentences, doc_level_ids)
+        elif block.name == 'w':
+            sentence = parse_w_doc(bp, block, sentence, id_set)
+        return sentence
+
     def raw(bp, block, sentence, sentences, id_set):
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s_raw(block, sentence, sentences)
+        return sentence
+
+    def raw_doc(bp, block, sentence, sentences, id_set, doc_level_ids):
+        if block.name == 's':
+            sentence = parse_s_raw_doc(block, sentence, sentences, doc_level_ids)
         return sentence
 
     def parsed(bp, block, sentence, sentences, id_set):
@@ -70,6 +119,13 @@ def parse_type(preprocess, preserve, get_annotations):
             sentence = parse_s(block, sentence, sentences)
         elif block.name == 'w':
             sentence = parse_w_parsed(bp, block, sentence, id_set)
+        return sentence
+
+    def parsed_doc(bp, block, sentence, sentences, id_set, doc_level_ids):
+        if block.name == 's':
+            sentence = parse_s_doc(block, sentence, sentences, doc_level_ids)
+        elif block.name == 'w':
+            sentence = parse_w_parsed_doc(bp, block, sentence, id_set)
         return sentence
 
     def xml_preserve(bp, block, sentence, sentences, id_set):
@@ -81,11 +137,27 @@ def parse_type(preprocess, preserve, get_annotations):
             sentence = parse_time(bp, block, sentence, id_set)
         return sentence
 
+    def xml_preserve_doc(bp, block, sentence, sentences, id_set, doc_level_ids):
+        if block.name == 's':
+            sentence = parse_s_doc(block, sentence, sentences, doc_level_ids)
+        elif block.name == 'w':
+            sentence = parse_w_doc(bp, block, sentence, id_set)
+        elif block.name == 'time':
+            sentence = parse_time_doc(bp, block, sentence, id_set)
+        return sentence
+
     def raw_preserve(bp, block, sentence, sentences, id_set):
         if block.name == 's' and block.attributes['id'] in id_set:
             sentence = parse_s_raw(block, sentence, sentences)
         elif block.name == 'time':
             sentence = parse_time(bp, block, sentence, id_set)
+        return sentence
+
+    def raw_preserve_doc(bp, block, sentence, sentences, id_set, doc_level_ids):
+        if block.name == 's':
+            sentence = parse_s_raw_doc(block, sentence, sentences)
+        elif block.name == 'time':
+            sentence = parse_time_doc(bp, block, sentence, id_set)
         return sentence
 
     def parsed_preserve(bp, block, sentence, sentences, id_set):
@@ -97,26 +169,47 @@ def parse_type(preprocess, preserve, get_annotations):
             sentence = parse_time(bp, block, sentence, id_set)
         return sentence
 
+    def parsed_preserve_doc(bp, block, sentence, sentences, id_set, doc_level_ids):
+        if block.name == 's':
+            sentence = parse_s_doc(block, sentence, sentences)
+        elif block.name == 'w':
+            sentence = parse_w_parsed_doc(bp, block, sentence, id_set)
+        elif block.name == 'time':
+            sentence = parse_time_doc(bp, block, sentence, id_set)
+        return sentence
+
     if preserve:
         if preprocess == 'xml':
             return xml_preserve
+        if preprocess == 'xmldoc':
+            return xml_preserve_doc
         if preprocess == 'raw':
             return raw_preserve
+        if preprocess == 'rawdoc':
+            return raw_preserve_doc
         if preprocess == 'parsed':
             return parsed_preserve
+        if preprocess == 'parseddoc':
+            return parsed_preserve_doc
     else:
         if preprocess == 'xml':
             return xml
+        if preprocess == 'xmldoc':
+            return xml_doc
         if preprocess == 'raw':
             return raw
+        if preprocess == 'rawdoc':
+            return raw_doc
         if preprocess == 'parsed':
             return parsed
+        if preprocess == 'parseddoc':
+            return parsed_doc
 
 
 class SentenceParser:
 
     def __init__(self, document, preprocessing=None, anno_attrs=['all_attrs'],
-            delimiter='|', preserve=None):
+            delimiter='|', preserve=None, doc_level=False):
         """Parse xml sentence files that have sentence ids in any order.
 
         Arguments:
@@ -125,15 +218,20 @@ class SentenceParser:
         anno_attrs -- Which annotations will be printed
         delimiter -- Annotation attribute delimiter
         preserve -- Preserve inline tags
+        doc_level -- Print whole documents
         """
 
         self.document = document
         self.delimiter = delimiter
         self.anno_attrs = anno_attrs
-
-        self.parse_block = parse_type(preprocessing, preserve, self.get_annotations)
+        self.doc_level = doc_level
+        if doc_level:
+            self.parse_block = parse_type(preprocessing+'doc', preserve, self.get_annotations)
+        else:
+            self.parse_block = parse_type(preprocessing, preserve, self.get_annotations)
 
         self.sentences = {}
+        self.doc_level_ids = []
         self.done = False
 
         self.data_tag = 'w'
@@ -154,9 +252,13 @@ class SentenceParser:
             blocks, cur_pos = bp.get_complete_blocks(cur_pos, verbose)
             while blocks and not stop:
                 for block in blocks:
-                    sentence = self.parse_block(
-                            bp, block, sentence, self.sentences, id_set)
-                    if len(self.sentences) == len(id_set):
+                    if self.doc_level:
+                        sentence = self.parse_block(
+                                bp, block, sentence, self.sentences, id_set, self.doc_level_ids)
+                    else:
+                        sentence = self.parse_block(
+                                bp, block, sentence, self.sentences, id_set)
+                    if len(self.sentences) == len(id_set) and not self.doc_level:
                         stop = True
                         break
                 blocks, cur_pos= bp.get_complete_blocks(cur_pos, verbose)

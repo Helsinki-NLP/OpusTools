@@ -33,7 +33,7 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
                  [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi] [-n regex]
-                 [-N regex] [-cs CHUNK_SIZE] [-v]
+                 [-N regex] [-cs CHUNK_SIZE] [--doc_level] [-v]
 ```
 
 arguments:
@@ -117,6 +117,7 @@ arguments:
 -N regex            Skip all documents that match the regex
 -cs CHUNK_SIZE, --chunk_size CHUNK_SIZE
                     Number of sentence pairs in chunks to be processed (default=1000000)
+--doc_level         Print full documents
 -v, --verbose       Print progress messages
 ```
 
@@ -157,6 +158,30 @@ opus_read --directory RF \
 ```
 
 To download a wider range of different file types, see [opus_get](#opus_get).
+
+**Document level data**
+
+Using the `--doc_level` option, you can extract all sentences from parallel documents, not just the aligned parallel sentence pairs. In moses write mode, non-aligned sentences are written on separate lines where source sentences are followed by TABs and target sentences are preceded by TABs. Aligned sentence pairs are written normally separated by TABs and document boundaries are indicated by empty lines:
+
+```
+<src_doc1_sent1><TAB>
+<src_doc1_sent2><TAB>
+<TAB><trg_doc1_sent1>
+<TAB><trg_doc1_sent2>
+<src_doc1_sent3><TAB><trg_doc1_sent3>
+<src_doc1_sent4><TAB>
+<TAB><trg_doc1_sent4>
+<src_doc1_sent5><TAB><trg_doc1_sent5> <trg_doc1_sent6>
+<src_doc1_sent6><TAB>
+<src_doc1_sent7><TAB>
+<TAB><trg_doc1_sent7>
+
+<src_doc2_sent1><TAB>
+<TAB><trg_doc2_sent1>
+<src_doc2_sent2><TAB><trg_doc2_sent2>
+<src_doc2_sent3> <src_doc2_sent4><TAB><trg_doc2_sent3>
+...
+```
 
 **Examples:**
 

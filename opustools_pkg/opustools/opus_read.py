@@ -49,7 +49,7 @@ class OpusRead:
             src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
             write_ids=None, suppress_prompts=False, download_dir='.',
             preserve_inline_tags=False, n=None, N=None, chunk_size=1000000,
-            verbose=False):
+            doc_level=False, verbose=False):
         """Read xces alignment files and xml sentence files and output in
         desired format.
 
@@ -95,8 +95,11 @@ class OpusRead:
         N -- Skip all doucments that match the regex
         chunk_size -- Number of sentence pairs in chunks to be processed
             (default 1000000)
+        doc_level -- Print full documents
         verbose -- Print progress messages
         """
+
+        self.doc_level = doc_level
 
         if alignment_file == -1:
             self.fromto = sorted([source, target])
@@ -172,7 +175,10 @@ class OpusRead:
 
         self.add_file_header = file_header_type(write_mode, write, source)
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
-        self.add_doc_ending = doc_ending_type(write_mode, write)
+        if doc_level:
+            self.add_doc_ending = doc_ending_type(write_mode+'doc', write)
+        else:
+            self.add_doc_ending = doc_ending_type(write_mode, write)
         self.add_file_ending = file_ending_type(write_mode, write)
 
         self.out_put_pair = out_put_type(
@@ -208,6 +214,33 @@ class OpusRead:
         self.alignmentParser = AlignmentParser(
             self.alignment, (src_range, tgt_range), attribute, threshold,
             store_attrs, leave_non_alignments_out)
+
+    def doc_level_link_list(self, link_list, src_parser, trg_parser):
+        new_link_list = []
+        sid_pos, tid_pos = 0, 0
+        for links in link_list:
+            src_links = links[0].split(' ')
+            trg_links = links[1].split(' ')
+            for i in range(sid_pos, len(src_parser.doc_level_ids)-1):
+                sid = src_parser.doc_level_ids[i]
+                if sid == src_links[0]:
+                    sid_pos=i+len(src_links)
+                    break
+                new_link_list.append((sid, ''))
+            for i in range(tid_pos, len(trg_parser.doc_level_ids)-1):
+                tid = trg_parser.doc_level_ids[i]
+                if tid == trg_links[0]:
+                    tid_pos=i+len(trg_links)
+                    break
+                new_link_list.append(('', tid))
+            new_link_list.append(links)
+        for i in range(sid_pos, len(src_parser.doc_level_ids)-1):
+            sid = src_parser.doc_level_ids[i]
+            new_link_list.append((sid, ''))
+        for i in range(tid_pos, len(trg_parser.doc_level_ids)-1):
+            tid = trg_parser.doc_level_ids[i]
+            new_link_list.append(('', tid))
+        return new_link_list
 
     def printPairs(self):
         logger.debug("printPairs called!")
@@ -300,11 +333,11 @@ class OpusRead:
                 try:
                     src_parser = SentenceParser(
                         src_doc, preprocessing=self.preprocess, anno_attrs=self.src_annot,
-                        preserve=self.preserve, delimiter=self.annot_delimiter)
+                        preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level)
                     src_doc_size = src_parser.store_sentences(src_set, src_doc_size, self.verbose)
                     trg_parser = SentenceParser(
                         trg_doc, preprocessing=self.preprocess, anno_attrs=self.trg_annot,
-                        preserve=self.preserve, delimiter=self.annot_delimiter)
+                        preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level)
                     trg_doc_size = trg_parser.store_sentences(trg_set, trg_doc_size, self.verbose)
                 except SentenceParserError as e:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.', file=sys.stderr)
@@ -312,6 +345,9 @@ class OpusRead:
 
             self.add_doc_names(
                 src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg)
+
+            if self.doc_level and self.write_mode != 'links':
+                link_list = self.doc_level_link_list(link_list, src_parser, trg_parser)
 
             len_link_list = len(link_list)
 
