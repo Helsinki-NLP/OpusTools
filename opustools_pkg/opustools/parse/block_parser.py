@@ -44,7 +44,7 @@ class Block:
 
 class BlockParser:
 
-    def __init__(self, document, data_tag=None, doc_size=-1):
+    def __init__(self, document, data_tag=None, doc_size=-1, len_name=-1):
         """Parse an xml document line by line removing each element
         from memory as soon as its end tag is found.
 
@@ -55,11 +55,12 @@ class BlockParser:
 
         self.document = document
         self.data_tag = data_tag
+        self.len_name = len_name
         self.block = Block(name='root')
         self.completeBlocks = []
 
         if doc_size == -1:
-            print(f'Measuring file "{document.name}" ...', end="\r", file=sys.stderr)
+            print(f'Measuring file "{document.name[:self.len_name]}" ...', end="\r", file=sys.stderr)
             self.document.seek(0, 2)
             self.doc_size = self.document.tell()
             self.document.seek(0)
@@ -102,7 +103,7 @@ class BlockParser:
 
     def report_progress(self, cur_pos):
         progress = str(round(cur_pos/self.doc_size*100, 2) if self.doc_size > 0 else 0)
-        print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name, progress), end="\r", file=sys.stderr)
+        print("\x1b[2KParsing file \"{}\" ... {}%".format(self.document.name[:self.len_name], progress), end="\r", file=sys.stderr)
 
     def get_complete_blocks(self, cur_pos, verbose=False):
         """

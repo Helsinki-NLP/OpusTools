@@ -209,7 +209,7 @@ def parse_type(preprocess, preserve, get_annotations):
 class SentenceParser:
 
     def __init__(self, document, preprocessing=None, anno_attrs=['all_attrs'],
-            delimiter='|', preserve=None, doc_level=False):
+            delimiter='|', preserve=None, doc_level=False, len_name=50):
         """Parse xml sentence files that have sentence ids in any order.
 
         Arguments:
@@ -219,12 +219,14 @@ class SentenceParser:
         delimiter -- Annotation attribute delimiter
         preserve -- Preserve inline tags
         doc_level -- Print whole documents
+        len_name -- Show the first N characters of file names when displaying progress
         """
 
         self.document = document
         self.delimiter = delimiter
         self.anno_attrs = anno_attrs
         self.doc_level = doc_level
+        self.len_name = len_name
         if doc_level:
             self.parse_block = parse_type(preprocessing+'doc', preserve, self.get_annotations)
         else:
@@ -240,7 +242,7 @@ class SentenceParser:
 
     def store_sentences(self, id_set, doc_size, verbose=False):
         """Read document and store sentences in a dictionary."""
-        bp = BlockParser(self.document, data_tag=self.data_tag, doc_size=doc_size)
+        bp = BlockParser(self.document, data_tag=self.data_tag, doc_size=doc_size, len_name=self.len_name)
         sentence = []
         sid = None
 

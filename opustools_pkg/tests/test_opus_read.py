@@ -200,6 +200,114 @@ class TestOpusRead(unittest.TestCase):
         else:
             self.root_directory = tempfile.mkdtemp()
 
+            en_doc_text_xml = '''<?xml version="1.0" encoding="utf-8"?>
+                <text> <p id="1"> <s id="s1.1">
+                 <w id="w1.1">en_word1.1</w>
+                 <w id="w1.2">en_word1.2</w>
+                 <w id="w1.3">en_word1.3</w>
+                 <w id="w1.4">en_word1.4</w>
+                 <w id="w1.5">en_word1.5</w>
+                </s><s id="s1.2">
+                 <w id="w2.1">en_word2.1</w>
+                 <w id="w2.2">en_word2.2</w>
+                 <w id="w2.3">en_word2.3</w>
+                 <w id="w2.4">en_word2.4</w>
+                 <w id="w2.5">en_word2.5</w>
+                </s><s id="s1.3">
+                 <w id="w3.1">en_word3.1</w>
+                 <w id="w3.2">en_word3.2</w>
+                 <w id="w3.3">en_word3.3</w>
+                 <w id="w3.4">en_word3.4</w>
+                 <w id="w3.5">en_word3.5</w>
+                </s><s id="s1.4">
+                 <w id="w4.1">en_word4.1</w>
+                 <w id="w4.2">en_word4.2</w>
+                 <w id="w4.3">en_word4.3</w>
+                 <w id="w4.4">en_word4.4</w>
+                 <w id="w4.5">en_word4.5</w>
+                </s><s id="s1.5">
+                 <w id="w5.1">en_word5.1</w>
+                 <w id="w5.2">en_word5.2</w>
+                 <w id="w5.3">en_word5.3</w>
+                 <w id="w5.4">en_word5.4</w>
+                 <w id="w5.5">en_word5.5</w>
+                </s></p></text>
+                '''
+            en_doc_text_raw = '''<?xml version="1.0" encoding="utf-8"?>
+                <text> <p id="1">
+                <s id="s1.1">en_word1.1 en_word1.2 en_word1.3 en_word1.4 en_word1.5</s>
+                <s id="s1.2">en_word2.1 en_word2.2 en_word2.3 en_word2.4 en_word2.5</s>
+                <s id="s1.3">en_word3.1 en_word3.2 en_word3.3 en_word3.4 en_word3.5</s>
+                <s id="s1.4">en_word4.1 en_word4.2 en_word4.3 en_word4.4 en_word4.5</s>
+                <s id="s1.5">en_word5.1 en_word5.2 en_word5.3 en_word5.4 en_word5.5</s>
+                </p></text>
+                '''
+
+            os.makedirs(os.path.join(self.root_directory, 'TEST', 'latest', 'xml', 'en'))
+            os.makedirs(os.path.join(self.root_directory, 'TEST', 'latest', 'xml', 'fr'))
+            os.makedirs(os.path.join(self.root_directory, 'TEST', 'latest', 'raw', 'en'))
+            os.makedirs(os.path.join(self.root_directory, 'TEST', 'latest', 'raw', 'fr'))
+
+            for i in range(3):
+                with open(os.path.join(self.root_directory, 'TEST', 'latest', 'xml', 'en',
+                                       f'doc_{i+1}.xml'), 'w') as f:
+                    f.write(en_doc_text_xml.replace('en_word', 'e'))
+                with open(os.path.join(self.root_directory, 'TEST', 'latest', 'xml', 'fr',
+                                       f'doc_{i+1}.xml'), 'w') as f:
+                    f.write(en_doc_text_xml.replace('en_word', 'f'))
+                with open(os.path.join(self.root_directory, 'TEST', 'latest', 'raw', 'en',
+                                       f'doc_{i+1}.xml'), 'w') as f:
+                    f.write(en_doc_text_raw.replace('en_word', 'e'))
+                with open(os.path.join(self.root_directory, 'TEST', 'latest', 'raw', 'fr',
+                                       f'doc_{i+1}.xml'), 'w') as f:
+                    f.write(en_doc_text_raw.replace('en_word', 'f'))
+
+            with zipfile.ZipFile(os.path.join(self.root_directory,
+                                              'TEST', 'latest', 'xml', 'en.zip'), 'w') as zf:
+                for i in range(3):
+                    zf.write(os.path.join(self.root_directory, 'TEST', 'latest', 'xml', 'en',
+                                      f'doc_{i+1}.xml'), arcname=f'TEST/xml/en/doc_{i+1}.xml')
+            with zipfile.ZipFile(os.path.join(self.root_directory,
+                                              'TEST', 'latest', 'xml', 'fr.zip'), 'w') as zf:
+                for i in range(3):
+                    zf.write(os.path.join(self.root_directory, 'TEST', 'latest', 'xml', 'fr',
+                                      f'doc_{i+1}.xml'), arcname=f'TEST/xml/fr/doc_{i+1}.xml')
+            with zipfile.ZipFile(os.path.join(self.root_directory,
+                                              'TEST', 'latest', 'raw', 'en.zip'), 'w') as zf:
+                for i in range(3):
+                    zf.write(os.path.join(self.root_directory, 'TEST', 'latest', 'raw', 'en',
+                                      f'doc_{i+1}.xml'), arcname=f'TEST/raw/en/doc_{i+1}.xml')
+            with zipfile.ZipFile(os.path.join(self.root_directory,
+                                              'TEST', 'latest', 'raw', 'fr.zip'), 'w') as zf:
+                for i in range(3):
+                    zf.write(os.path.join(self.root_directory, 'TEST', 'latest', 'raw', 'fr',
+                                      f'doc_{i+1}.xml'), arcname=f'TEST/raw/fr/doc_{i+1}.xml')
+
+            with open(os.path.join(self.root_directory, 'TEST', 'latest', 'xml', 'en-fr.xml'),
+                      'w') as f:
+                f.write('''<?xml version="1.0" encoding="utf-8"?>
+                    <!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">
+                    <cesAlign version="1.0">
+                    <linkGrp targType="s" fromDoc="en/doc_1.xml.gz" toDoc="fr/doc_1.xml.gz">
+                    <link xtargets="s1.1;s1.1" id="SL1" />
+                    <link xtargets="s1.2;s1.2" id="SL2" />
+                    <link xtargets="s1.4;s1.4" id="SL3" />
+                    </linkGrp>
+                    <linkGrp targType="s" fromDoc="en/doc_2.xml.gz" toDoc="fr/doc_2.xml.gz">
+                    <link xtargets="s1.2;s1.2 s1.3" id="SL1" />
+                    <link xtargets="s1.4 s1.5;s1.4" id="SL2" />
+                    </linkGrp>
+                    <linkGrp targType="s" fromDoc="en/doc_3.xml.gz" toDoc="fr/doc_3.xml.gz">
+                    <link xtargets="s1.1 s1.2;s1.2" id="SL1" />
+                    <link xtargets="s1.3;s1.3" id="SL2" />
+                    </linkGrp>
+                    </cesAlign>
+                    ''')
+
+            with gzip.open(os.path.join(self.root_directory, 'TEST', 'latest', 'xml', 'en-fr.xml.gz'), 'wb') as f:
+                with open(os.path.join(self.root_directory,  'TEST', 'latest', 'xml', 'en-fr.xml'), 'rb') as b:
+                    f.write(b.read())
+
             os.makedirs(os.path.join(self.root_directory, 'RF', 'latest',
                                      'xml'))
 
@@ -2102,13 +2210,45 @@ class TestOpusRead(unittest.TestCase):
                  root_directory=self.root_directory, preprocess='moses',
                  write=[os.path.join(self.tempdir1, 'rf.moses.sv'),
                         os.path.join(self.tempdir1, 'rf.moses.en')]).printPairs()
-        logging.warning(os.listdir(self.tempdir1))
-        logging.warning(os.listdir('.'))
         with open(os.path.join(self.tempdir1, 'rf.moses.en')) as moses_en:
             self.assertEqual(moses_en.readlines()[0][:41], 'Statement of Government Policy by the Pri')
         with open(os.path.join(self.tempdir1, 'rf.moses.sv')) as moses_sv:
             self.assertEqual(moses_sv.readlines()[0][:41], 'REGERINGSFÖRKLARING.\n')
 
+    def test_moses_doc_level(self):
+        result=['e1.1 e1.2 e1.3 e1.4 e1.5\tf1.1 f1.2 f1.3 f1.4 f1.5\n',
+                'e2.1 e2.2 e2.3 e2.4 e2.5\tf2.1 f2.2 f2.3 f2.4 f2.5\n',
+                'e3.1 e3.2 e3.3 e3.4 e3.5\t\n',
+                '\tf3.1 f3.2 f3.3 f3.4 f3.5\n',
+                'e4.1 e4.2 e4.3 e4.4 e4.5\tf4.1 f4.2 f4.3 f4.4 f4.5\n',
+                'e5.1 e5.2 e5.3 e5.4 e5.5\t\n',
+                '\tf5.1 f5.2 f5.3 f5.4 f5.5\n',
+                '\n',
+                'e1.1 e1.2 e1.3 e1.4 e1.5\t\n',
+                '\tf1.1 f1.2 f1.3 f1.4 f1.5\n',
+                'e2.1 e2.2 e2.3 e2.4 e2.5\tf2.1 f2.2 f2.3 f2.4 f2.5 f3.1 f3.2 f3.3 f3.4 f3.5\n',
+                'e3.1 e3.2 e3.3 e3.4 e3.5\t\n',
+                'e4.1 e4.2 e4.3 e4.4 e4.5 e5.1 e5.2 e5.3 e5.4 e5.5\tf4.1 f4.2 f4.3 f4.4 f4.5\n',
+                '\tf5.1 f5.2 f5.3 f5.4 f5.5\n',
+                '\n',
+                '\tf1.1 f1.2 f1.3 f1.4 f1.5\n',
+                'e1.1 e1.2 e1.3 e1.4 e1.5 e2.1 e2.2 e2.3 e2.4 e2.5\tf2.1 f2.2 f2.3 f2.4 f2.5\n',
+                'e3.1 e3.2 e3.3 e3.4 e3.5\tf3.1 f3.2 f3.3 f3.4 f3.5\n',
+                'e4.1 e4.2 e4.3 e4.4 e4.5\t\n',
+                'e5.1 e5.2 e5.3 e5.4 e5.5\t\n',
+                '\tf4.1 f4.2 f4.3 f4.4 f4.5\n',
+                '\tf5.1 f5.2 f5.3 f5.4 f5.5\n',
+                '\n']
+        OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
+                 root_directory=self.root_directory, write_mode='moses', doc_level=True,
+                 write=[os.path.join(self.tempdir1, 'doc_level.en-fr.txt')]).printPairs()
+        with open(os.path.join(self.tempdir1, 'doc_level.en-fr.txt')) as doc_out:
+            self.assertEqual(doc_out.readlines(), result)
+        OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
+                 root_directory=self.root_directory, write_mode='moses', doc_level=True,
+                 write=[os.path.join(self.tempdir1, 'doc_level.en-fr.txt')], preprocess='raw').printPairs()
+        with open(os.path.join(self.tempdir1, 'doc_level.en-fr.txt')) as doc_out:
+            self.assertEqual(doc_out.readlines(), result)
 
 if __name__ == '__main__':
     unittest.main()

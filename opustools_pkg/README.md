@@ -33,7 +33,7 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
                  [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi] [-n regex]
-                 [-N regex] [-cs CHUNK_SIZE] [--doc_level] [-v]
+                 [-N regex] [-cs CHUNK_SIZE] [--doc_level] [--len_name N] [-v]
 ```
 
 arguments:
@@ -118,6 +118,7 @@ arguments:
 -cs CHUNK_SIZE, --chunk_size CHUNK_SIZE
                     Number of sentence pairs in chunks to be processed (default=1000000)
 --doc_level         Print full documents
+--len_name N        Show the first N charaters of file names when displaying progress. -1 to show full names (default=50)
 -v, --verbose       Print progress messages
 ```
 

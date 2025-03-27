@@ -49,7 +49,7 @@ class OpusRead:
             src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
             write_ids=None, suppress_prompts=False, download_dir='.',
             preserve_inline_tags=False, n=None, N=None, chunk_size=1000000,
-            doc_level=False, verbose=False):
+            doc_level=False, len_name=50, verbose=False):
         """Read xces alignment files and xml sentence files and output in
         desired format.
 
@@ -96,10 +96,12 @@ class OpusRead:
         chunk_size -- Number of sentence pairs in chunks to be processed
             (default 1000000)
         doc_level -- Print full documents
+        len_name -- Show the first N characters of file names when displaying progress
         verbose -- Print progress messages
         """
 
         self.doc_level = doc_level
+        self.len_name = len_name
 
         if alignment_file == -1:
             self.fromto = sorted([source, target])
@@ -213,7 +215,7 @@ class OpusRead:
         self.alignment = self.of_handler.open_alignment_file(self.alignment)
         self.alignmentParser = AlignmentParser(
             self.alignment, (src_range, tgt_range), attribute, threshold,
-            store_attrs, leave_non_alignments_out)
+            store_attrs, leave_non_alignments_out, self.len_name)
 
     def doc_level_link_list(self, link_list, src_parser, trg_parser):
         new_link_list = []
@@ -221,23 +223,23 @@ class OpusRead:
         for links in link_list:
             src_links = links[0].split(' ')
             trg_links = links[1].split(' ')
-            for i in range(sid_pos, len(src_parser.doc_level_ids)-1):
+            for i in range(sid_pos, len(src_parser.doc_level_ids)):
                 sid = src_parser.doc_level_ids[i]
                 if sid == src_links[0]:
                     sid_pos=i+len(src_links)
                     break
                 new_link_list.append((sid, ''))
-            for i in range(tid_pos, len(trg_parser.doc_level_ids)-1):
+            for i in range(tid_pos, len(trg_parser.doc_level_ids)):
                 tid = trg_parser.doc_level_ids[i]
                 if tid == trg_links[0]:
                     tid_pos=i+len(trg_links)
                     break
                 new_link_list.append(('', tid))
             new_link_list.append(links)
-        for i in range(sid_pos, len(src_parser.doc_level_ids)-1):
+        for i in range(sid_pos, len(src_parser.doc_level_ids)):
             sid = src_parser.doc_level_ids[i]
             new_link_list.append((sid, ''))
-        for i in range(tid_pos, len(trg_parser.doc_level_ids)-1):
+        for i in range(tid_pos, len(trg_parser.doc_level_ids)):
             tid = trg_parser.doc_level_ids[i]
             new_link_list.append(('', tid))
         return new_link_list
@@ -333,11 +335,11 @@ class OpusRead:
                 try:
                     src_parser = SentenceParser(
                         src_doc, preprocessing=self.preprocess, anno_attrs=self.src_annot,
-                        preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level)
+                        preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level, len_name=self.len_name)
                     src_doc_size = src_parser.store_sentences(src_set, src_doc_size, self.verbose)
                     trg_parser = SentenceParser(
                         trg_doc, preprocessing=self.preprocess, anno_attrs=self.trg_annot,
-                        preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level)
+                        preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level, len_name=self.len_name)
                     trg_doc_size = trg_parser.store_sentences(trg_set, trg_doc_size, self.verbose)
                 except SentenceParserError as e:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.', file=sys.stderr)

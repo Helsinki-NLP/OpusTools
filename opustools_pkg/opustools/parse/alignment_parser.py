@@ -60,8 +60,8 @@ def non_alignment_filter(*args):
 
 class AlignmentParser:
 
-    def __init__(self, alignment_file, src_trg_range=('all', 'all'),
-            attr=None, thres=None, store_attrs=False, leave_non_alignments_out=False):
+    def __init__(self, alignment_file, src_trg_range=('all', 'all'), attr=None, thres=None,
+                 store_attrs=False, leave_non_alignments_out=False, len_name=50):
         """Parse xces alignment files and output sentence ids."""
 
         self.alignment_file = alignment_file
@@ -70,7 +70,7 @@ class AlignmentParser:
         self.af_size = self.alignment_file.tell()
         self.alignment_file.seek(0)
 
-        self.bp = BlockParser(alignment_file)
+        self.bp = BlockParser(alignment_file, len_name=len_name)
         self.filters = []
 
         src_range, trg_range = src_trg_range
