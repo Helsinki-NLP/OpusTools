@@ -2,6 +2,7 @@ import urllib.request
 import sqlite3
 import logging
 import os
+import gzip
 
 from ruamel.yaml import YAML, scanner, reader
 
@@ -14,7 +15,11 @@ def read_url(url):
 
 
 def read_url_yaml(url, yaml):
-    raw = urllib.request.urlopen(url).read().decode('utf-8')
+    try:
+        raw = urllib.request.urlopen(url).read().decode('utf-8')
+    except urllib.error.HTTPError:
+        gzbytes = urllib.request.urlopen(url+'.gz').read()
+        raw = gzip.decompress(gzbytes).decode('utf-8')
     data = yaml.load(raw)
     return data
 
