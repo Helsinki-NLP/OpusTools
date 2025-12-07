@@ -44,6 +44,7 @@ def create_table(cur):
     cur.execute(create_opusfile_table)
     create_url_index = 'CREATE INDEX IF NOT EXISTS idx_url ON opusfile(url)'
     cur.execute(create_url_index)
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_corpusdata ON opusfile(source,target,corpus,preprocessing,latest)')
 
 
 def execute_sql(cur, opusfile):
