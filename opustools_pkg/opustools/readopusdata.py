@@ -50,11 +50,13 @@ def create_table(cur):
         "CREATE INDEX IF NOT EXISTS idx_opusfile_updated ON opusfile(updated)"
     )
 
-     cur.execute(
-    \"\"\"
-       CREATE INDEX IF NOT EXISTS idx_opusfile_6cols
-       ON opusfile (source, target, corpus, preprocessing, version, url)
-        \"\"\"
+    # Composite index for multi-column lookups:
+    # WHERE source=? AND target=? AND corpus=? AND preprocessing=? AND version=? AND url=?
+    cur.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_opusfile_6cols
+        ON opusfile (source, target, corpus, preprocessing, version, url)
+        """
     )
 
 
