@@ -25,3 +25,7 @@ If you use OpusTools in your research, please cite our [LREC 2020 paper](http://
     ISBN = "979-10-95546-34-4",
 }
 ```
+
+## Acknowledgements
+
+This project has received funding from the European Union’s Horizon Europe research and innovation programme under grant agreement No 101070350.
