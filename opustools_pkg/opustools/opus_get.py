@@ -49,7 +49,7 @@ class OpusGet:
             self.fromto = [source, target]
             self.fromto.sort()
 
-        self.url = 'http://opus.nlpl.eu/opusapi/?'
+        self.url = 'https://opus.nlpl.eu/opusapi'
         #self.url = 'http://127.0.0.1:5000/?'
 
         urlparts = [(source, 'source'), (target, 'target'),
@@ -61,9 +61,9 @@ class OpusGet:
             if a[0]:
                 self.parameters[a[1]] = a[0]
                 if a[0] == ' ':
-                    self.url += a[1] + '=&'
+                    self.url += '?' + a[1] + '=&'
                 else:
-                    self.url += a[1] + '=' + a[0] + '&'
+                    self.url += '?' + a[1] + '=' + a[0] + '&'
 
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
@@ -163,7 +163,7 @@ class OpusGet:
                         reporthook=self.progress_status)
                     print('')
                 except urllib.error.URLError as e:
-                    print('Unable to retrieve the data.')
+                    print(f'Unable to retrieve the data from {self.url}: {e}')
                     return
 
     def get_file_info_output(self, c):
@@ -193,24 +193,23 @@ class OpusGet:
                 if self.local_db:
                     languages = self.dbo.run_languages_query(self.parameters)
                 else:
-                    languages = self.get_response(self.url+'languages=True')['languages']
+                    languages = self.get_response(self.url + '?languages=True')['languages']
                 print(', '.join([str(l) for l in languages]))
                 return
             elif self.list_corpora:
                 if self.local_db:
                     corpus_list = self.dbo.run_corpora_query(self.parameters)
                 else:
-                    corpus_list = self.get_response(self.url+'corpora=True')['corpora']
+                    corpus_list = self.get_response(self.url + '?corpora=True')['corpora']
                 print(', '.join([str(c) for c in corpus_list]))
                 return
             else:
                 corpora, total_size = self.get_corpora_data()
         except urllib.error.URLError as e:
-            print('Unable to retrieve the data.')
+            print(f'Unable to retrieve the data from {self.url}: {e}')
             return
 
         if not self.list_resources:
             self.download(corpora, total_size)
         else:
             self.print_files(corpora, total_size)
-
