@@ -57,13 +57,15 @@ class OpusGet:
             (preprocess, 'preprocessing')]
         self.parameters = {}
 
+        url_parameters = ''
         for a in urlparts:
             if a[0]:
                 self.parameters[a[1]] = a[0]
                 if a[0] == ' ':
-                    self.url += '?' + a[1] + '=&'
+                    url_parameters += a[1] + '=&'
                 else:
-                    self.url += '?' + a[1] + '=' + a[0] + '&'
+                    url_parameters += a[1] + '=' + a[0] + '&'
+        self.url += '?' + url_parameters
 
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
@@ -123,6 +125,7 @@ class OpusGet:
             data = self.get_response(self.url)
             corpora = data['corpora']
 
+        print(corpora)
         ret_corpora = []
         for c in corpora:
             filename = self.make_file_name(c)
