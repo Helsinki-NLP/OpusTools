@@ -125,7 +125,6 @@ class OpusGet:
             data = self.get_response(self.url)
             corpora = data['corpora']
 
-        print(corpora)
         ret_corpora = []
         for c in corpora:
             filename = self.make_file_name(c)

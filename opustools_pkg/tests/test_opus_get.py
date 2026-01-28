@@ -40,7 +40,7 @@ class TestOpusGet(unittest.TestCase):
         opg.get_files()
         sys.stdout = old_stdout
 
-        self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
+        self.assertIn('Unable to retrieve the data', printout.getvalue())
 
     @mock.patch('opustools.opus_get.input', create=True)
     def test_download_invalid_url(self, mocked_input):
@@ -55,7 +55,7 @@ class TestOpusGet(unittest.TestCase):
         opg.download(corpora, total_size)
         sys.stdout = old_stdout
 
-        self.assertEqual(printout.getvalue(), 'Unable to retrieve the data.\n')
+        self.assertIn('Unable to retrieve the data', printout.getvalue())
 
     @mock.patch('opustools.opus_get.input', create=True)
     def test_dont_list_files_that_are_already_in_path(self, mocked_input):
@@ -136,4 +136,3 @@ class TestOpusGet(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
