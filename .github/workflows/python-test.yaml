@@ -3,6 +3,10 @@ name: Upload Python Package
 on:
   push:
     branches: [develop]
+  pull_request:
+    branches:
+      - master
+      - develop
 
 permissions:
   contents: read
