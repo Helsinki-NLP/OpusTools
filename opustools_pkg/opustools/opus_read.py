@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def skip_regex_type(n, N):
-    "Select function to skip document names"
+    """Select function to skip document names"""
 
     def get_re(doc_name):
         return not re.search(n, doc_name)
@@ -92,7 +92,7 @@ class OpusRead:
         download_dir -- Directory where files will be downloaded (default .)
         preserve_inline_tags -- Preserve inline tags within sentences
         n -- Get only documents that match the regex
-        N -- Skip all doucments that match the regex
+        N -- Skip all documents that match the regex
         chunk_size -- Number of sentence pairs in chunks to be processed
             (default 1000000)
         doc_level -- Print full documents
@@ -244,60 +244,21 @@ class OpusRead:
             new_link_list.append(('', tid))
         return new_link_list
 
-    def printPairs(self):
-        logger.debug("printPairs called!")
-        resultfile = None
-        mosessrc = None
-        mosestrg = None
-        id_file = None
+    def _iter_pairs(self, wmode, format_pair, on_doc_start=None, on_doc_end=None):
+        """Yield (src_result, trg_result, link_attr, src_doc_name, trg_doc_name)
+        for each alignment link across all documents.
 
-        if self.write_ids:
-            id_file = file_open(self.write_ids, 'w', encoding='utf-8')
+        Handles chunked link collection, sentence file opening/parsing,
+        skip_doc, doc_level, and maximum enforcement.
 
-        if self.write:
-            if self.write_mode == 'moses' and len(self.write) == 2:
-                mosessrc = file_open(self.write[0], mode='w', encoding='utf-8')
-                mosestrg = file_open(self.write[1], mode='w', encoding='utf-8')
-            else:
-                resultfile = file_open(self.write[0], mode='w', encoding='utf-8')
-
-        if self.preprocess == 'moses':
-            # If preprocessing is moses, download
-            if not self.write or len(self.write) != 2:
-                # Write to current path and return
-                if self.write and len(self.write) != 2:
-                    resultfile.close()
-                    logger.warning('"moses" preprocessing requires two output '
-                                   'file names. Using default names.')
-                moses_names = self.of_handler.open_moses_files(
-                    outpath=self.of_handler.download_dir)
-                logger.info('Moses files written to %s', ', '.join(moses_names))
-                return
-            with tempfile.TemporaryDirectory() as tmpdir:
-                # Write to specified files
-                logger.info('Extracting data...')
-                moses_names = self.of_handler.open_moses_files(outpath=tmpdir)
-                with file_open(os.path.join(tmpdir, moses_names[0])) as in1, \
-                     file_open(os.path.join(tmpdir, moses_names[1])) as in2:
-                    if self.switch_langs:
-                        in1, in2 = in2, in1
-                    for fin, fout in [(in1, mosessrc), (in2, mosestrg)]:
-                        for line in fin:
-                            fout.write(line)
-                mosessrc.close()
-                mosestrg.close()
-                logger.info('Moses files written to %s', ', '.join(self.write))
-            return
-
-        self.add_file_header(resultfile)
-
+        on_doc_start(src_doc_name, trg_doc_name) is called before processing
+        each document chunk. on_doc_end() is called after processing each
+        document chunk (even if no pairs are yielded).
+        """
         src_parser = None
         trg_parser = None
-
         total = 0
-        stop = False
         cur_pos = 0
-
         prev_src_doc_name = None
         prev_trg_doc_name = None
         src_doc_size = -1
@@ -323,66 +284,120 @@ class OpusRead:
             if self.skip_doc(src_doc_name):
                 continue
 
-            if (self.write_mode != 'links' or
-                    (self.write_mode == 'links' and self.check_lang)):
+            if wmode != 'links' or (wmode == 'links' and self.check_lang):
                 try:
                     src_doc = self.of_handler.open_sentence_file(src_doc_name, 'src')
                     trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
                 except KeyError as e:
                     print('\n'+e.args[0]+'\nContinuing from next sentence file pair.', file=sys.stderr)
                     continue
-
                 try:
                     src_parser = SentenceParser(
                         src_doc, preprocessing=self.preprocess, anno_attrs=self.src_annot,
-                        preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level, len_name=self.len_name)
+                        preserve=self.preserve, delimiter=self.annot_delimiter,
+                        doc_level=self.doc_level, len_name=self.len_name)
                     src_doc_size = src_parser.store_sentences(src_set, src_doc_size, self.verbose)
                     trg_parser = SentenceParser(
                         trg_doc, preprocessing=self.preprocess, anno_attrs=self.trg_annot,
-                        preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level, len_name=self.len_name)
+                        preserve=self.preserve, delimiter=self.annot_delimiter,
+                        doc_level=self.doc_level, len_name=self.len_name)
                     trg_doc_size = trg_parser.store_sentences(trg_set, trg_doc_size, self.verbose)
                 except SentenceParserError as e:
                     print('\n'+e.message+'\nContinuing from next sentence file pair.', file=sys.stderr)
                     continue
 
-            self.add_doc_names(
-                src_doc_name, trg_doc_name, resultfile, mosessrc, mosestrg)
+            if on_doc_start:
+                on_doc_start(src_doc_name, trg_doc_name)
 
-            if self.doc_level and self.write_mode != 'links':
+            if self.doc_level and wmode != 'links':
                 link_list = self.doc_level_link_list(link_list, src_parser, trg_parser)
 
             len_link_list = len(link_list)
-
             for i, link_a in enumerate(link_list):
                 if self.verbose:
                     if i % 1000 == 0 or i + 1 == len_link_list:
                         progress = str(round((i+1)/len_link_list*100, 2))
                         print("\x1b[2KWriting chunk ... {}%".format(progress), end="\r", file=sys.stderr)
 
-                src_result, trg_result = self.format_pair(
+                src_result, trg_result = format_pair(
                         link_a, src_parser, trg_parser, self.fromto)
 
                 if src_result == -1:
                     continue
 
-                link_attr = attrs_list[i] if i < len(attrs_list) else None
-
-                self.out_put_pair(
-                    src_result, trg_result, resultfile, mosessrc, mosestrg,
-                    link_attr, id_file, src_doc_name, trg_doc_name)
+                yield (src_result, trg_result,
+                       attrs_list[i] if i < len(attrs_list) else None,
+                       src_doc_name, trg_doc_name)
 
                 total += 1
                 if total == self.maximum:
-                    stop = True
                     break
 
-            self.add_doc_ending(resultfile)
+            if on_doc_end:
+                on_doc_end()
 
             if self.verbose and self.write:
                 print("\033[F\033[F\033[F", end="", file=sys.stderr)
 
-            if stop:
+            if total == self.maximum:
                 break
+
+    def printPairs(self):
+        logger.debug("printPairs called!")
+        resultfile = None
+        mosessrc = None
+        mosestrg = None
+        id_file = None
+
+        if self.write_ids:
+            id_file = file_open(self.write_ids, 'w', encoding='utf-8')
+
+        if self.write:
+            if self.write_mode == 'moses' and len(self.write) == 2:
+                mosessrc = file_open(self.write[0], mode='w', encoding='utf-8')
+                mosestrg = file_open(self.write[1], mode='w', encoding='utf-8')
+            else:
+                resultfile = file_open(self.write[0], mode='w', encoding='utf-8')
+
+        if self.preprocess == 'moses':
+            if not self.write or len(self.write) != 2:
+                if self.write and len(self.write) != 2:
+                    resultfile.close()
+                    logger.warning('"moses" preprocessing requires two output '
+                                   'file names. Using default names.')
+                moses_names = self.of_handler.open_moses_files(
+                    outpath=self.of_handler.download_dir)
+                logger.info('Moses files written to %s', ', '.join(moses_names))
+                return
+            with tempfile.TemporaryDirectory() as tmpdir:
+                logger.info('Extracting data...')
+                moses_names = self.of_handler.open_moses_files(outpath=tmpdir)
+                with file_open(os.path.join(tmpdir, moses_names[0])) as in1, \
+                     file_open(os.path.join(tmpdir, moses_names[1])) as in2:
+                    if self.switch_langs:
+                        in1, in2 = in2, in1
+                    for fin, fout in [(in1, mosessrc), (in2, mosestrg)]:
+                        for line in fin:
+                            fout.write(line)
+                mosessrc.close()
+                mosestrg.close()
+                logger.info('Moses files written to %s', ', '.join(self.write))
+            return
+
+        self.add_file_header(resultfile)
+
+        def doc_start(src, trg):
+            self.add_doc_names(src, trg, resultfile, mosessrc, mosestrg)
+
+        def doc_end():
+            self.add_doc_ending(resultfile)
+
+        for src_result, trg_result, link_attr, src_doc_name, trg_doc_name \
+                in self._iter_pairs(self.write_mode, self.format_pair,
+                                    on_doc_start=doc_start, on_doc_end=doc_end):
+            self.out_put_pair(
+                src_result, trg_result, resultfile, mosessrc, mosestrg,
+                link_attr, id_file, src_doc_name, trg_doc_name)
 
         if self.verbose and self.write:
             print("\n\n", file=sys.stderr)
@@ -421,15 +436,6 @@ class OpusRead:
                         yield src_line.rstrip('\n'), trg_line.rstrip('\n')
             return
 
-        src_parser = None
-        trg_parser = None
-        total = 0
-        cur_pos = 0
-        prev_src_doc_name = None
-        prev_trg_doc_name = None
-        src_doc_size = -1
-        trg_doc_size = -1
-
         form_sent_langs = self.fromto.copy()
         if self.switch_langs:
             form_sent_langs = [self.fromto[1], self.fromto[0]]
@@ -439,60 +445,11 @@ class OpusRead:
             'yield_tuple', self.switch_langs, check_filters, False,
             format_sentences)
 
-        while True:
-            link_list, src_set, trg_set, attrs_list, src_doc_name, trg_doc_name, cur_pos = \
-                self.alignmentParser.collect_links(cur_pos, self.chunk_size, self.verbose)
-
-            if src_doc_name != prev_src_doc_name:
-                src_doc_size = -1
-            prev_src_doc_name = src_doc_name
-            if trg_doc_name != prev_trg_doc_name:
-                trg_doc_size = -1
-            prev_trg_doc_name = trg_doc_name
-
-            if not src_doc_name:
-                break
-
-            if self.skip_doc(src_doc_name):
-                continue
-
-            try:
-                src_doc = self.of_handler.open_sentence_file(src_doc_name, 'src')
-                trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
-            except KeyError as e:
-                print('\n'+e.args[0]+'\nContinuing from next sentence file pair.', file=sys.stderr)
-                continue
-
-            try:
-                src_parser = SentenceParser(
-                    src_doc, preprocessing=self.preprocess, anno_attrs=self.src_annot,
-                    preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level, len_name=self.len_name)
-                src_doc_size = src_parser.store_sentences(src_set, src_doc_size, self.verbose)
-                trg_parser = SentenceParser(
-                    trg_doc, preprocessing=self.preprocess, anno_attrs=self.trg_annot,
-                    preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level, len_name=self.len_name)
-                trg_doc_size = trg_parser.store_sentences(trg_set, trg_doc_size, self.verbose)
-            except SentenceParserError as e:
-                print('\n'+e.message+'\nContinuing from next sentence file pair.', file=sys.stderr)
-                continue
-
-            if self.doc_level:
-                link_list = self.doc_level_link_list(link_list, src_parser, trg_parser)
-
-            for link_a in link_list:
-                src_result, trg_result = format_pair(
-                        link_a, src_parser, trg_parser, self.fromto)
-                if src_result == -1:
-                    continue
-                src = src_result.rstrip('\n').replace('\n', ' ')
-                tgt = trg_result.rstrip('\n').replace('\n', ' ')
-                yield src, tgt
-                total += 1
-                if total == self.maximum:
-                    break
-
-            if total == self.maximum:
-                break
+        for src_result, trg_result, _, _, _ \
+                in self._iter_pairs('yield_tuple', format_pair):
+            src = src_result.rstrip('\n').replace('\n', ' ')
+            tgt = trg_result.rstrip('\n').replace('\n', ' ')
+            yield src, tgt
 
         self.alignmentParser.bp.close_document()
         self.of_handler.close_zipfiles()
