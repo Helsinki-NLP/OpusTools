@@ -126,7 +126,7 @@ class OpusRead:
             source_annotations, target_annotations = \
                 target_annotations.copy(), source_annotations.copy()
 
-        lang_filters = [src_cld2, src_langid, trg_cld2, trg_langid]
+        self.lang_filters = lang_filters = [src_cld2, src_langid, trg_cld2, trg_langid]
 
         default_alignment = os.path.join(
             root_directory, directory, release, 'xml',
@@ -401,4 +401,98 @@ class OpusRead:
         if self.write_ids:
             id_file.close()
 
+        self.of_handler.close_zipfiles()
+
+    def yieldPairs(self):
+        """Yield (source_sentence, target_sentence) tuples from the corpus.
+
+        Applies the same filters as printPairs (maximum, skip_doc, src/tgt_range,
+        language filters, etc.) but yields plain-text sentence pairs instead of
+        writing to files or stdout. Useful for programmatic access.
+        """
+        if self.preprocess == 'moses':
+            with tempfile.TemporaryDirectory() as tmpdir:
+                moses_names = self.of_handler.open_moses_files(outpath=tmpdir)
+                with file_open(os.path.join(tmpdir, moses_names[0])) as src_f, \
+                     file_open(os.path.join(tmpdir, moses_names[1])) as trg_f:
+                    if self.switch_langs:
+                        src_f, trg_f = trg_f, src_f
+                    for src_line, trg_line in zip(src_f, trg_f):
+                        yield src_line.rstrip('\n'), trg_line.rstrip('\n')
+            return
+
+        src_parser = None
+        trg_parser = None
+        total = 0
+        cur_pos = 0
+        prev_src_doc_name = None
+        prev_trg_doc_name = None
+        src_doc_size = -1
+        trg_doc_size = -1
+
+        form_sent_langs = self.fromto.copy()
+        if self.switch_langs:
+            form_sent_langs = [self.fromto[1], self.fromto[0]]
+        format_sentences = sentence_format_type('yield_tuple', form_sent_langs)
+        check_filters, _ = check_lang_conf_type(self.lang_filters)
+        format_pair = pair_format_type(
+            'yield_tuple', self.switch_langs, check_filters, False,
+            format_sentences)
+
+        while True:
+            link_list, src_set, trg_set, attrs_list, src_doc_name, trg_doc_name, cur_pos = \
+                self.alignmentParser.collect_links(cur_pos, self.chunk_size, self.verbose)
+
+            if src_doc_name != prev_src_doc_name:
+                src_doc_size = -1
+            prev_src_doc_name = src_doc_name
+            if trg_doc_name != prev_trg_doc_name:
+                trg_doc_size = -1
+            prev_trg_doc_name = trg_doc_name
+
+            if not src_doc_name:
+                break
+
+            if self.skip_doc(src_doc_name):
+                continue
+
+            try:
+                src_doc = self.of_handler.open_sentence_file(src_doc_name, 'src')
+                trg_doc = self.of_handler.open_sentence_file(trg_doc_name, 'trg')
+            except KeyError as e:
+                print('\n'+e.args[0]+'\nContinuing from next sentence file pair.', file=sys.stderr)
+                continue
+
+            try:
+                src_parser = SentenceParser(
+                    src_doc, preprocessing=self.preprocess, anno_attrs=self.src_annot,
+                    preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level, len_name=self.len_name)
+                src_doc_size = src_parser.store_sentences(src_set, src_doc_size, self.verbose)
+                trg_parser = SentenceParser(
+                    trg_doc, preprocessing=self.preprocess, anno_attrs=self.trg_annot,
+                    preserve=self.preserve, delimiter=self.annot_delimiter, doc_level=self.doc_level, len_name=self.len_name)
+                trg_doc_size = trg_parser.store_sentences(trg_set, trg_doc_size, self.verbose)
+            except SentenceParserError as e:
+                print('\n'+e.message+'\nContinuing from next sentence file pair.', file=sys.stderr)
+                continue
+
+            if self.doc_level:
+                link_list = self.doc_level_link_list(link_list, src_parser, trg_parser)
+
+            for link_a in link_list:
+                src_result, trg_result = format_pair(
+                        link_a, src_parser, trg_parser, self.fromto)
+                if src_result == -1:
+                    continue
+                src = src_result.rstrip('\n').replace('\n', ' ')
+                tgt = trg_result.rstrip('\n').replace('\n', ' ')
+                yield src, tgt
+                total += 1
+                if total == self.maximum:
+                    break
+
+            if total == self.maximum:
+                break
+
+        self.alignmentParser.bp.close_document()
         self.of_handler.close_zipfiles()

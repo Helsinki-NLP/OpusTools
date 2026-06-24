@@ -328,7 +328,8 @@ def sentence_format_type(wmode, fromto):
     format_fs = {'normal': (normal_src, normal_trg),
             'tmx': (tmx_src, tmx_trg),
             'moses': (moses, moses),
-            'links': (None, None)}
+            'links': (None, None),
+            'yield_tuple': (moses, moses)}
 
     return format_fs[wmode]
 
