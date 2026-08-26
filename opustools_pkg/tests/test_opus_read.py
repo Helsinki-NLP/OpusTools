@@ -2250,5 +2250,145 @@ class TestOpusRead(unittest.TestCase):
         with open(os.path.join(self.tempdir1, 'doc_level.en-fr.txt')) as doc_out:
             self.assertEqual(doc_out.readlines(), result)
 
+    def test_yield_pairs_xml_maximum(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr',
+            root_directory=self.root_directory, maximum=3).yieldPairs())
+        self.assertEqual(len(pairs), 3)
+
+    def test_yield_pairs_xml_all_pairs(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr',
+            root_directory=self.root_directory).yieldPairs())
+        self.assertEqual(len(pairs), 7)
+        self.assertEqual(
+            pairs[0],
+            ('e1.1 e1.2 e1.3 e1.4 e1.5', 'f1.1 f1.2 f1.3 f1.4 f1.5'))
+        self.assertEqual(
+            pairs[1],
+            ('e2.1 e2.2 e2.3 e2.4 e2.5', 'f2.1 f2.2 f2.3 f2.4 f2.5'))
+        self.assertEqual(
+            pairs[2],
+            ('e4.1 e4.2 e4.3 e4.4 e4.5', 'f4.1 f4.2 f4.3 f4.4 f4.5'))
+        self.assertEqual(
+            pairs[3],
+            ('e2.1 e2.2 e2.3 e2.4 e2.5',
+             'f2.1 f2.2 f2.3 f2.4 f2.5 f3.1 f3.2 f3.3 f3.4 f3.5'))
+        self.assertEqual(
+            pairs[4],
+            ('e4.1 e4.2 e4.3 e4.4 e4.5 e5.1 e5.2 e5.3 e5.4 e5.5',
+             'f4.1 f4.2 f4.3 f4.4 f4.5'))
+        self.assertEqual(
+            pairs[5],
+            ('e1.1 e1.2 e1.3 e1.4 e1.5 e2.1 e2.2 e2.3 e2.4 e2.5',
+             'f2.1 f2.2 f2.3 f2.4 f2.5'))
+        self.assertEqual(
+            pairs[6],
+            ('e3.1 e3.2 e3.3 e3.4 e3.5', 'f3.1 f3.2 f3.3 f3.4 f3.5'))
+
+    def test_yield_pairs_raw_basic(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr',
+            root_directory=self.root_directory, maximum=1,
+            preprocess='raw').yieldPairs())
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(
+            pairs[0],
+            ('e1.1 e1.2 e1.3 e1.4 e1.5', 'f1.1 f1.2 f1.3 f1.4 f1.5'))
+
+    def test_yield_pairs_all_maximum_minus_one(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr',
+            root_directory=self.root_directory, maximum=-1).yieldPairs())
+        self.assertEqual(len(pairs), 7)
+
+    def test_yield_pairs_switch_langs(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='fr', target='en',
+            root_directory=self.root_directory, maximum=1).yieldPairs())
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(
+            pairs[0],
+            ('f1.1 f1.2 f1.3 f1.4 f1.5', 'e1.1 e1.2 e1.3 e1.4 e1.5'))
+
+
+class TestOpusReadYieldPairsLocal(unittest.TestCase):
+    """Tests for yieldPairs using locally generated data (no OPUS API)."""
+
+    @classmethod
+    def setUpClass(self):
+        self.tempdir = tempfile.mkdtemp()
+
+        os.makedirs(os.path.join(self.tempdir, 'TEST', 'latest', 'xml', 'en'))
+        os.makedirs(os.path.join(self.tempdir, 'TEST', 'latest', 'xml', 'fr'))
+
+        en_xml = '''<?xml version="1.0" encoding="utf-8"?>
+            <text><p id="1"><s id="s1">
+            <w id="w1">Hello</w>
+            <w id="w2">world</w>
+            </s><s id="s2">
+            <w id="w3">Good</w>
+            <w id="w4">morning</w>
+            </s></p></text>'''
+        fr_xml = '''<?xml version="1.0" encoding="utf-8"?>
+            <text><p id="1"><s id="s1">
+            <w id="w1">Bonjour</w>
+            <w id="w2">le</w>
+            <w id="w3">monde</w>
+            </s><s id="s2">
+            <w id="w4">Bon</w>
+            <w id="w5">matin</w>
+            </s></p></text>'''
+
+        for lang, content in [('en', en_xml), ('fr', fr_xml)]:
+            with open(os.path.join(
+                    self.tempdir, 'TEST', 'latest', 'xml', lang, 'doc1.xml'), 'w') as f:
+                f.write(content)
+
+        with zipfile.ZipFile(os.path.join(
+                self.tempdir, 'TEST', 'latest', 'xml', 'en.zip'), 'w') as zf:
+            zf.write(os.path.join(self.tempdir, 'TEST', 'latest', 'xml', 'en', 'doc1.xml'),
+                     arcname='TEST/xml/en/doc1.xml')
+        with zipfile.ZipFile(os.path.join(
+                self.tempdir, 'TEST', 'latest', 'xml', 'fr.zip'), 'w') as zf:
+            zf.write(os.path.join(self.tempdir, 'TEST', 'latest', 'xml', 'fr', 'doc1.xml'),
+                     arcname='TEST/xml/fr/doc1.xml')
+
+        align_xml = '''<?xml version="1.0" encoding="utf-8"?>
+            <!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">
+            <cesAlign version="1.0">
+            <linkGrp targType="s" fromDoc="en/doc1.xml.gz" toDoc="fr/doc1.xml.gz">
+            <link xtargets="s1;s1" id="SL1"/>
+            <link xtargets="s2;s2" id="SL2"/>
+            </linkGrp>
+            </cesAlign>'''
+
+        align_path = os.path.join(self.tempdir, 'TEST', 'latest', 'xml', 'en-fr.xml')
+        with open(align_path, 'w') as f:
+            f.write(align_xml)
+        with gzip.open(align_path + '.gz', 'wb') as f:
+            with open(align_path, 'rb') as b:
+                f.write(b.read())
+
+    @classmethod
+    def tearDownClass(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_yield_pairs_basic(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr',
+            root_directory=self.tempdir).yieldPairs())
+        self.assertEqual(len(pairs), 2)
+        self.assertEqual(pairs[0], ('Hello world', 'Bonjour le monde'))
+        self.assertEqual(pairs[1], ('Good morning', 'Bon matin'))
+
+    def test_yield_pairs_maximum_1(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr',
+            root_directory=self.tempdir, maximum=1).yieldPairs())
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(pairs[0], ('Hello world', 'Bonjour le monde'))
+
+
 if __name__ == '__main__':
     unittest.main()
