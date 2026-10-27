@@ -106,6 +106,8 @@ def doc_ending_type(wmode, write):
             return link_write
         if wmode == 'mosesdoc':
             return doc_write
+        if wmode == 'mosesdoc2':
+            return nothing
     else:
         if wmode in ['normal', 'normaldoc']:
             return normal_print

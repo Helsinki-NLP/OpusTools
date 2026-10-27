@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import tempfile
+import json
 
 from .parse.alignment_parser import AlignmentParser
 from .parse.sentence_parser import SentenceParser, SentenceParserError
@@ -178,7 +179,10 @@ class OpusRead:
         self.add_file_header = file_header_type(write_mode, write, source)
         self.add_doc_names = doc_name_type(write_mode, write, print_file_names)
         if doc_level:
-            self.add_doc_ending = doc_ending_type(write_mode+'doc', write)
+            if self.write and len(self.write) == 2:
+                self.add_doc_ending = doc_ending_type(write_mode+'doc2', write)
+            else:
+                self.add_doc_ending = doc_ending_type(write_mode+'doc', write)
         else:
             self.add_doc_ending = doc_ending_type(write_mode, write)
         self.add_file_ending = file_ending_type(write_mode, write)
@@ -312,26 +316,53 @@ class OpusRead:
             if self.doc_level and wmode != 'links':
                 link_list = self.doc_level_link_list(link_list, src_parser, trg_parser)
 
-            len_link_list = len(link_list)
-            for i, link_a in enumerate(link_list):
-                if self.verbose:
-                    if i % 1000 == 0 or i + 1 == len_link_list:
-                        progress = str(round((i+1)/len_link_list*100, 2))
-                        print("\x1b[2KWriting chunk ... {}%".format(progress), end="\r", file=sys.stderr)
+            if self.doc_level and self.write and len(self.write) == 2:
+                src_out, trg_out = {"text": ""}, {"text": ""}
+                len_link_list = len(link_list)
+                for i, link_a in enumerate(link_list):
+                    if self.verbose:
+                        if i % 1000 == 0 or i + 1 == len_link_list:
+                            progress = str(round((i+1)/len_link_list*100, 2))
+                            print("\x1b[2KWriting chunk ... {}%".format(progress), end="\r", file=sys.stderr)
 
-                src_result, trg_result = format_pair(
-                        link_a, src_parser, trg_parser, self.fromto)
+                    src_result, trg_result = format_pair(
+                            link_a, src_parser, trg_parser, self.fromto)
 
-                if src_result == -1:
-                    continue
+                    if src_result == -1:
+                        continue
 
-                yield (src_result, trg_result,
+                    src_out["text"] += src_result
+                    trg_out["text"] += trg_result
+
+                yield (json.dumps(src_out, ensure_ascii=False), json.dumps(trg_out, ensure_ascii=False),
                        attrs_list[i] if i < len(attrs_list) else None,
                        src_doc_name, trg_doc_name)
 
                 total += 1
                 if total == self.maximum:
                     break
+
+            else:
+                len_link_list = len(link_list)
+                for i, link_a in enumerate(link_list):
+                    if self.verbose:
+                        if i % 1000 == 0 or i + 1 == len_link_list:
+                            progress = str(round((i+1)/len_link_list*100, 2))
+                            print("\x1b[2KWriting chunk ... {}%".format(progress), end="\r", file=sys.stderr)
+
+                    src_result, trg_result = format_pair(
+                            link_a, src_parser, trg_parser, self.fromto)
+
+                    if src_result == -1:
+                        continue
+
+                    yield (src_result, trg_result,
+                           attrs_list[i] if i < len(attrs_list) else None,
+                           src_doc_name, trg_doc_name)
+
+                    total += 1
+                    if total == self.maximum:
+                        break
 
             if on_doc_end:
                 on_doc_end()
@@ -390,7 +421,11 @@ class OpusRead:
             self.add_doc_names(src, trg, resultfile, mosessrc, mosestrg)
 
         def doc_end():
-            self.add_doc_ending(resultfile)
+            if self.write and len(self.write) == 2:
+                self.add_doc_ending(mosessrc)
+                self.add_doc_ending(mosestrg)
+            else:
+                self.add_doc_ending(resultfile)
 
         for src_result, trg_result, link_attr, src_doc_name, trg_doc_name \
                 in self._iter_pairs(self.write_mode, self.format_pair,
