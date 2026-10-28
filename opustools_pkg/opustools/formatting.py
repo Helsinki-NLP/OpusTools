@@ -1,4 +1,5 @@
 import html
+import json
 
 
 def file_header_type(wmode, write, source_lang):
@@ -194,103 +195,94 @@ def write_id_line_type(switch_langs, attribute):
 def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
     """Select function for outputting sentence pairs"""
 
-    #args = (src_result, trg_result, resultfile, mosessrc, mosestrg, link_a,
-    #       id_file, src_doc_name, trg_doc_name)
+    # args = (src_result, trg_result, resultfile, mosessrc, mosestrg, link_a,
+    #        id_file, src_doc_name, trg_doc_name)
+
     def normal_write(*args):
         args[2].write(args[0]+args[1])
+
     def normal_print(*args):
         print(args[0]+args[1], end='')
+
     def moses_write(*args):
         src = args[0].rstrip('\n').replace('\n', ' ')
         tgt = args[1].rstrip('\n').replace('\n', ' ')
         args[2].write(src + moses_del + tgt + '\n')
+
     def moses_write_2(*args):
         src = args[0].rstrip('\n').replace('\n', ' ')
         tgt = args[1].rstrip('\n').replace('\n', ' ')
         args[3].write(src + '\n')
         args[4].write(tgt + '\n')
+
     def moses_print(*args):
         src = args[0].rstrip('\n').replace('\n', ' ')
         tgt = args[1].rstrip('\n').replace('\n', ' ')
         print(src + moses_del + tgt)
+
+    def jsonl_write(*args):
+        line = json.dumps({'src' : args[0].rstrip('\n'), 'tgt': args[1].rstrip('\n')}, ensure_ascii=False)
+        args[2].write(line + '\n')
+
+    def jsonl_write_2(*args):
+        src = json.dumps(args[0].rstrip('\n'), ensure_ascii=False)
+        tgt = json.dumps(args[1].rstrip('\n'), ensure_ascii=False)
+        args[3].write(src + '\n')
+        args[4].write(tgt + '\n')
+
+    def jsonl_print(*args):
+        line = json.dumps({'src' : args[0].rstrip('\n'), 'tgt': args[1].rstrip('\n')}, ensure_ascii=False)
+        print(line)
+
     def links_write(*args):
         str_link = '<link {} />\n'.format(' '.join(
             ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
         args[2].write(str_link)
+
     def links_print(*args):
         str_link = '<link {} />\n'.format(' '.join(
             ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
         print(str_link, end='')
 
-    write_id_line = write_id_line_type(switch_langs, attribute)
-
-    def normal_write_id(*args):
-        args[2].write(args[0]+args[1])
-        write_id_line(args[5], args[6], args[7], args[8])
-    def normal_print_id(*args):
-        print(args[0]+args[1], end='')
-        write_id_line(args[5], args[6], args[7], args[8])
-    def moses_write_id(*args):
-        src = args[0].rstrip('\n').replace('\n', ' ')
-        tgt = args[1].rstrip('\n').replace('\n', ' ')
-        args[2].write(src + moses_del + tgt + '\n')
-        write_id_line(args[5], args[6], args[7], args[8])
-    def moses_write_2_id(*args):
-        src = args[0].rstrip('\n').replace('\n', ' ')
-        tgt = args[1].rstrip('\n').replace('\n', ' ')
-        args[3].write(src + '\n')
-        args[4].write(tgt + '\n')
-        write_id_line(args[5], args[6], args[7], args[8])
-    def moses_print_id(*args):
-        src = args[0].rstrip('\n').replace('\n', ' ')
-        tgt = args[1].rstrip('\n').replace('\n', ' ')
-        print(src + moses_del + tgt)
-        write_id_line(args[5], args[6], args[7], args[8])
-    def links_write_id(*args):
-        str_link = '<link {} />\n'.format(' '.join(
-            ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
-        args[2].write(str_link)
-        write_id_line(args[5], args[6], args[7], args[8])
-    def links_print_id(*args):
-        str_link = '<link {} />\n'.format(' '.join(
-            ['{}="{}"'.format(k, v) for k, v in args[5].items()]))
-        print(str_link, end='')
-        write_id_line(args[5], args[6], args[7], args[8])
-
     def nothing(*args):
         pass
 
-    if write_ids:
-        if wmode in ['normal', 'tmx'] and write:
-            return normal_write_ids
-        if wmode in ['normal', 'tmx'] and not write:
-            return normal_print_id
-        if wmode == 'moses' and not write:
-            return moses_print_id
-        if wmode == 'moses' and len(write) == 1:
-            return moses_write_id
-        if wmode == 'moses' and len(write) == 2:
-            return moses_write_2_id
-        if wmode == 'links'and write:
-            return links_write_id
-        if wmode == 'links'and not write:
-            return links_print_id
-    else:
+    def select_method():
         if wmode in ['normal', 'tmx'] and write:
             return normal_write
         if wmode in ['normal', 'tmx'] and not write:
             return normal_print
-        if wmode in ['moses', 'jsonl'] and not write:
+        if wmode in ['moses'] and not write:
             return moses_print
-        if wmode in ['moses', 'jsonl'] and len(write) == 1:
+        if wmode in ['moses'] and len(write) == 1:
             return moses_write
-        if wmode in ['moses', 'jsonl'] and len(write) == 2:
+        if wmode in ['moses'] and len(write) == 2:
             return moses_write_2
+        if wmode in ['jsonl'] and not write:
+            return jsonl_print
+        if wmode in ['jsonl'] and len(write) == 1:
+            return jsonl_write
+        if wmode in ['jsonl'] and len(write) == 2:
+            return jsonl_write_2
         if wmode == 'links'and write:
             return links_write
         if wmode == 'links'and not write:
             return links_print
-    return nothing
+        return nothing
+
+    def wrap_with_write(func):
+        """Wrap output method with write_id_line"""
+        def wrapped(*args):
+            write_id_line = write_id_line_type(switch_langs, attribute)
+            write_id_line(args[5], args[6], args[7], args[8])
+            return func(*args)
+        return wrapped
+
+    method = select_method()
+    if write_ids:
+        method = wrap_with_write(method)
+
+    return method
 
 def sentence_format_type(wmode, fromto):
     """Select function for formatting sentences"""
@@ -419,4 +411,3 @@ def pair_format_type(wmode, switch_langs, check_filters, check_lang,
         return switch
     else:
         return normal
-
