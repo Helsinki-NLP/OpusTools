@@ -60,7 +60,8 @@ class OpusRead:
         target -- Target language
         release -- Corpus release version (default latest)
         preprocess -- Corpus preprocessing type (default xml)
-        maximum -- Maximum number of alignments outputted (default all)
+        maximum -- Maximum number of alignments outputted (default all).
+            With doc_level, limits the number of documents.
         src_range -- Number of source sentences in alignment (default all)
         tgt_range -- Number of target sentences in alignment (default all)
         attribute -- Set attribute for filtering
@@ -361,8 +362,6 @@ class OpusRead:
                            src_doc_name, trg_doc_name)
 
                 total += 1
-                if total == self.maximum:
-                    break
 
             else:
                 len_link_list = len(link_list)

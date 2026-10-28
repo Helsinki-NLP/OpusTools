@@ -2339,6 +2339,24 @@ class TestOpusRead(unittest.TestCase):
             root_directory=self.root_directory, doc_level=True).yieldPairs())
         self.assertEqual(pairs, self.doc_level_docs())
 
+    def test_yield_pairs_doc_level_maximum(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr', suppress_prompts=True,
+            root_directory=self.root_directory, doc_level=True,
+            maximum=1).yieldPairs())
+        self.assertEqual(pairs, self.doc_level_docs()[:1])
+
+    def test_moses_doc_level_maximum(self):
+        result = self.moses_doc_level_result()
+        expected = result[:result.index('\n') + 1]
+        path = os.path.join(self.tempdir1, 'doc_level_maximum.moses')
+        OpusRead(directory='TEST', source='en', target='fr',
+                 suppress_prompts=True, root_directory=self.root_directory,
+                 write_mode='moses', doc_level=True, maximum=1,
+                 write=[path]).printPairs()
+        with open(path) as output:
+            self.assertEqual(output.readlines(), expected)
+
     def test_jsonl_output(self):
         src = ('Statement of Government Policy by the Prime Minister , '
                'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'

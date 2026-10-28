@@ -50,7 +50,8 @@ arguments:
                     Release (default=latest)
 -p {raw,xml,parsed}, --preprocess {raw,xml,parsed}
                     Preprocess-type (raw, xml or parsed, default=xml)
--m MAXIMUM, --maximum MAXIMUM   Maximum number of alignments
+-m MAXIMUM, --maximum MAXIMUM   Maximum number of alignments (documents with
+                                --doc_level)
 -S SRC_RANGE, --src_range SRC_RANGE
                     Number of source sentences in alignments (range is
                     allowed, eg. -S 1-2)

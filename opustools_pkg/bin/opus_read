@@ -21,7 +21,8 @@ parser.add_argument('-r', '--release', help='Release (default=latest)',
 parser.add_argument('-p', '--preprocess',
     help='Preprocess-type (raw, xml, parsed or moses, default=xml)',
     default='xml', choices=['raw', 'xml', 'parsed', 'moses'])
-parser.add_argument('-m', '--maximum', help='Maximum number of alignments',
+parser.add_argument('-m', '--maximum', help='Maximum number of alignments '
+    '(documents with --doc_level)',
     default=-1, type=int)
 parser.add_argument('-S', '--src_range',
     help='Number of source sentences in alignments (range is '
