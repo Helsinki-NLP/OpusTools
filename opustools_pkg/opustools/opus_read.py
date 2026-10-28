@@ -489,9 +489,10 @@ class OpusRead:
             'yield_tuple', self.switch_langs, check_filters, False,
             format_sentences)
 
-        for src_result, trg_result, _, _, _ \
-                in self._iter_pairs('yield_tuple', format_pair):
-            yield src_result.rstrip('\n'), trg_result.rstrip('\n')
-
-        self.alignmentParser.bp.close_document()
-        self.of_handler.close_zipfiles()
+        try:
+            for src_result, trg_result, _, _, _ \
+                    in self._iter_pairs('yield_tuple', format_pair):
+                yield src_result.rstrip('\n'), trg_result.rstrip('\n')
+        finally:
+            self.alignmentParser.bp.close_document()
+            self.of_handler.close_zipfiles()

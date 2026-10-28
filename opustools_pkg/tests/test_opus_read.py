@@ -2581,6 +2581,19 @@ class TestOpusReadYieldPairsLocal(unittest.TestCase):
         self.assertEqual(len(pairs), 1)
         self.assertEqual(pairs[0], ('Hello world', 'Bonjour le monde'))
 
+    def test_yield_pairs_closes_on_partial_consumption(self):
+        reader = OpusRead(directory='TEST', source='en', target='fr',
+                          root_directory=self.tempdir)
+        with mock.patch.object(
+                reader.alignmentParser.bp, 'close_document') as close_doc, \
+             mock.patch.object(
+                reader.of_handler, 'close_zipfiles') as close_zipfiles:
+            pairs = reader.yieldPairs()
+            self.assertEqual(next(pairs), ('Hello world', 'Bonjour le monde'))
+            pairs.close()
+        close_doc.assert_called_once_with()
+        close_zipfiles.assert_called_once_with()
+
     def test_doc_level_moses_preprocessing_warns(self):
         with self.assertLogs('opustools.opus_read', level='WARNING') as logs:
             OpusRead(directory='TEST', source='en', target='fr',
