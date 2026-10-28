@@ -206,6 +206,9 @@ class OpusRead:
                 preprocess, self.fromto, suppress_prompts)
 
         if preprocess == 'moses':
+            if self.doc_level:
+                logger.warning("doc_level is not supported for moses preprocessing. "
+                               "Ignoring doc_level.")
             if self.write_mode != 'moses':
                 logger.warning("Only moses write_mode is supported for moses preprocessing. "
                                "Ignoring write_mode %s.", self.write_mode)

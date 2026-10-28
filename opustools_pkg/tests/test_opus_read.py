@@ -2581,6 +2581,14 @@ class TestOpusReadYieldPairsLocal(unittest.TestCase):
         self.assertEqual(len(pairs), 1)
         self.assertEqual(pairs[0], ('Hello world', 'Bonjour le monde'))
 
+    def test_doc_level_moses_preprocessing_warns(self):
+        with self.assertLogs('opustools.opus_read', level='WARNING') as logs:
+            OpusRead(directory='TEST', source='en', target='fr',
+                     root_directory=self.tempdir, preprocess='moses',
+                     doc_level=True, suppress_prompts=True)
+        self.assertIn('doc_level is not supported',
+                      '\n'.join(logs.output))
+
 
 if __name__ == '__main__':
     unittest.main()
