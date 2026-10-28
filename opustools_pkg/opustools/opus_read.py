@@ -224,12 +224,20 @@ class OpusRead:
             self.alignment, (src_range, tgt_range), attribute, threshold,
             store_attrs, leave_non_alignments_out, self.len_name)
 
-    def doc_level_link_list(self, link_list, src_parser, trg_parser):
+    def doc_level_link_list(self, link_list, src_parser, trg_parser, attrs_list):
         new_link_list = []
+        new_attrs_list = []
         sid_pos, tid_pos = 0, 0
         src_ids = src_parser.doc_level_ids
         trg_ids = trg_parser.doc_level_ids
-        for links in link_list:
+
+        def add_link(link, attrs=None):
+            new_link_list.append(link)
+            new_attrs_list.append(attrs)
+
+        for link_index, links in enumerate(link_list):
+            link_attrs = (attrs_list[link_index]
+                          if link_index < len(attrs_list) else None)
             src_links = links[0].split()
             trg_links = links[1].split()
             if src_links:
@@ -238,7 +246,8 @@ class OpusRead:
                 except ValueError:
                     pass
                 else:
-                    new_link_list += [(sid, '') for sid in src_ids[sid_pos:sid]]
+                    for src_id in src_ids[sid_pos:sid]:
+                        add_link((src_id, ''))
                     sid_pos = sid + len(src_links)
             if trg_links:
                 try:
@@ -246,12 +255,15 @@ class OpusRead:
                 except ValueError:
                     pass
                 else:
-                    new_link_list += [('', tid) for tid in trg_ids[tid_pos:tid]]
+                    for trg_id in trg_ids[tid_pos:tid]:
+                        add_link(('', trg_id))
                     tid_pos = tid + len(trg_links)
-            new_link_list.append(links)
-        new_link_list += [(sid, '') for sid in src_ids[sid_pos:]]
-        new_link_list += [('', tid) for tid in trg_ids[tid_pos:]]
-        return new_link_list
+            add_link(links, link_attrs)
+        for src_id in src_ids[sid_pos:]:
+            add_link((src_id, ''))
+        for trg_id in trg_ids[tid_pos:]:
+            add_link(('', trg_id))
+        return new_link_list, new_attrs_list
 
     def _iter_pairs(self, wmode, format_pair, on_doc_start=None, on_doc_end=None):
         """Yield (src_result, trg_result, link_attr, src_doc_name, trg_doc_name)
@@ -319,7 +331,8 @@ class OpusRead:
                 on_doc_start(src_doc_name, trg_doc_name)
 
             if self.doc_level and wmode != 'links':
-                link_list = self.doc_level_link_list(link_list, src_parser, trg_parser)
+                link_list, attrs_list = self.doc_level_link_list(
+                        link_list, src_parser, trg_parser, attrs_list)
                 src_out, trg_out = "", ""
                 len_link_list = len(link_list)
                 for i, link_a in enumerate(link_list):
@@ -335,16 +348,16 @@ class OpusRead:
                         continue
 
                     if wmode == 'moses':
-                        yield (src_result, trg_result,
-                               attrs_list[i] if i < len(attrs_list) else None,
+                        yield (src_result, trg_result, attrs_list[i],
                                src_doc_name, trg_doc_name)
                     else:
                         src_out += src_result
                         trg_out += trg_result
 
                 if wmode != 'moses':
-                    yield (src_out, trg_out,
-                           attrs_list[i] if i < len(attrs_list) else None,
+                    doc_attrs = next((attrs for attrs in reversed(attrs_list)
+                                      if attrs is not None), None)
+                    yield (src_out, trg_out, doc_attrs,
                            src_doc_name, trg_doc_name)
 
                 total += 1

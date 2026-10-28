@@ -271,8 +271,9 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
     def wrap_with_write(func):
         """Wrap output method with write_id_line"""
         def wrapped(*args):
-            write_id_line = write_id_line_type(switch_langs, attribute)
-            write_id_line(args[5], args[6], args[7], args[8])
+            if args[5] is not None:
+                write_id_line = write_id_line_type(switch_langs, attribute)
+                write_id_line(args[5], args[6], args[7], args[8])
             return func(*args)
         return wrapped
 

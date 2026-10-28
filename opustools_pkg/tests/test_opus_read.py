@@ -2602,6 +2602,33 @@ class TestOpusReadYieldPairsLocal(unittest.TestCase):
         self.assertIn('doc_level is not supported',
                       '\n'.join(logs.output))
 
+    def test_doc_level_write_ids(self):
+        alignment = os.path.join(
+            self.tempdir, 'TEST', 'latest', 'xml', 'doc_level_ids.xml')
+        with open(alignment, 'w') as f:
+            f.write('<?xml version="1.0" encoding="utf-8"?>\n'
+                    '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+                    '<cesAlign version="1.0">\n'
+                    '<linkGrp targType="s" fromDoc="en/doc1.xml.gz" '
+                    'toDoc="fr/doc1.xml.gz">\n'
+                    '<link xtargets="s2;s2" id="SL1" certainty="0.9" />\n'
+                    '</linkGrp>\n</cesAlign>\n')
+        output_path = os.path.join(self.tempdir, 'doc_level_ids.moses')
+        ids_path = os.path.join(self.tempdir, 'doc_level_ids.tsv')
+        OpusRead(directory='TEST', source='en', target='fr',
+                 root_directory=self.tempdir, alignment_file=alignment,
+                 write_mode='moses', doc_level=True, write=[output_path],
+                 write_ids=ids_path, attribute='certainty').printPairs()
+        with open(output_path) as output:
+            self.assertEqual(output.readlines(), [
+                'Hello world\t\n',
+                '\tBonjour le monde\n',
+                'Good morning\tBon matin\n',
+                '\n'])
+        with open(ids_path) as ids:
+            self.assertEqual(ids.read(),
+                             'en/doc1.xml.gz\tfr/doc1.xml.gz\ts2\ts2\t0.9\n')
+
 
 if __name__ == '__main__':
     unittest.main()
