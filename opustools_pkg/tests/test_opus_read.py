@@ -2247,8 +2247,7 @@ class TestOpusRead(unittest.TestCase):
         trg = []
         for line in self.moses_doc_level_result():
             if line == '\n':
-                docs.append(('\n'.join(src).rstrip('\n'),
-                             '\n'.join(trg).rstrip('\n')))
+                docs.append(('\n'.join(src), '\n'.join(trg)))
                 src = []
                 trg = []
             else:
@@ -2626,6 +2625,36 @@ class TestOpusReadYieldPairsLocal(unittest.TestCase):
                      doc_level=True, suppress_prompts=True)
         self.assertIn('doc_level is not supported',
                       '\n'.join(logs.output))
+
+    def test_doc_level_preserves_trailing_blank_row(self):
+        alignment = os.path.join(
+            self.tempdir, 'TEST', 'latest', 'xml', 'trailing_blank.xml')
+        with open(alignment, 'w') as f:
+            f.write('<?xml version="1.0" encoding="utf-8"?>\n'
+                    '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+                    '<cesAlign version="1.0">\n'
+                    '<linkGrp targType="s" fromDoc="en/doc1.xml.gz" '
+                    'toDoc="fr/doc1.xml.gz">\n'
+                    '<link xtargets="s1 s2;s1" />\n'
+                    '<link xtargets=";s2" />\n'
+                    '</linkGrp>\n</cesAlign>\n')
+        expected = ('Hello world Good morning\n',
+                    'Bonjour le monde\nBon matin')
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr',
+            root_directory=self.tempdir, alignment_file=alignment,
+            doc_level=True).yieldPairs())
+        self.assertEqual(pairs, [expected])
+
+        output_path = os.path.join(self.tempdir, 'trailing_blank.jsonl')
+        OpusRead(directory='TEST', source='en', target='fr',
+                 root_directory=self.tempdir, alignment_file=alignment,
+                 write_mode='jsonl', doc_level=True,
+                 write=[output_path]).printPairs()
+        with open(output_path) as output:
+            self.assertEqual(
+                json.loads(output.read()),
+                {'src': expected[0], 'tgt': expected[1]})
 
     def test_doc_level_write_ids(self):
         alignment = os.path.join(

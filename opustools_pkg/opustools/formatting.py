@@ -203,33 +203,33 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
         print(args[0]+args[1], end='')
 
     def moses_write(*args):
-        src = args[0].rstrip('\n').replace('\n', ' ')
-        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        src = args[0].removesuffix('\n').replace('\n', ' ')
+        tgt = args[1].removesuffix('\n').replace('\n', ' ')
         args[2].write(src + moses_del + tgt + '\n')
 
     def moses_write_2(*args):
-        src = args[0].rstrip('\n').replace('\n', ' ')
-        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        src = args[0].removesuffix('\n').replace('\n', ' ')
+        tgt = args[1].removesuffix('\n').replace('\n', ' ')
         args[3].write(src + '\n')
         args[4].write(tgt + '\n')
 
     def moses_print(*args):
-        src = args[0].rstrip('\n').replace('\n', ' ')
-        tgt = args[1].rstrip('\n').replace('\n', ' ')
+        src = args[0].removesuffix('\n').replace('\n', ' ')
+        tgt = args[1].removesuffix('\n').replace('\n', ' ')
         print(src + moses_del + tgt)
 
     def jsonl_write(*args):
-        line = json.dumps({'src' : args[0].rstrip('\n'), 'tgt': args[1].rstrip('\n')}, ensure_ascii=False)
+        line = json.dumps({'src' : args[0].removesuffix('\n'), 'tgt': args[1].removesuffix('\n')}, ensure_ascii=False)
         args[2].write(line + '\n')
 
     def jsonl_write_2(*args):
-        src = json.dumps(args[0].rstrip('\n'), ensure_ascii=False)
-        tgt = json.dumps(args[1].rstrip('\n'), ensure_ascii=False)
+        src = json.dumps(args[0].removesuffix('\n'), ensure_ascii=False)
+        tgt = json.dumps(args[1].removesuffix('\n'), ensure_ascii=False)
         args[3].write(src + '\n')
         args[4].write(tgt + '\n')
 
     def jsonl_print(*args):
-        line = json.dumps({'src' : args[0].rstrip('\n'), 'tgt': args[1].rstrip('\n')}, ensure_ascii=False)
+        line = json.dumps({'src' : args[0].removesuffix('\n'), 'tgt': args[1].removesuffix('\n')}, ensure_ascii=False)
         print(line)
 
     def links_write(*args):

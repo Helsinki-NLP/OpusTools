@@ -493,7 +493,7 @@ class OpusRead:
                     if self.switch_langs:
                         src_f, trg_f = trg_f, src_f
                     for src_line, trg_line in zip(src_f, trg_f):
-                        yield src_line.rstrip('\n'), trg_line.rstrip('\n')
+                        yield src_line.removesuffix('\n'), trg_line.removesuffix('\n')
             return
 
         form_sent_langs = self.fromto.copy()
@@ -508,7 +508,7 @@ class OpusRead:
         try:
             for src_result, trg_result, _, _, _ \
                     in self._iter_pairs('yield_tuple', format_pair):
-                yield src_result.rstrip('\n'), trg_result.rstrip('\n')
+                yield src_result.removesuffix('\n'), trg_result.removesuffix('\n')
         finally:
             self.alignmentParser.bp.close_document()
             self.of_handler.close_zipfiles()
