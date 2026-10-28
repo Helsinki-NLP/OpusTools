@@ -224,28 +224,30 @@ class OpusRead:
     def doc_level_link_list(self, link_list, src_parser, trg_parser):
         new_link_list = []
         sid_pos, tid_pos = 0, 0
+        src_ids = src_parser.doc_level_ids
+        trg_ids = trg_parser.doc_level_ids
         for links in link_list:
-            src_links = links[0].split(' ')
-            trg_links = links[1].split(' ')
-            for i in range(sid_pos, len(src_parser.doc_level_ids)):
-                sid = src_parser.doc_level_ids[i]
-                if sid == src_links[0]:
-                    sid_pos=i+len(src_links)
-                    break
-                new_link_list.append((sid, ''))
-            for i in range(tid_pos, len(trg_parser.doc_level_ids)):
-                tid = trg_parser.doc_level_ids[i]
-                if tid == trg_links[0]:
-                    tid_pos=i+len(trg_links)
-                    break
-                new_link_list.append(('', tid))
+            src_links = links[0].split()
+            trg_links = links[1].split()
+            if src_links:
+                try:
+                    sid = src_ids.index(src_links[0], sid_pos)
+                except ValueError:
+                    pass
+                else:
+                    new_link_list += [(sid, '') for sid in src_ids[sid_pos:sid]]
+                    sid_pos = sid + len(src_links)
+            if trg_links:
+                try:
+                    tid = trg_ids.index(trg_links[0], tid_pos)
+                except ValueError:
+                    pass
+                else:
+                    new_link_list += [('', tid) for tid in trg_ids[tid_pos:tid]]
+                    tid_pos = tid + len(trg_links)
             new_link_list.append(links)
-        for i in range(sid_pos, len(src_parser.doc_level_ids)):
-            sid = src_parser.doc_level_ids[i]
-            new_link_list.append((sid, ''))
-        for i in range(tid_pos, len(trg_parser.doc_level_ids)):
-            tid = trg_parser.doc_level_ids[i]
-            new_link_list.append(('', tid))
+        new_link_list += [(sid, '') for sid in src_ids[sid_pos:]]
+        new_link_list += [('', tid) for tid in trg_ids[tid_pos:]]
         return new_link_list
 
     def _iter_pairs(self, wmode, format_pair, on_doc_start=None, on_doc_end=None):
@@ -329,11 +331,18 @@ class OpusRead:
                     if src_result == -1:
                         continue
 
-                    src_out += src_result
-                    trg_out += trg_result
+                    if wmode == 'moses':
+                        yield (src_result, trg_result,
+                               attrs_list[i] if i < len(attrs_list) else None,
+                               src_doc_name, trg_doc_name)
+                    else:
+                        src_out += src_result
+                        trg_out += trg_result
 
-                yield (src_out, trg_out, attrs_list[i] if i < len(attrs_list) else None,
-                       src_doc_name, trg_doc_name)
+                if wmode != 'moses':
+                    yield (src_out, trg_out,
+                           attrs_list[i] if i < len(attrs_list) else None,
+                           src_doc_name, trg_doc_name)
 
                 total += 1
                 if total == self.maximum:
@@ -479,9 +488,7 @@ class OpusRead:
 
         for src_result, trg_result, _, _, _ \
                 in self._iter_pairs('yield_tuple', format_pair):
-            src = src_result.rstrip('\n').replace('\n', ' ')
-            tgt = trg_result.rstrip('\n').replace('\n', ' ')
-            yield src, tgt
+            yield src_result.rstrip('\n'), trg_result.rstrip('\n')
 
         self.alignmentParser.bp.close_document()
         self.of_handler.close_zipfiles()

@@ -5,6 +5,7 @@ from unittest import mock
 import io
 import sys
 import gzip
+import json
 import shutil
 import zipfile
 import tempfile
@@ -2215,8 +2216,8 @@ class TestOpusRead(unittest.TestCase):
         with open(os.path.join(self.tempdir1, 'rf.moses.sv')) as moses_sv:
             self.assertEqual(moses_sv.readlines()[0][:41], 'REGERINGSFÖRKLARING.\n')
 
-    def test_moses_doc_level(self):
-        result=['e1.1 e1.2 e1.3 e1.4 e1.5\tf1.1 f1.2 f1.3 f1.4 f1.5\n',
+    def moses_doc_level_result(self):
+        return ['e1.1 e1.2 e1.3 e1.4 e1.5\tf1.1 f1.2 f1.3 f1.4 f1.5\n',
                 'e2.1 e2.2 e2.3 e2.4 e2.5\tf2.1 f2.2 f2.3 f2.4 f2.5\n',
                 'e3.1 e3.2 e3.3 e3.4 e3.5\t\n',
                 '\tf3.1 f3.2 f3.3 f3.4 f3.5\n',
@@ -2239,6 +2240,25 @@ class TestOpusRead(unittest.TestCase):
                 '\tf4.1 f4.2 f4.3 f4.4 f4.5\n',
                 '\tf5.1 f5.2 f5.3 f5.4 f5.5\n',
                 '\n']
+
+    def doc_level_docs(self):
+        docs = []
+        src = []
+        trg = []
+        for line in self.moses_doc_level_result():
+            if line == '\n':
+                docs.append(('\n'.join(src).rstrip('\n'),
+                             '\n'.join(trg).rstrip('\n')))
+                src = []
+                trg = []
+            else:
+                src_line, trg_line = line.rstrip('\n').split('\t')
+                src.append(src_line)
+                trg.append(trg_line)
+        return docs
+
+    def test_moses_doc_level(self):
+        result = self.moses_doc_level_result()
         OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
                  root_directory=self.root_directory, write_mode='moses', doc_level=True,
                  write=[os.path.join(self.tempdir1, 'doc_level.en-fr.txt')]).printPairs()
@@ -2249,6 +2269,178 @@ class TestOpusRead(unittest.TestCase):
                  write=[os.path.join(self.tempdir1, 'doc_level.en-fr.txt')], preprocess='raw').printPairs()
         with open(os.path.join(self.tempdir1, 'doc_level.en-fr.txt')) as doc_out:
             self.assertEqual(doc_out.readlines(), result)
+
+    def test_moses_doc_level_two_files(self):
+        result = self.moses_doc_level_result()
+        en_result = []
+        fr_result = []
+        for line in result:
+            if line == '\n':
+                en_result.append('\n')
+                fr_result.append('\n')
+            else:
+                src, trg = line.rstrip('\n').split('\t')
+                en_result.append(src + '\n')
+                fr_result.append(trg + '\n')
+        en_path = os.path.join(self.tempdir1, 'doc_level.en')
+        fr_path = os.path.join(self.tempdir1, 'doc_level.fr')
+        OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
+                 root_directory=self.root_directory, write_mode='moses', doc_level=True,
+                 write=[en_path, fr_path]).printPairs()
+        with open(en_path) as en_out:
+            self.assertEqual(en_out.readlines(), en_result)
+        with open(fr_path) as fr_out:
+            self.assertEqual(fr_out.readlines(), fr_result)
+
+    def test_moses_doc_level_print(self):
+        result = self.moses_doc_level_result()
+        with mock.patch('sys.stdout', new=io.StringIO()) as output:
+            OpusRead(directory='TEST', source='en', target='fr',
+                     suppress_prompts=True, root_directory=self.root_directory,
+                     write_mode='moses', doc_level=True).printPairs()
+            self.assertEqual(output.getvalue(), ''.join(result))
+
+    def test_jsonl_doc_level(self):
+        docs = self.doc_level_docs()
+        single_expected = ''.join(
+            json.dumps({'src': src, 'tgt': trg}, ensure_ascii=False) + '\n'
+            for src, trg in docs)
+        en_expected = ''.join(
+            json.dumps(src, ensure_ascii=False) + '\n' for src, _ in docs)
+        fr_expected = ''.join(
+            json.dumps(trg, ensure_ascii=False) + '\n' for _, trg in docs)
+
+        single_path = os.path.join(self.tempdir1, 'doc_level.jsonl')
+        OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
+                 root_directory=self.root_directory, write_mode='jsonl',
+                 doc_level=True, write=[single_path]).printPairs()
+        with open(single_path) as doc_out:
+            self.assertEqual(doc_out.read(), single_expected)
+
+        with mock.patch('sys.stdout', new=io.StringIO()) as output:
+            OpusRead(directory='TEST', source='en', target='fr',
+                     suppress_prompts=True, root_directory=self.root_directory,
+                     write_mode='jsonl', doc_level=True).printPairs()
+            self.assertEqual(output.getvalue(), single_expected)
+
+        en_path = os.path.join(self.tempdir1, 'doc_level.en.jsonl')
+        fr_path = os.path.join(self.tempdir1, 'doc_level.fr.jsonl')
+        OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
+                 root_directory=self.root_directory, write_mode='jsonl',
+                 doc_level=True, write=[en_path, fr_path]).printPairs()
+        with open(en_path) as en_out:
+            self.assertEqual(en_out.read(), en_expected)
+        with open(fr_path) as fr_out:
+            self.assertEqual(fr_out.read(), fr_expected)
+
+    def test_yield_pairs_doc_level(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr', suppress_prompts=True,
+            root_directory=self.root_directory, doc_level=True).yieldPairs())
+        self.assertEqual(pairs, self.doc_level_docs())
+
+    def test_jsonl_output(self):
+        src = ('Statement of Government Policy by the Prime Minister , '
+               'Mr Ingvar Carlsson , at the Opening of the Swedish Parli'
+               'ament on Tuesday , 4 October , 1988 .')
+        trg = 'REGERINGSFÖRKLARING .'
+        single_path = os.path.join(self.tempdir1, 'output.jsonl')
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
+                 write_mode='jsonl', write=[single_path],
+                 root_directory=self.root_directory).printPairs()
+        with open(single_path) as output:
+            self.assertEqual(
+                output.readlines(),
+                [json.dumps({'src': src, 'tgt': trg},
+                            ensure_ascii=False) + '\n'])
+
+        en_path = os.path.join(self.tempdir1, 'output.en.jsonl')
+        fr_path = os.path.join(self.tempdir1, 'output.sv.jsonl')
+        OpusRead(directory='RF', source='en', target='sv', maximum=1,
+                 write_mode='jsonl', write=[en_path, fr_path],
+                 root_directory=self.root_directory).printPairs()
+        with open(en_path) as output:
+            self.assertEqual(output.readlines(),
+                             [json.dumps(src, ensure_ascii=False) + '\n'])
+        with open(fr_path) as output:
+            self.assertEqual(output.readlines(),
+                             [json.dumps(trg, ensure_ascii=False) + '\n'])
+
+        with mock.patch('sys.stdout', new=io.StringIO()) as output:
+            OpusRead(directory='RF', source='en', target='sv', maximum=1,
+                     write_mode='jsonl',
+                     root_directory=self.root_directory).printPairs()
+            self.assertEqual(
+                output.getvalue(),
+                json.dumps({'src': src, 'tgt': trg},
+                           ensure_ascii=False) + '\n')
+
+    def test_doc_level_empty_alignment_sides(self):
+        alignment = os.path.join(self.tempdir1, 'test_files',
+                                 'empty_alignment_sides.xml')
+        with open(alignment, 'w') as f:
+            f.write('<?xml version="1.0" encoding="utf-8"?>\n'
+                    '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+                    '<cesAlign version="1.0">\n'
+                    '<linkGrp targType="s" fromDoc="en/doc_1.xml.gz" '
+                    'toDoc="fr/doc_1.xml.gz">\n'
+                    '<link xtargets="s1.1;s1.1" id="SL1" />\n'
+                    '<link xtargets=";s1.2" id="SL2" />\n'
+                    '<link xtargets="s1.3;" id="SL3" />\n'
+                    '<link xtargets="s1.5;s1.5" id="SL4" />\n'
+                    '</linkGrp>\n</cesAlign>\n')
+
+        src_sents = [' '.join(f'e{s}.{w}' for w in range(1, 6))
+                     for s in range(1, 6)]
+        trg_sents = [' '.join(f'f{s}.{w}' for w in range(1, 6))
+                     for s in range(1, 6)]
+        expected_src = '\n'.join(
+            [src_sents[0], '', src_sents[1], src_sents[2], src_sents[3],
+             '', '', src_sents[4]])
+        expected_trg = '\n'.join(
+            [trg_sents[0], trg_sents[1], '', '', '', trg_sents[2],
+             trg_sents[3], trg_sents[4]])
+        expected_moses = [
+            f'{src_sents[0]}\t{trg_sents[0]}\n',
+            f'\t{trg_sents[1]}\n',
+            f'{src_sents[1]}\t\n',
+            f'{src_sents[2]}\t\n',
+            f'{src_sents[3]}\t\n',
+            f'\t{trg_sents[2]}\n',
+            f'\t{trg_sents[3]}\n',
+            f'{src_sents[4]}\t{trg_sents[4]}\n',
+            '\n']
+
+        moses_path = os.path.join(self.tempdir1, 'doc_level_empty.moses')
+        OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
+                 root_directory=self.root_directory, preprocess='raw',
+                 alignment_file=alignment, write_mode='moses', doc_level=True,
+                 write=[moses_path]).printPairs()
+        with open(moses_path) as doc_out:
+            self.assertEqual(doc_out.readlines(), expected_moses)
+
+        jsonl_path = os.path.join(self.tempdir1, 'doc_level_empty.jsonl')
+        OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
+                 root_directory=self.root_directory, preprocess='raw',
+                 alignment_file=alignment, write_mode='jsonl', doc_level=True,
+                 write=[jsonl_path]).printPairs()
+        with open(jsonl_path) as doc_out:
+            lines = doc_out.readlines()
+        self.assertEqual(len(lines), 1)
+        doc = json.loads(lines[0])
+        self.assertEqual(doc['src'], expected_src)
+        self.assertEqual(doc['tgt'], expected_trg)
+
+        en_path = os.path.join(self.tempdir1, 'doc_level_empty.en.jsonl')
+        fr_path = os.path.join(self.tempdir1, 'doc_level_empty.fr.jsonl')
+        OpusRead(directory='TEST', source='en', target='fr', suppress_prompts=True,
+                 root_directory=self.root_directory, preprocess='raw',
+                 alignment_file=alignment, write_mode='jsonl', doc_level=True,
+                 write=[en_path, fr_path]).printPairs()
+        with open(en_path) as en_out:
+            self.assertEqual(json.loads(en_out.readline()), expected_src)
+        with open(fr_path) as fr_out:
+            self.assertEqual(json.loads(fr_out.readline()), expected_trg)
 
     def test_yield_pairs_xml_maximum(self):
         pairs = list(OpusRead(
