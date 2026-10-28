@@ -266,12 +266,15 @@ class OpusRead:
             add_link(('', trg_id))
         return new_link_list, new_attrs_list
 
-    def _iter_pairs(self, wmode, format_pair, on_doc_start=None, on_doc_end=None):
+    def _iter_pairs(self, wmode, format_pair, on_doc_start=None, on_doc_end=None,
+                    group_doc_level=True):
         """Yield (src_result, trg_result, link_attr, src_doc_name, trg_doc_name)
         for each alignment link across all documents.
 
         Handles chunked link collection, sentence file opening/parsing,
-        skip_doc, doc_level, and maximum enforcement.
+        skip_doc, doc_level, and maximum enforcement. If group_doc_level is
+        true, doc_level yields one result per document; otherwise it yields
+        one result per link.
 
         on_doc_start(src_doc_name, trg_doc_name) is called before processing
         each document chunk. on_doc_end() is called after processing each
@@ -348,14 +351,14 @@ class OpusRead:
                     if src_result == -1:
                         continue
 
-                    if wmode == 'moses':
-                        yield (src_result, trg_result, attrs_list[i],
-                               src_doc_name, trg_doc_name)
-                    else:
+                    if group_doc_level:
                         src_out += src_result
                         trg_out += trg_result
+                    else:
+                        yield (src_result, trg_result, attrs_list[i],
+                               src_doc_name, trg_doc_name)
 
-                if wmode != 'moses':
+                if group_doc_level:
                     doc_attrs = next((attrs for attrs in reversed(attrs_list)
                                       if attrs is not None), None)
                     yield (src_out, trg_out, doc_attrs,
@@ -450,7 +453,8 @@ class OpusRead:
 
         for src_result, trg_result, link_attr, src_doc_name, trg_doc_name \
                 in self._iter_pairs(self.write_mode, self.format_pair,
-                                    on_doc_start=doc_start, on_doc_end=doc_end):
+                                    on_doc_start=doc_start, on_doc_end=doc_end,
+                                    group_doc_level=self.write_mode != 'moses'):
             self.out_put_pair(
                 src_result, trg_result, resultfile, mosessrc, mosestrg,
                 link_attr, id_file, src_doc_name, trg_doc_name)

@@ -2339,6 +2339,13 @@ class TestOpusRead(unittest.TestCase):
             root_directory=self.root_directory, doc_level=True).yieldPairs())
         self.assertEqual(pairs, self.doc_level_docs())
 
+    def test_yield_pairs_ignores_write_mode(self):
+        pairs = list(OpusRead(
+            directory='TEST', source='en', target='fr', suppress_prompts=True,
+            root_directory=self.root_directory, doc_level=True,
+            write_mode='moses').yieldPairs())
+        self.assertEqual(pairs, self.doc_level_docs())
+
     def test_yield_pairs_doc_level_maximum(self):
         pairs = list(OpusRead(
             directory='TEST', source='en', target='fr', suppress_prompts=True,
