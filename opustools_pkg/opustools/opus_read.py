@@ -241,24 +241,31 @@ class OpusRead:
                           if link_index < len(attrs_list) else None)
             src_links = links[0].split()
             trg_links = links[1].split()
+            sid = tid = None
             if src_links:
                 try:
                     sid = src_ids.index(src_links[0], sid_pos)
                 except ValueError:
-                    pass
-                else:
-                    for src_id in src_ids[sid_pos:sid]:
-                        add_link((src_id, ''))
-                    sid_pos = sid + len(src_links)
+                    logger.warning('Skipping malformed alignment link %s: '
+                                   'source ID %r not found',
+                                   links, src_links[0])
+                    continue
             if trg_links:
                 try:
                     tid = trg_ids.index(trg_links[0], tid_pos)
                 except ValueError:
-                    pass
-                else:
-                    for trg_id in trg_ids[tid_pos:tid]:
-                        add_link(('', trg_id))
-                    tid_pos = tid + len(trg_links)
+                    logger.warning('Skipping malformed alignment link %s: '
+                                   'target ID %r not found',
+                                   links, trg_links[0])
+                    continue
+            if sid is not None:
+                for src_id in src_ids[sid_pos:sid]:
+                    add_link((src_id, ''))
+                sid_pos = sid + len(src_links)
+            if tid is not None:
+                for trg_id in trg_ids[tid_pos:tid]:
+                    add_link(('', trg_id))
+                tid_pos = tid + len(trg_links)
             add_link(links, link_attrs)
         for src_id in src_ids[sid_pos:]:
             add_link((src_id, ''))

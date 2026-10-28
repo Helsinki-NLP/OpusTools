@@ -2656,6 +2656,32 @@ class TestOpusReadYieldPairsLocal(unittest.TestCase):
                 json.loads(output.read()),
                 {'src': expected[0], 'tgt': expected[1]})
 
+    def test_doc_level_skips_malformed_links(self):
+        alignment = os.path.join(
+            self.tempdir, 'TEST', 'latest', 'xml', 'malformed.xml')
+        with open(alignment, 'w') as f:
+            f.write('<?xml version="1.0" encoding="utf-8"?>\n'
+                    '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+                    '<cesAlign version="1.0">\n'
+                    '<linkGrp targType="s" fromDoc="en/doc1.xml.gz" '
+                    'toDoc="fr/doc1.xml.gz">\n'
+                    '<link xtargets="s1;s1" />\n'
+                    '<link xtargets="missing;s2" />\n'
+                    '<link xtargets="s2;missing" />\n'
+                    '<link xtargets="s2;s2" />\n'
+                    '</linkGrp>\n</cesAlign>\n')
+        with self.assertLogs('opustools.opus_read', level='WARNING') as logs:
+            pairs = list(OpusRead(
+                directory='TEST', source='en', target='fr',
+                root_directory=self.tempdir, alignment_file=alignment,
+                doc_level=True).yieldPairs())
+        self.assertEqual(
+            pairs,
+            [('Hello world\nGood morning', 'Bonjour le monde\nBon matin')])
+        warnings = '\n'.join(logs.output)
+        self.assertIn("source ID 'missing'", warnings)
+        self.assertIn("target ID 'missing'", warnings)
+
     def test_doc_level_write_ids(self):
         alignment = os.path.join(
             self.tempdir, 'TEST', 'latest', 'xml', 'doc_level_ids.xml')
