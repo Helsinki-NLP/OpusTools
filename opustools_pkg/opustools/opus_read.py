@@ -316,7 +316,7 @@ class OpusRead:
             if self.doc_level and wmode != 'links':
                 link_list = self.doc_level_link_list(link_list, src_parser, trg_parser)
 
-            if self.doc_level and self.write and len(self.write) == 2:
+            if self.doc_level and self.write_mode == 'jsonl':
                 src_out, trg_out = {"text": ""}, {"text": ""}
                 len_link_list = len(link_list)
                 for i, link_a in enumerate(link_list):
@@ -384,7 +384,7 @@ class OpusRead:
             id_file = file_open(self.write_ids, 'w', encoding='utf-8')
 
         if self.write:
-            if self.write_mode == 'moses' and len(self.write) == 2:
+            if self.write_mode in ['moses', 'jsonl'] and len(self.write) == 2:
                 mosessrc = file_open(self.write[0], mode='w', encoding='utf-8')
                 mosestrg = file_open(self.write[1], mode='w', encoding='utf-8')
             else:
@@ -442,7 +442,7 @@ class OpusRead:
         self.alignmentParser.bp.close_document()
 
         if self.write:
-            if self.write_mode == 'moses' and mosessrc:
+            if self.write_mode in ['moses', 'jsonl'] and mosessrc:
                 mosessrc.close()
                 mosestrg.close()
             else:

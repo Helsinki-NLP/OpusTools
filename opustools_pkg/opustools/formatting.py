@@ -280,11 +280,11 @@ def out_put_type(wmode, write, write_ids, switch_langs, attribute, moses_del):
             return normal_write
         if wmode in ['normal', 'tmx'] and not write:
             return normal_print
-        if wmode == 'moses' and not write:
+        if wmode in ['moses', 'jsonl'] and not write:
             return moses_print
-        if wmode == 'moses' and len(write) == 1:
+        if wmode in ['moses', 'jsonl'] and len(write) == 1:
             return moses_write
-        if wmode == 'moses' and len(write) == 2:
+        if wmode in ['moses', 'jsonl'] and len(write) == 2:
             return moses_write_2
         if wmode == 'links'and write:
             return links_write
@@ -331,7 +331,8 @@ def sentence_format_type(wmode, fromto):
             'tmx': (tmx_src, tmx_trg),
             'moses': (moses, moses),
             'links': (None, None),
-            'yield_tuple': (moses, moses)}
+            'yield_tuple': (moses, moses),
+            'jsonl': (moses, moses)}
 
     return format_fs[wmode]
 
