@@ -315,8 +315,6 @@ class OpusRead:
 
             if self.doc_level and wmode != 'links':
                 link_list = self.doc_level_link_list(link_list, src_parser, trg_parser)
-
-            if self.doc_level and self.write_mode == 'jsonl':
                 src_out, trg_out = "", ""
                 len_link_list = len(link_list)
                 for i, link_a in enumerate(link_list):
@@ -334,8 +332,7 @@ class OpusRead:
                     src_out += src_result
                     trg_out += trg_result
 
-                yield (json.dumps(src_out, ensure_ascii=False), json.dumps(trg_out, ensure_ascii=False),
-                       attrs_list[i] if i < len(attrs_list) else None,
+                yield (src_out, trg_out, attrs_list[i] if i < len(attrs_list) else None,
                        src_doc_name, trg_doc_name)
 
                 total += 1
