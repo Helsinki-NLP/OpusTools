@@ -44,6 +44,8 @@ class OpusGet:
                 with open(database, 'wb') as outfile:
                     outfile.write(data)
         self.dbo = DbOperations(db_file=database)
+        if self.local_db:
+            self.dbo.ensure_indexes()
 
         if source and target:
             self.fromto = [source, target]

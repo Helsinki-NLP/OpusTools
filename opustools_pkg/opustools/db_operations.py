@@ -313,8 +313,20 @@ class DbOperations:
     def ensure_indexes(self) -> None:
         """
         Create indexes that match the query patterns used in this class.
-        Call this once (e.g. from a migration or admin script).
+        Existing local databases are indexed on first use; later calls are cheap.
         """
+        expected = {
+            "idx_opusfile_src_trg_pre_latest",
+            "idx_opusfile_corpus_latest_pre",
+            "idx_opusfile_source_pre_latest",
+            "idx_opusfile_target_pre_latest",
+        }
+        existing = {
+            row[1] for row in self.conn.execute("PRAGMA index_list(opusfile)")
+        }
+        if expected <= existing:
+            return
+
         self.conn.executescript(
             """
             CREATE INDEX IF NOT EXISTS idx_opusfile_src_trg_pre_latest
