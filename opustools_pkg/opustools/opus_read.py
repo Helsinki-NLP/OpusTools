@@ -50,7 +50,7 @@ class OpusRead:
             src_cld2=None, trg_cld2=None, src_langid=None, trg_langid=None,
             write_ids=None, suppress_prompts=False, download_dir='.',
             preserve_inline_tags=False, n=None, N=None, chunk_size=1000000,
-            doc_level=False, len_name=50, verbose=False):
+            doc_level=False, len_name=50, verbose=False, synthetic=False):
         """Read xces alignment files and xml sentence files and output in
         desired format.
 
@@ -100,6 +100,7 @@ class OpusRead:
         doc_level -- Print full documents
         len_name -- Show the first N characters of file names when displaying progress
         verbose -- Print progress messages
+        synthetic -- Use the synthetic corpus API when downloading files.
         """
 
         self.doc_level = doc_level
@@ -204,7 +205,7 @@ class OpusRead:
 
         self.of_handler = OpusFileHandler(
                 download_dir, source_zip, target_zip, directory, release,
-                preprocess, self.fromto, suppress_prompts)
+                preprocess, self.fromto, suppress_prompts, synthetic)
 
         if preprocess == 'moses':
             if self.doc_level:
@@ -325,12 +326,14 @@ class OpusRead:
                     continue
                 try:
                     src_parser = SentenceParser(
-                        src_doc, preprocessing=self.preprocess, anno_attrs=self.src_annot,
+                        src_doc, preprocessing=self.of_handler.sentence_preprocess,
+                        anno_attrs=self.src_annot,
                         preserve=self.preserve, delimiter=self.annot_delimiter,
                         doc_level=self.doc_level, len_name=self.len_name)
                     src_doc_size = src_parser.store_sentences(src_set, src_doc_size, self.verbose)
                     trg_parser = SentenceParser(
-                        trg_doc, preprocessing=self.preprocess, anno_attrs=self.trg_annot,
+                        trg_doc, preprocessing=self.of_handler.sentence_preprocess,
+                        anno_attrs=self.trg_annot,
                         preserve=self.preserve, delimiter=self.annot_delimiter,
                         doc_level=self.doc_level, len_name=self.len_name)
                     trg_doc_size = trg_parser.store_sentences(trg_set, trg_doc_size, self.verbose)

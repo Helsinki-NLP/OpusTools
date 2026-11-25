@@ -171,5 +171,23 @@ class TestOpusCat(unittest.TestCase):
         self.assertEqual(var[-38:],
             '"w3.1.4" deprel="null">)</w>\n</s></p>\n')
 
+    def test_synthetic_flag_passed_to_opus_get(self):
+        with mock.patch('opustools.opus_cat.zipfile.ZipFile',
+                side_effect=FileNotFoundError), \
+             mock.patch('opustools.opus_cat.OpusGet') as opus_get:
+            OpusCat(directory='Europarl', language='en',
+                synthetic=True, download_dir=self.tempdir1)
+
+        self.assertEqual(opus_get.call_count, 2)
+        for call in opus_get.call_args_list:
+            self.assertTrue(call.kwargs['synthetic'])
+        self.assertEqual(
+            opus_get.call_args_list[0].kwargs,
+            {'directory': 'Europarl', 'source': 'en', 'target': '',
+             'preprocess': 'xml', 'list_resources': True,
+             'release': 'latest', 'download_dir': self.tempdir1,
+             'synthetic': True})
+        self.assertFalse(opus_get.call_args_list[1].kwargs['list_resources'])
+
 if __name__ == '__main__':
     unittest.main()

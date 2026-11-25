@@ -84,7 +84,8 @@ class OpusCat:
             maximum=-2, preprocess='xml', plain=False, file_name=None, release='latest',
             print_annotations=False, set_attribute=['pos', 'lem'],
             change_annotation_delimiter='|',
-            root_directory='/projappl/nlpl/data/OPUS', download_dir='.' ):
+            root_directory='/projappl/nlpl/data/OPUS', download_dir='.',
+            synthetic=False):
         """Print the contents of a xml sentence file.
 
         Keyword arguments:
@@ -102,6 +103,7 @@ class OpusCat:
         root_directory -- Root directory for corpus files
             (default /projappl/nlpl/data/OPUS)
         download_dir -- Directory where files will be downloaded (default .)
+        synthetic -- Use the synthetic corpus API when downloading files.
         """
 
         self.maximum = maximum
@@ -116,8 +118,10 @@ class OpusCat:
         self.plain = plain
 
         self.preprocess = preprocess
-        parser_pp = preprocess
-        if print_annotations:
+        self.synthetic = synthetic
+        self.sentence_preprocess = 'raw' if synthetic else preprocess
+        parser_pp = self.sentence_preprocess
+        if print_annotations and not synthetic:
             parser_pp = 'parsed'
 
         spar = SentenceParser(None, parser_pp,
@@ -145,7 +149,8 @@ class OpusCat:
                 self.download_dir]
             arguments={'directory': self.directory, 'source': self.language,
                 'target': '', 'preprocess': self.preprocess, 'list_resources': True,
-                'release': self.release, 'download_dir': self.download_dir}
+                'release': self.release, 'download_dir': self.download_dir,
+                'synthetic': self.synthetic}
             og = OpusGet(**arguments)
             og.get_files()
             arguments['list_resources'] = False
@@ -165,7 +170,7 @@ class OpusCat:
             maximum = self.maximum
             stop = False
             sentence = []
-            if self.preprocess == 'raw':
+            if self.sentence_preprocess == 'raw':
                 bp = BlockParser(f, data_tag='s', doc_size=0)
             else:
                 bp = BlockParser(f, data_tag='w', doc_size=0)

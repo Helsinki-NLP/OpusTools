@@ -22,6 +22,8 @@ parser.add_argument('-lc', '--list_corpora', help='List available corpora. Use -
     action='store_true')
 parser.add_argument('--local_db', help='Search resources from the local database instead of the online OPUS-API.',
     action='store_true')
+parser.add_argument('--synthetic', help='Use the synthetic corpus API instead of the default OPUS API.',
+    action='store_true')
 parser.add_argument('-db', '--database', help='Sqlite db file location', default='~/.OpusTools/opusdata.db')
 parser.add_argument('-dl', '--download_dir',
     help='Set download directory (default=current directory)', default='.')
