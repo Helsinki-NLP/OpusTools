@@ -8,12 +8,14 @@ from .opus_get import OpusGet
 class OpusFileHandler:
 
     def __init__(self, download_dir, source_zip, target_zip, directory,
-            release, preprocess, fromto, suppress_prompts):
+            release, preprocess, fromto, suppress_prompts, synthetic=False):
 
         self.directory = directory
         self.release = release
         self.preprocess = preprocess
         self.fromto = fromto
+        self.synthetic = synthetic
+        self.sentence_preprocess = 'raw' if synthetic else preprocess
 
         self.suppress_prompts = suppress_prompts
 
@@ -29,7 +31,8 @@ class OpusFileHandler:
         arguments = {'source': self.fromto[0],
                 'target': self.fromto[1], 'directory': self.directory,
                 'release': self.release, 'preprocess': self.preprocess,
-                'download_dir': self.download_dir, 'list_resources': True}
+                'download_dir': self.download_dir, 'list_resources': True,
+                'synthetic': self.synthetic}
         og = OpusGet(**arguments)
         og.get_files()
         arguments['list_resources'] = False
@@ -98,6 +101,8 @@ class OpusFileHandler:
             self.src_zip, self.trg_zip = self.open_specific_zips(
                     self.src_zip_name, self.trg_zip_name)
         elif os.path.isfile(local_src_name) and os.path.isfile(local_trg_name):
+            self.src_zip_name = local_src_name
+            self.trg_zip_name = local_trg_name
             self.src_zip, self.trg_zip = self.open_specific_zips(
                     local_src_name, local_trg_name)
         else:
@@ -126,7 +131,8 @@ class OpusFileHandler:
 
         #In OPUS, directory and preprocessing information need to be added and
         #the ".gz" ending needs to be removed.
-        opus_doc_name = self.directory+'/'+self.preprocess+'/'+doc_name[:-3]
+        zip_preprocess = 'raw' if self.synthetic else self.preprocess
+        opus_doc_name = self.directory+'/'+zip_preprocess+'/'+doc_name[:-3]
 
         try:
             if direction == 'src':

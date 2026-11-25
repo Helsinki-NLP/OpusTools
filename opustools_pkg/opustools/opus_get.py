@@ -1,9 +1,11 @@
+import urllib.error
 import urllib.request
 import json
 import argparse
 import sys
 import os
 import gzip
+from urllib.parse import urlencode
 
 from .db_operations import DbOperations
 
@@ -12,7 +14,8 @@ class OpusGet:
     def __init__(self, source=None, target=None, directory=None,
             release='latest', preprocess='xml', list_resources=False,
             list_languages=False, list_corpora=False, download_dir='.',
-            local_db=False, suppress_prompts=False, database='~/.OpusTools/opusdata.db'):
+            local_db=False, suppress_prompts=False,
+            database='~/.OpusTools/opusdata.db', synthetic=False):
         """Download files from OPUS.
 
         Keyword arguments:
@@ -28,11 +31,18 @@ class OpusGet:
         database -- Sqlite db file location (default ~/.OpusTools/opusdata.db)
         download_dir -- Directory where files will be downloaded (default .)
         suppress_prompts -- Download files without prompting "(y/n)"
+        synthetic -- Use the synthetic corpus API instead of the default OPUS API.
         """
+
+        if synthetic and local_db:
+            raise ValueError('synthetic and local_db cannot be combined')
+        if synthetic and preprocess not in ('xml', 'raw'):
+            raise ValueError('synthetic API supports only xml and raw preprocessing')
 
         self.list_languages = list_languages
         self.list_corpora = list_corpora
         self.local_db = local_db
+        self.synthetic = synthetic
 
         database = os.path.expanduser(database)
         if self.local_db:
@@ -49,23 +59,29 @@ class OpusGet:
             self.fromto = [source, target]
             self.fromto.sort()
 
-        self.url = 'https://opus.nlpl.eu/opusapi'
-        #self.url = 'http://127.0.0.1:5000/?'
+        if self.synthetic:
+            self.base_url = 'https://opus.nlpl.eu/synthetic-api'
+            urlparts = [(directory, 'name'),
+                        (None if release == 'latest' else release, 'version'),
+                        (source, 'src'), (target, 'tgt')]
+            self.items_url = self.base_url + '/items'
+            self.languages_url = self.base_url + '/languages'
+            self.collections_url = self.base_url + '/collections'
+        else:
+            self.base_url = 'https://opus.nlpl.eu/opusapi'
+            urlparts = [(source, 'source'), (target, 'target'),
+                        (directory, 'corpus'), (release, 'version'),
+                        (preprocess, 'preprocessing')]
 
-        urlparts = [(source, 'source'), (target, 'target'),
-            (directory, 'corpus'), (release, 'version'),
-            (preprocess, 'preprocessing')]
         self.parameters = {}
+        for value, name in urlparts:
+            if value:
+                self.parameters[name] = value
 
-        url_parameters = ''
-        for a in urlparts:
-            if a[0]:
-                self.parameters[a[1]] = a[0]
-                if a[0] == ' ':
-                    url_parameters += a[1] + '=&'
-                else:
-                    url_parameters += a[1] + '=' + a[0] + '&'
-        self.url += '?' + url_parameters
+        if self.synthetic:
+            self.url = self._build_url(self.items_url, self.parameters)
+        else:
+            self.url = self._build_url(self.base_url, self.parameters)
 
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
@@ -73,9 +89,18 @@ class OpusGet:
         self.release = release
         self.preprocess = preprocess
         self.download_dir = download_dir
+        self.directory = directory
+        self.source = source
         self.target = target
         self.list_resources = list_resources
         self.suppress_prompts = suppress_prompts
+
+    @staticmethod
+    def _build_url(base_url, parameters):
+        """Return base_url with url-encoded parameters."""
+        if not parameters:
+            return base_url
+        return base_url + '?' + urlencode(parameters)
 
     def round_size(self, size, length, unit):
         """Round file size."""
@@ -100,7 +125,7 @@ class OpusGet:
 
     def get_response(self, url):
         """Return data from a url."""
-        response = urllib.request.urlopen(url[:-1])
+        response = urllib.request.urlopen(url)
         result = response.read().decode('utf-8')
         data = json.loads(result)
 
@@ -108,12 +133,125 @@ class OpusGet:
 
     def make_file_name(self, c):
         """Return file name based on corpus data."""
+        if 'filename' in c:
+            return c['filename']
         filename = c['url'].replace('/', '_').replace(
             'https:__object.pouta.csc.fi_OPUS-', '')
         if self.release == 'latest':
             filename = filename.replace(
                 '_'+c['version']+'_', '_latest_')
         return os.path.join(self.download_dir, filename)
+
+    def _latest_synthetic_items(self, items):
+        """Return the newest item for each synthetic collection/language pair."""
+        latest = {}
+        for item in items:
+            key = (item['name'], item['src_lang'], item['tgt_lang'])
+            item_sort_key = (item.get('updated_at', ''), item.get('version', ''))
+            current = latest.get(key)
+            if current is None or item_sort_key > (
+                    current.get('updated_at', ''), current.get('version', '')):
+                latest[key] = item
+        return list(latest.values())
+
+    def _synthetic_filename(self, item, kind):
+        """Return the local file name for a synthetic download."""
+        version = 'latest' if self.release == 'latest' else item['version']
+        if kind == 'alignment':
+            filename = ('{}_{}_xml_{}-{}.xml.gz'.format(
+                item['name'], version, item['src_lang'], item['tgt_lang']))
+        elif kind == 'source':
+            filename = ('{}_{}_{}_{}.zip'.format(
+                item['name'], version, self.preprocess, item['src_lang']))
+        else:
+            filename = ('{}_{}_{}_{}.zip'.format(
+                item['name'], version, self.preprocess, item['tgt_lang']))
+        return os.path.join(self.download_dir, filename)
+
+    @staticmethod
+    def _valid_synthetic_download(download):
+        """Return whether a synthetic download has a usable URL."""
+        return bool(download and download.get('url'))
+
+    @staticmethod
+    def _synthetic_size(download):
+        """Convert a synthetic byte size to the KB units used by OpusGet."""
+        return round((download.get('size') or 0) / 1024)
+
+    def _synthetic_rows(self, data):
+        """Convert synthetic API items into default-API-style corpus rows."""
+        items = data.get('items', [])
+        if self.directory:
+            items = [item for item in items if item['name'] == self.directory]
+        if self.source:
+            items = [item for item in items if item['src_lang'] == self.source]
+        if self.target:
+            items = [item for item in items if item['tgt_lang'] == self.target]
+        if self.release != 'latest':
+            items = [item for item in items if item['version'] == self.release]
+        elif self.release == 'latest':
+            items = self._latest_synthetic_items(items)
+
+        include_source = bool(self.source) or not bool(self.target)
+        include_target = bool(self.target) or not bool(self.source)
+        rows = []
+
+        for item in items:
+            downloads = item.get('downloads', {})
+            common = {
+                'id': item.get('id'),
+                'corpus': item['name'],
+                'version': item['version'],
+                'documents': item.get('files', 0),
+            }
+
+            if self.source and self.target:
+                download = downloads.get('alignments')
+                if self.preprocess != 'raw' and self._valid_synthetic_download(download):
+                    row = dict(common)
+                    row.update({
+                        'source': item['src_lang'],
+                        'target': item['tgt_lang'],
+                        'alignment_pairs': item.get('alignments', 0),
+                        'source_tokens': item.get('src_tokens', 0),
+                        'target_tokens': item.get('tgt_tokens', 0),
+                        'size': self._synthetic_size(download),
+                        'url': download['url'],
+                        'filename': self._synthetic_filename(item, 'alignment'),
+                    })
+                    rows.append(row)
+
+            download = downloads.get('source_language')
+            if include_source and self._valid_synthetic_download(download):
+                row = dict(common)
+                row.update({
+                    'source': item['src_lang'],
+                    'target': '',
+                    'alignment_pairs': item.get('files', 0),
+                    'source_tokens': item.get('src_tokens', 0),
+                    'target_tokens': '',
+                    'size': self._synthetic_size(download),
+                    'url': download['url'],
+                    'filename': self._synthetic_filename(item, 'source'),
+                })
+                rows.append(row)
+
+            download = downloads.get('target_language')
+            if include_target and self._valid_synthetic_download(download):
+                row = dict(common)
+                row.update({
+                    'source': item['tgt_lang'],
+                    'target': '',
+                    'alignment_pairs': item.get('files', 0),
+                    'source_tokens': item.get('tgt_tokens', 0),
+                    'target_tokens': '',
+                    'size': self._synthetic_size(download),
+                    'url': download['url'],
+                    'filename': self._synthetic_filename(item, 'target'),
+                })
+                rows.append(row)
+
+        return rows
 
     def get_corpora_data(self):
         """Receive corpus data."""
@@ -123,7 +261,10 @@ class OpusGet:
             corpora = self.dbo.get_corpora(self.parameters)
         else:
             data = self.get_response(self.url)
-            corpora = data['corpora']
+            if self.synthetic:
+                corpora = self._synthetic_rows(data)
+            else:
+                corpora = data['corpora']
 
         ret_corpora = []
         for c in corpora:
@@ -194,15 +335,28 @@ class OpusGet:
             if self.list_languages:
                 if self.local_db:
                     languages = self.dbo.run_languages_query(self.parameters)
+                elif self.synthetic:
+                    url = self._build_url(self.languages_url, self.parameters)
+                    languages = self.get_response(url)['languages']
                 else:
-                    languages = self.get_response(self.url + '?languages=True')['languages']
+                    parameters = dict(self.parameters)
+                    parameters['languages'] = 'True'
+                    url = self._build_url(self.base_url, parameters)
+                    languages = self.get_response(url)['languages']
                 print(', '.join([str(l) for l in languages]))
                 return
             elif self.list_corpora:
                 if self.local_db:
                     corpus_list = self.dbo.run_corpora_query(self.parameters)
+                elif self.synthetic:
+                    url = self._build_url(self.collections_url, self.parameters)
+                    collections = self.get_response(url)['collections']
+                    corpus_list = [c['name'] for c in collections]
                 else:
-                    corpus_list = self.get_response(self.url + '?corpora=True')['corpora']
+                    parameters = dict(self.parameters)
+                    parameters['corpora'] = 'True'
+                    url = self._build_url(self.base_url, parameters)
+                    corpus_list = self.get_response(url)['corpora']
                 print(', '.join([str(c) for c in corpus_list]))
                 return
             else:

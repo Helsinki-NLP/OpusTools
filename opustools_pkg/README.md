@@ -33,8 +33,10 @@ usage: opus_read [-h] -d corpus_name -s langid -t langid [-r version]
                  [--src_cld2 lang_id score] [--trg_cld2 lang_id score]
                  [--src_langid lang_id score] [--trg_langid lang_id score]
                  [-id file_name] [-q] [-dl DOWNLOAD_DIR] [-pi] [-n regex]
-                 [-N regex] [-cs CHUNK_SIZE] [--doc_level] [--len_name N] [-v]
+                  [-N regex] [-cs CHUNK_SIZE] [--doc_level] [--len_name N] [-v]
+                  [--synthetic]
 ```
+
 
 arguments:
 
@@ -121,11 +123,18 @@ arguments:
 --doc_level         Print full documents
 --len_name N        Show the first N charaters of file names when displaying progress. -1 to show full names (default=50)
 -v, --verbose       Print progress messages
+--synthetic         Use the synthetic corpus API when downloading files
 ```
 
 ### Description
 
 `opus_read` is a script to read sentence alignments stored in XCES align format and print the aligned sentences to STDOUT. It requires monolingual alignments of sentences in linked XML files. Linked XML files are specified in the "toDoc" and "fromDoc" attributes (see below).
+
+Use `--synthetic` to download and read a corpus from the synthetic corpus API, for example:
+
+```
+opus_read --synthetic --directory Europarl --source bg --target mk
+```
 
 ```
 <cesAlign version="1.0">
@@ -428,7 +437,7 @@ usage: opus_cat [-h] -d DIRECTORY -l LANGUAGE [-i] [-m MAXIMUM]
                 [-pp {raw,xml}] [-p] [-f FILE_NAME]
                 [-r RELEASE] [-pa] [-sa SET_ATTRIBUTE [SET_ATTRIBUTE ...]]
                 [-ca CHANGE_ANNOTATION_DELIMITER] [-rd path_to_dir]
-                [-dl DOWNLOAD_DIR]
+                [-dl DOWNLOAD_DIR] [--synthetic]
 ```
 
 arguments:
@@ -460,11 +469,18 @@ arguments:
                         Change root directory (default=/projappl/nlpl/data/OPUS)
   -dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
                         Set download directory (default=current directory)
+  --synthetic           Use the synthetic corpus API when downloading files
 ```
 
 ### Description
 
 Read a document from OPUS and print to STDOUT
+
+Use `--synthetic` to download and read a document from a synthetic corpus, for example:
+
+```
+opus_cat --synthetic --directory Europarl --language en
+```
 
 **Examples:**
 
@@ -501,7 +517,7 @@ opus_cat --directory RF --language en --file_name RF/xml/en/1996.xml
 ```
 usage: opus_get [-h] [-s SOURCE] [-t TARGET] [-d DIRECTORY] [-r RELEASE]
                 [-p {raw,xml,parsed,mono,moses,tmx,truecaser,ud,freq,smt,dic}]
-                [-l] [-ll] [-lc] [--local_db] [-db DATABASE]
+                [-l] [-ll] [-lc] [--local_db] [--synthetic] [-db DATABASE]
                 [-dl DOWNLOAD_DIR] [-q] [-u] [-w]
 ```
 
@@ -527,6 +543,7 @@ arguments:
 -lc, --list_corpora   List available corpora. Use -s to find corpora for a given language and use
                       both -s and -t to find corpora for a given language pair.
 --local_db            Search resources from the local database instead of the online OPUS-API.
+--synthetic           Use the synthetic corpus API instead of the default OPUS API.
 -db DATABASE, --database DATABASE
                       Sqlite db file location
 -dl DOWNLOAD_DIR, --download_dir DOWNLOAD_DIR
@@ -541,6 +558,12 @@ arguments:
 ### Description
 
 Download files from OPUS
+
+With `--synthetic`, queries are sent to the [synthetic corpus API](https://opus.nlpl.eu/synthetic-api).
+`--directory` selects a collection name, `--release` selects a synthetic version, and `--source`/`--target`
+map to the API's `src`/`tgt` filters. Only `xml` and `raw` preprocessing are supported in synthetic mode,
+and it cannot be combined with `--local_db`. The default `latest` release resolves to the newest available
+version for each collection and language pair.
 
 **Examples:**
 
@@ -590,6 +613,24 @@ Find all corpora that contain the language pair en-sv:
 
 ```
 opus_get --list_corpora --source en --target sv
+```
+
+List synthetic collections:
+
+```
+opus_get --synthetic --list_corpora
+```
+
+List synthetic language-pair files for a collection:
+
+```
+opus_get --synthetic --directory Europarl --source bg --target mk --list_resources
+```
+
+Download the newest synthetic version of a language pair:
+
+```
+opus_get --synthetic --directory Europarl --source bg --target mk
 ```
 
 ---

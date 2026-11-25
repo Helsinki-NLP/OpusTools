@@ -39,6 +39,9 @@ parser.add_argument('-rd', '--root_directory',
 parser.add_argument('-dl', '--download_dir',
     help='Set download directory (default=current directory)',
     default='.')
+parser.add_argument('--synthetic',
+    help='Use the synthetic corpus API when downloading files',
+    action='store_true')
 
 args = parser.parse_args()
 

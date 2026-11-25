@@ -2527,6 +2527,53 @@ class TestOpusRead(unittest.TestCase):
             pairs[0],
             ('f1.1 f1.2 f1.3 f1.4 f1.5', 'e1.1 e1.2 e1.3 e1.4 e1.5'))
 
+    def test_synthetic_flag_passed_to_file_handler(self):
+        with mock.patch('opustools.opus_read.OpusFileHandler') as handler, \
+             mock.patch('opustools.opus_read.AlignmentParser'):
+            OpusRead(directory='Europarl', source='bg', target='mk',
+                synthetic=True, alignment_file='dummy', root_directory='ROOT')
+
+        handler.assert_called_once_with(
+            '.', 'ROOT/Europarl/latest/xml/bg.zip',
+            'ROOT/Europarl/latest/xml/mk.zip', 'Europarl', 'latest', 'xml',
+            ['bg', 'mk'], False, True)
+
+    def test_synthetic_raw_sentence_files(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            alignment = os.path.join(tempdir, 'SYN', 'latest', 'xml', 'en-fr.xml')
+            os.makedirs(os.path.dirname(alignment), exist_ok=True)
+            with open(alignment, 'w') as f:
+                f.write('<?xml version="1.0" encoding="utf-8"?>\n'
+                        '<!DOCTYPE cesAlign PUBLIC "-//CES//DTD XML cesAlign//EN" "">\n'
+                        '<cesAlign version="1.0">\n'
+                        '<linkGrp targType="s" fromDoc="en/doc.xml.gz" '
+                        'toDoc="fr/doc.xml.gz">\n'
+                        '<link xtargets="1;1" />\n'
+                        '</linkGrp>\n</cesAlign>\n')
+            with gzip.open(alignment + '.gz', 'wb') as f:
+                with open(alignment, 'rb') as b:
+                    f.write(b.read())
+
+            contents = {
+                'en': '<s id="1">Hello world</s>',
+                'fr': '<s id="1">Bonjour le monde</s>',
+            }
+            for lang, content in contents.items():
+                with zipfile.ZipFile(os.path.join(
+                        tempdir, 'SYN_latest_xml_'+lang+'.zip'), 'w') as zf:
+                    zf.writestr(
+                        'SYN/raw/'+lang+'/doc.xml',
+                        '<?xml version="1.0" encoding="utf-8"?>\n'
+                        '<document>'+content+'</document>')
+
+            pairs = list(OpusRead(
+                directory='SYN', source='en', target='fr', release='latest',
+                synthetic=True, download_dir=tempdir,
+                alignment_file=alignment + '.gz',
+                root_directory=tempdir).yieldPairs())
+
+            self.assertEqual(pairs, [('Hello world', 'Bonjour le monde')])
+
 
 class TestOpusReadYieldPairsLocal(unittest.TestCase):
     """Tests for yieldPairs using locally generated data (no OPUS API)."""
