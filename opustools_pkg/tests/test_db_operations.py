@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import unittest
 
@@ -9,8 +10,18 @@ from opustools import DbOperations
 class TestDbOperations(unittest.TestCase):
 
     @classmethod
-    def setUpClass(self):
-        self.dbo = DbOperations(db_file='tests/testdata.db')
+    def setUpClass(cls):
+        db_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'testdata.db')
+        if not os.path.isfile(db_file):
+            raise unittest.SkipTest(
+                'Database fixture not available: {}'.format(db_file))
+        cls.dbo = DbOperations(db_file=db_file)
+        try:
+            cls.dbo.run_query('SELECT 1')
+        except sqlite3.OperationalError as e:
+            raise unittest.SkipTest(
+                'Database fixture not available: {}'.format(e)) from e
 
     def test_get_latest_bilingual(self):
         params = {'source': 'en', 'target': 'fi', 'corpus': 'OpenSubtitles', 'preprocessing': 'xml', 'latest': 'True'}
